@@ -9,6 +9,19 @@ from core.web_enum import run_nuclei, run_dirsearch, run_sqlmap
 from core.exploitation import run_routersploit, run_ingram
 from core.bruteforce import run_hydra
 
+def update_self_repo():
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    git_dir = os.path.join(base_dir, ".git")
+    if os.path.exists(git_dir):
+        print("[*] Updating local repository from GitHub...")
+        try:
+            subprocess.run(["git", "pull", "--ff-only"], cwd=base_dir, check=True)
+            print("[+] Repository is up to date.")
+        except subprocess.CalledProcessError:
+            print("[!] Failed to pull latest repository updates. Please check your Git settings.")
+    else:
+        print("[*] No local Git repository found; skipping repository update.")
+
 def auto_install_tools():
     print("[*] Checking dependencies and tools...")
     base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -35,6 +48,14 @@ def auto_install_tools():
                 shutil.rmtree(tool_path, ignore_errors=True)
             subprocess.run(["git", "clone", "--depth", "1", repo_url, tool_path])
             missing_tools = True
+        else:
+            git_dir = os.path.join(tool_path, ".git")
+            if os.path.exists(git_dir):
+                print(f"[*] Updating {tool_name} to latest version...")
+                try:
+                    subprocess.run(["git", "pull", "--ff-only"], cwd=tool_path, check=True)
+                except subprocess.CalledProcessError:
+                    print(f"[!] Failed to update {tool_name}. Skipping.")
             
     req_path = os.path.join(base_dir, "requirements.txt")
     flag_file = os.path.join(tools_dir, ".installed")
@@ -54,7 +75,8 @@ def main():
     args = parser.parse_args()
     ip = args.target
 
-    # التحقق التلقائي وتحميل الأدوات الناقصة
+    # التحقق من التحديثات من GitHub قبل التشغيل
+    update_self_repo()
     auto_install_tools()
 
     print(f"======================================================")
