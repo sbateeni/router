@@ -12,13 +12,29 @@ from core.bruteforce import run_hydra
 def update_self_repo():
     base_dir = os.path.dirname(os.path.abspath(__file__))
     git_dir = os.path.join(base_dir, ".git")
+    print(f"[*] Repository base path: {base_dir}")
     if os.path.exists(git_dir):
         print("[*] Updating local repository from GitHub...")
         try:
-            subprocess.run(["git", "pull", "--ff-only"], cwd=base_dir, check=True)
-            print("[+] Repository is up to date.")
-        except subprocess.CalledProcessError:
-            print("[!] Failed to pull latest repository updates. Please check your Git settings.")
+            result = subprocess.run(
+                ["git", "pull", "--ff-only"],
+                cwd=base_dir,
+                check=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True
+            )
+            if result.stdout:
+                print(result.stdout.strip())
+            print("[+] Repository update completed.")
+        except FileNotFoundError:
+            print("[!] Git is not installed or not available in PATH.")
+        except subprocess.CalledProcessError as exc:
+            print("[!] Failed to pull latest repository updates.")
+            if exc.stdout:
+                print(exc.stdout.strip())
+            if exc.stderr:
+                print(exc.stderr.strip())
     else:
         print("[*] No local Git repository found; skipping repository update.")
 
