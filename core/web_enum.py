@@ -7,6 +7,18 @@ NUCLEI_CMD = os.path.join(TOOLS_DIR, "nuclei", "v2", "cmd", "nuclei", "nuclei") 
 # Actually nuclei is a go project and requires `go build`. It's better to keep assuming it's installed via apt/go on kali or use the release binaries. But we'll leave it as "nuclei" because kali has it usually or we can download the binary.
 NUCLEI_CMD = "nuclei"
 
+
+def update_nuclei_templates():
+    print("\n[+] Nuclei templates are missing or outdated. Updating templates now...")
+    command = [NUCLEI_CMD, "-ut"]
+    success, output = run_cmd(command, capture=True)
+    if output:
+        print(output)
+    if not success:
+        print("[-] Failed to update Nuclei templates.")
+    return success
+
+
 def run_nuclei(target_url, target_dir):
     print("\n[+] Running Nuclei (Vulnerability Scanning)...")
     port = target_url.split(":")[-1] if ":" in target_url.replace("https://", "").replace("http://", "") else "80"
@@ -14,6 +26,10 @@ def run_nuclei(target_url, target_dir):
     
     command = [NUCLEI_CMD, "-u", target_url, "-t", "default-logins,cves,misconfiguration"]
     success, output = run_cmd(command, capture=True, log_file=log_file)
+    
+    if "no templates provided for scan" in output.lower() or "could not find template" in output.lower():
+        if update_nuclei_templates():
+            success, output = run_cmd(command, capture=True, log_file=log_file)
     
     if output:
         print(output)
