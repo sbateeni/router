@@ -1,21 +1,48 @@
 import os
+import glob
+import shutil
 from core.utils import run_cmd, TOOLS_DIR
 
 DIRSEARCH_PATH = os.path.join(TOOLS_DIR, "dirsearch", "dirsearch.py")
 SQLMAP_PATH = os.path.join(TOOLS_DIR, "sqlmap", "sqlmap.py")
-NUCLEI_CMD = os.path.join(TOOLS_DIR, "nuclei", "v2", "cmd", "nuclei", "nuclei")  # Or just rely on system installed nuclei if we prefer. But let's fallback to system one if local is not built
-# Actually nuclei is a go project and requires `go build`. It's better to keep assuming it's installed via apt/go on kali or use the release binaries. But we'll leave it as "nuclei" because kali has it usually or we can download the binary.
-NUCLEI_CMD = "nuclei"
+# Prefer system-installed nuclei; fall back to a local clone path if present
+NUCLEI_CMD = os.path.join(TOOLS_DIR, "nuclei", "v2", "cmd", "nuclei", "nuclei")
+if not os.path.exists(NUCLEI_CMD):
+    NUCLEI_CMD = "nuclei"
+
+
+def nuclei_templates_installed():
+    """Return True if it looks like nuclei templates exist locally."""
+    candidates = [
+        os.path.expanduser("~/.nuclei/templates"),
+        os.path.expanduser("~/.config/nuclei/templates"),
+        os.path.join(TOOLS_DIR, "nuclei-templates"),
+        os.path.join("/usr/share/nuclei-templates"),
+    ]
+    for c in candidates:
+        if os.path.exists(c) and any(glob.glob(os.path.join(c, "**", "*.yaml"), recursive=True)):
+            return True
+    return False
 
 
 def update_nuclei_templates():
-    print("\n[+] Nuclei templates are missing or outdated. Updating templates now...")
-    command = [NUCLEI_CMD, "-ut"]
-    success, output = run_cmd(command, capture=True)
-    if output:
-        print(output)
-    if not success:
-        print("[-] Failed to update Nuclei templates.")
+    print("\n[+] Ensuring Nuclei templates are up-to-date...")
+    # Try the short flag first, then the long-form as a fallback
+    commands = [[NUCLEI_CMD, "-ut"], [NUCLEI_CMD, "-update-templates"], [NUCLEI_CMD, "-ut", "-no-colors"]]
+    success = False
+    for command in commands:
+        success, output = run_cmd(command, capture=True)
+        if output:
+            print(output)
+        if success:
+            break
+
+    # Verify templates were actually installed
+    if not nuclei_templates_installed():
+        print("[-] Nuclei templates not detected after update. Please ensure nuclei is installed and can access the network.")
+        return False
+
+    print("[+] Nuclei templates are present.")
     return success
 
 
@@ -25,9 +52,17 @@ def run_nuclei(target_url, target_dir):
     log_file = os.path.join(target_dir, f"nuclei_port_{port}.txt")
     
     command = [NUCLEI_CMD, "-u", target_url, "-tags", "default-logins,cves,misconfiguration"]
+
+    # Ensure templates are present before running nuclei; attempt update if missing
+    if not nuclei_templates_installed():
+        ok = update_nuclei_templates()
+        if not ok:
+            print("[!] Skipping nuclei scan due to missing templates.")
+            return False
+
     success, output = run_cmd(command, capture=True, log_file=log_file)
     
-    if "no templates provided for scan" in output.lower() or "could not find template" in output.lower():
+    if output and ("no templates provided for scan" in output.lower() or "could not find template" in output.lower()):
         if update_nuclei_templates():
             success, output = run_cmd(command, capture=True, log_file=log_file)
     
@@ -87,5 +122,20 @@ def run_sqlmap(target_url, target_dir):
         
     if "is vulnerable" in output.lower():
         print("[!] SQLMap successfully injected the target!")
+        return True
+    return False
+
+
+def run_searchsploit(query, target_dir):
+    """Run searchsploit for a free-text query and save results. Returns True if any results found."""
+    if not shutil.which("searchsploit"):
+        print("[!] searchsploit is not installed; skipping SearchSploit lookup.")
+        return False
+    log_file = os.path.join(target_dir, "searchsploit.txt")
+    command = ["searchsploit", query]
+    success, output = run_cmd(command, capture=True, log_file=log_file)
+    if output:
+        print(output)
+        print(f"[+] searchsploit results saved to: {log_file}")
         return True
     return False

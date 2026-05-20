@@ -5,7 +5,7 @@ import shutil
 
 from core.scanner import run_nmap
 from core.utils import run_cmd
-from core.web_enum import run_nuclei, run_dirsearch, run_sqlmap
+from core.web_enum import run_nuclei, run_dirsearch, run_sqlmap, run_searchsploit
 from core.exploitation import run_routersploit, run_ingram
 from core.bruteforce import run_hydra
 
@@ -38,6 +38,43 @@ def normalize_url(url):
 
 def extract_query_urls(urls):
     return [u for u in urls if "?" in u]
+
+
+def extract_service_queries(open_ports):
+    """Create a list of service/product query strings from nmap results for searchsploit lookups."""
+    queries = set()
+    for p in open_ports:
+        # p may be dict with 'service' and 'version' or raw string; be defensive
+        svc = None
+        ver = None
+        try:
+            svc = p.get('service') if isinstance(p, dict) else str(p)
+        except Exception:
+            svc = str(p)
+        # try to split common banners like 'nginx 1.14.0'
+        if svc:
+            parts = svc.split()
+            if len(parts) >= 2:
+                queries.add(f"{parts[0]} {parts[1]}")
+            queries.add(parts[0])
+    return list(queries)
+
+
+def run_metasploit_search(query, target_dir):
+    """Run a safe msfconsole search for modules matching the query and save output."""
+    if not shutil.which("msfconsole"):
+        print("[!] Metasploit (msfconsole) not found; skipping Metasploit lookup.")
+        return False
+    log_file = os.path.join(target_dir, "msf_search.txt")
+    # run msfconsole in quiet mode and run a search command then exit
+    msf_cmd = f"search {query}; exit"
+    command = ["msfconsole", "-q", "-x", msf_cmd]
+    success, output = run_cmd(command, capture=True, log_file=log_file)
+    if output:
+        print(output)
+        print(f"[+] Metasploit search results saved to: {log_file}")
+        return True
+    return False
 
 
 def run_gau(target_url, target_dir):
@@ -284,6 +321,19 @@ def run_all_tools(ip, target_dir):
     else:
         context.web_ports = get_web_ports(context.open_ports)
         context.login_ports = get_login_ports(context.open_ports)
+
+        # Link Nmap results to SearchSploit and Metasploit lookups
+        try:
+            service_queries = extract_service_queries(context.open_ports)
+            if service_queries:
+                print("\n[+] Performing SearchSploit lookups based on detected services...")
+                for q in service_queries:
+                    found = run_searchsploit(q, target_dir)
+                    if found:
+                        # If searchsploit returned something, try a metasploit search as well
+                        run_metasploit_search(q, target_dir)
+        except Exception:
+            pass
 
     if context.web_ports:
         print("\n======================================================")
