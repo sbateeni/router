@@ -22,6 +22,16 @@ def update_self_repo():
     else:
         print("[*] No local Git repository found; skipping repository update.")
 
+def prompt_next_stage():
+    while True:
+        choice = input("\n[!] Ctrl+C detected. Do you want to skip the current phase and continue to the next stage? [Y/n] ").strip().lower()
+        if choice in ("", "y", "yes"):
+            return True
+        if choice in ("n", "no", "q", "quit", "exit"):
+            return False
+        print("Please enter 'y' to continue or 'n' to exit.")
+
+
 def auto_install_tools():
     print("[*] Checking dependencies and tools...")
     base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -90,14 +100,22 @@ def main():
 
     # المرحلة الأولى: الاستطلاع
     print(">>> PHASE 1: Scanning & Reconnaissance")
-    open_ports = run_nmap(ip, target_dir)
+    try:
+        open_ports = run_nmap(ip, target_dir)
+    except KeyboardInterrupt:
+        if not prompt_next_stage():
+            print("\n[-] Exiting as requested.")
+            sys.exit(0)
+        open_ports = []
     
     if not open_ports:
-        print(f"[-] No open ports found on {ip}. Exiting.")
-        sys.exit(0)
-        
-    web_ports = [p['port'] for p in open_ports if p['port'] in [80, 443, 8080, 8443] or 'http' in p['service'].lower()]
-    login_ports = [p for p in open_ports if p['port'] in [21, 22, 23] or p['service'].lower() in ['ssh', 'ftp', 'telnet']]
+        print(f"[-] No open ports found on {ip}. Moving on to the next phases.")
+        open_ports = []
+        web_ports = []
+        login_ports = []
+    else:
+        web_ports = [p['port'] for p in open_ports if p['port'] in [80, 443, 8080, 8443] or 'http' in p['service'].lower()]
+        login_ports = [p for p in open_ports if p['port'] in [21, 22, 23] or p['service'].lower() in ['ssh', 'ftp', 'telnet']]
     
     exploited = False
 
@@ -106,31 +124,45 @@ def main():
         print("\n======================================================")
         print(">>> PHASE 2: Web Enumeration & Vulnerability Scanning")
         print("======================================================")
-        for port in web_ports:
-            target_url = f"http://{ip}:{port}" if port not in [443, 8443] else f"https://{ip}:{port}"
-            print(f"\n[*] Target URL: {target_url}")
-            
-            if run_nuclei(target_url, target_dir):
-                exploited = True
-                break
+        try:
+            for port in web_ports:
+                target_url = f"http://{ip}:{port}" if port not in [443, 8443] else f"https://{ip}:{port}"
+                print(f"\n[*] Target URL: {target_url}")
                 
-            run_dirsearch(target_url, target_dir) 
+                if run_nuclei(target_url, target_dir):
+                    exploited = True
+                    break
+                
+                run_dirsearch(target_url, target_dir)
+        except KeyboardInterrupt:
+            if not prompt_next_stage():
+                print("\n[-] Exiting as requested.")
+                sys.exit(0)
 
     # المرحلة الثالثة: استغلال الراوترات والأجهزة المدمجة
     if not exploited:
         print("\n======================================================")
         print(">>> PHASE 3: Router & Device Exploitation")
         print("======================================================")
-        
-        if run_routersploit(ip, target_dir):
-            exploited = True
-        elif run_ingram(ip, target_dir):
-            exploited = True
+        try:
+            if run_routersploit(ip, target_dir):
+                exploited = True
+            elif run_ingram(ip, target_dir):
+                exploited = True
+        except KeyboardInterrupt:
+            if not prompt_next_stage():
+                print("\n[-] Exiting as requested.")
+                sys.exit(0)
 
     # المرحلة الرابعة: التخمين كملاذ أخير
     if not exploited and login_ports:
-        if run_hydra(ip, login_ports, target_dir):
-            exploited = True
+        try:
+            if run_hydra(ip, login_ports, target_dir):
+                exploited = True
+        except KeyboardInterrupt:
+            if not prompt_next_stage():
+                print("\n[-] Exiting as requested.")
+                sys.exit(0)
 
     print("\n======================================================")
     if exploited:
