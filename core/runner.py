@@ -200,9 +200,11 @@ def run_nuclei_only(ip, target_dir):
         return False
     web_ports = get_web_ports(open_ports)
     if not web_ports:
-        # Fallback to common web ports if nmap didn't identify any
-        print("[!] No web ports detected by Nmap; falling back to common ports for Nuclei: 80,443,8080,8443")
-        web_ports = [80, 443, 8080, 8443]
+        # Fallback to common web ports and common camera/web-UI ports if nmap didn't identify any
+        camera_ports = [81, 8000, 8001, 8081, 9000, 37777, 5000]
+        default_ports = [80, 443, 8080, 8443]
+        web_ports = default_ports + camera_ports
+        print(f"[!] No web ports detected by Nmap; falling back to ports for Nuclei: {web_ports}")
     for port in web_ports:
         target_url = f"http://{ip}:{port}" if port not in [443, 8443] else f"https://{ip}:{port}"
         if run_nuclei(target_url, target_dir):
