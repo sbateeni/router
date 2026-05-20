@@ -63,9 +63,8 @@ def update_nuclei_templates():
 def run_nuclei(target_url, target_dir):
     print("\n[+] Running Nuclei (Vulnerability Scanning)...")
     port = target_url.split(":")[-1] if ":" in target_url.replace("https://", "").replace("http://", "") else "80"
-    log_file = os.path.join(target_dir, f"nuclei_port_{port}.txt")
-    
-    command = [NUCLEI_CMD, "-u", target_url, "-tags", "default-logins,cves,misconfiguration"]
+    log_txt = os.path.join(target_dir, f"nuclei_port_{port}.txt")
+    log_json = os.path.join(target_dir, f"nuclei_port_{port}.json")
 
     # Ensure templates are present before running nuclei; attempt update if missing
     if not nuclei_templates_installed():
@@ -74,19 +73,80 @@ def run_nuclei(target_url, target_dir):
             print("[!] Skipping nuclei scan due to missing templates.")
             return False
 
-    success, output = run_cmd(command, capture=True, log_file=log_file)
-    
-    if output and ("no templates provided for scan" in output.lower() or "could not find template" in output.lower()):
-        if update_nuclei_templates():
-            success, output = run_cmd(command, capture=True, log_file=log_file)
-    
-    if output:
-        print(output)
-        print(f"[+] Nuclei results saved to: {log_file}")
-        
-    if "critical" in output.lower() or "high" in output.lower():
-        print("[!] Nuclei found a HIGH/CRITICAL vulnerability!")
+    # Run validation and save output per-target
+    try:
+        validate_log = os.path.join(target_dir, "nuclei_validate.txt")
+        run_cmd([NUCLEI_CMD, "-validate"], capture=True, log_file=validate_log)
+    except Exception:
+        pass
+
+    def run_scan(command, out_log):
+        success, output = run_cmd(command + ["-json"], capture=True, log_file=out_log)
+        return success, output
+
+    base_cmd = [NUCLEI_CMD, "-u", target_url]
+    tag_cmd = base_cmd + ["-tags", "default-logins,cves,misconfiguration"]
+
+    # First try with tags (preferred)
+    success, output = run_scan(tag_cmd, log_json)
+
+    # If no JSON findings (or empty file), retry without tags
+    findings = []
+    try:
+        if os.path.exists(log_json):
+            with open(log_json, "r", encoding="utf-8", errors="ignore") as fh:
+                for line in fh:
+                    line = line.strip()
+                    if not line:
+                        continue
+                    try:
+                        import json
+                        obj = json.loads(line)
+                        findings.append(obj)
+                    except Exception:
+                        # ignore non-json lines
+                        pass
+    except Exception:
+        pass
+
+    if not findings:
+        # retry without tags and capture to alternate file
+        log_json2 = os.path.join(target_dir, f"nuclei_port_{port}_notags.json")
+        success2, output2 = run_scan(base_cmd, log_json2)
+        try:
+            if os.path.exists(log_json2):
+                with open(log_json2, "r", encoding="utf-8", errors="ignore") as fh:
+                    for line in fh:
+                        line = line.strip()
+                        if not line:
+                            continue
+                        try:
+                            import json
+                            obj = json.loads(line)
+                            findings.append(obj)
+                        except Exception:
+                            pass
+        except Exception:
+            pass
+
+    # Also save combined human-readable log
+    try:
+        # if run_cmd wrote banner text into output, save that too
+        if output:
+            with open(log_txt, "w", encoding="utf-8") as fh:
+                fh.write(output)
+        elif os.path.exists(log_json):
+            with open(log_txt, "w", encoding="utf-8") as fh:
+                fh.write(open(log_json, "r", encoding="utf-8", errors="ignore").read())
+    except Exception:
+        pass
+
+    if findings:
+        print(f"[!] Nuclei found {len(findings)} findings (saved JSON to {log_json} or _notags variant).")
         return True
+
+    # No findings
+    print(f"[+] Nuclei scan completed for {target_url}. No results found.")
     return False
 
 def run_dirsearch(target_url, target_dir):
