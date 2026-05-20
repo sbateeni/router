@@ -12,9 +12,20 @@ def run_nmap(ip, target_dir):
         print("[-] Nmap scan failed or Nmap is not installed.")
         return []
 
+    open_ports = parse_nmap(output) if output else []
     if success and os.path.exists(log_file):
         print(f"[+] Nmap results saved to: {log_file}")
-    return parse_nmap(output)
+        
+    if not open_ports:
+        print(f"[-] No open ports found in top 1000 ports. Retrying with a full port scan (-p-)...")
+        log_file_full = os.path.join(target_dir, "nmap_scan_full.txt")
+        command_full = ["nmap", "-p-", "-sV", "-T4", "--open", ip]
+        success_full, output_full = run_cmd(command_full, capture=True, log_file=log_file_full)
+        if success_full and os.path.exists(log_file_full):
+            print(f"[+] Full Nmap results saved to: {log_file_full}")
+        open_ports = parse_nmap(output_full) if output_full else []
+
+    return open_ports
 
 def parse_nmap(nmap_output):
     open_ports = []

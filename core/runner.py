@@ -318,7 +318,7 @@ def run_all_tools(ip, target_dir):
         context.open_ports = []
 
     if not context.open_ports:
-        print(f"[-] No open ports found on {ip}. Moving on to the next phases.")
+        print(f"[-] No open ports found on {ip}. Proceeding with device-level checks only.")
         context.web_ports = []
         context.login_ports = []
     else:
@@ -333,81 +333,102 @@ def run_all_tools(ip, target_dir):
                 for q in service_queries:
                     found = run_searchsploit(q, target_dir)
                     if found:
-                        # If searchsploit returned something, try a metasploit search as well
                         run_metasploit_search(q, target_dir)
         except Exception:
             pass
 
     if context.web_ports:
         print("\n======================================================")
-        print(">>> PHASE 2: Web Enumeration & Vulnerability Scanning")
+        print(">>> PHASE 2: Web Reconnaissance (Path & URL Discovery)")
         print("======================================================")
         try:
             for port in context.web_ports:
                 target_url = build_url(ip, port)
                 print(f"\n[*] Target URL: {target_url}")
 
+                # Dirsearch
                 paths = run_dirsearch(target_url, target_dir)
-                context.discovered_paths.extend(paths)
+                if paths:
+                    context.discovered_paths.extend(paths)
 
-                if run_nuclei(target_url, target_dir):
-                    context.exploited = True
+                # GAU
+                if is_tool_available("gau"):
+                    gau_results = run_gau(target_url, target_dir)
+                    if gau_results:
+                        context.gau_urls.extend(gau_results)
+
+                # FFUF
+                if is_tool_available("ffuf"):
+                    ffuf_results = run_ffuf(target_url, target_dir)
+                    if ffuf_results:
+                        context.ffuf_candidates.extend(ffuf_results)
 
             context.discovered_paths = list(dict.fromkeys(context.discovered_paths))
-            if context.discovered_paths:
-                print(f"[+] Total discovered paths: {len(context.discovered_paths)}")
-
-            if is_tool_available("gau"):
-                for port in context.web_ports:
-                    target_url = build_url(ip, port)
-                    context.gau_urls.extend(run_gau(target_url, target_dir))
-                context.gau_urls = list(dict.fromkeys(context.gau_urls))
-
-            if is_tool_available("ffuf"):
-                for port in context.web_ports:
-                    target_url = build_url(ip, port)
-                    context.ffuf_candidates.extend(run_ffuf(target_url, target_dir))
-                context.ffuf_candidates = list(dict.fromkeys(context.ffuf_candidates))
+            context.gau_urls = list(dict.fromkeys(context.gau_urls))
+            context.ffuf_candidates = list(dict.fromkeys(context.ffuf_candidates))
 
             context.discovered_urls = list(dict.fromkeys(
-                context.discovered_paths + context.gau_urls + context.ffuf_candidates
+                [build_url(ip, p) for p in context.web_ports] + 
+                context.discovered_paths + 
+                context.gau_urls + 
+                context.ffuf_candidates
             ))
+            
+            print(f"[+] Total unique URLs discovered across all tools: {len(context.discovered_urls)}")
 
-            query_urls = extract_query_urls(context.discovered_urls)
-            if not query_urls:
-                query_urls = [build_url(ip, port) for port in context.web_ports]
+        except KeyboardInterrupt:
+            if not prompt_next_stage():
+                print("\n[-] Exiting as requested.")
+                sys.exit(0)
 
-            if query_urls:
+        print("\n======================================================")
+        print(">>> PHASE 3: Web Vulnerability Scanning")
+        print("======================================================")
+        try:
+            # Nuclei on discovered URLs (limit to prevent excessive scanning time)
+            if context.discovered_urls:
                 print("\n[+] Running Nuclei on discovered URL candidates...")
-                for target_url in query_urls[:20]:
+                # We can scan the base URLs plus up to 20 discovered interesting paths
+                scan_urls = list(dict.fromkeys([build_url(ip, p) for p in context.web_ports] + context.discovered_urls[:20]))
+                for target_url in scan_urls:
                     if run_nuclei(target_url, target_dir):
                         context.exploited = True
 
-            print("\n[+] Running SQLMap on candidate URLs...")
-            for target_url in query_urls:
-                if run_sqlmap(target_url, target_dir):
-                    context.exploited = True
+            # SQLMap on URLs with query parameters
+            query_urls = extract_query_urls(context.discovered_urls)
+            if query_urls:
+                print(f"\n[+] Running SQLMap on {len(query_urls)} candidate URLs with query parameters...")
+                for target_url in query_urls:
+                    if run_sqlmap(target_url, target_dir):
+                        context.exploited = True
+            else:
+                print("\n[-] No URLs with query parameters found for SQLMap.")
 
         except KeyboardInterrupt:
             if not prompt_next_stage():
                 print("\n[-] Exiting as requested.")
                 sys.exit(0)
 
-    if not context.exploited:
+    print("\n======================================================")
+    print(">>> PHASE 4: Router & Device Exploitation")
+    print("======================================================")
+    try:
+        # Routersploit and Ingram run against the target IP independently of web ports
+        if run_routersploit(ip, target_dir):
+            context.exploited = True
+        
+        if run_ingram(ip, target_dir):
+            context.exploited = True
+            
+    except KeyboardInterrupt:
+        if not prompt_next_stage():
+            print("\n[-] Exiting as requested.")
+            sys.exit(0)
+
+    if context.login_ports:
         print("\n======================================================")
-        print(">>> PHASE 3: Router & Device Exploitation")
+        print(">>> PHASE 5: Authentication Bruteforcing")
         print("======================================================")
-        try:
-            if run_routersploit(ip, target_dir):
-                context.exploited = True
-            elif run_ingram(ip, target_dir):
-                context.exploited = True
-        except KeyboardInterrupt:
-            if not prompt_next_stage():
-                print("\n[-] Exiting as requested.")
-                sys.exit(0)
-
-    if not context.exploited and context.login_ports:
         try:
             if run_hydra(ip, context.login_ports, target_dir):
                 context.exploited = True
