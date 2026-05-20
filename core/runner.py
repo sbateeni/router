@@ -229,6 +229,10 @@ def run_ffuf_only(ip, target_dir):
         print("[-] No web ports found for FFUF.")
         return False
 
+    if not is_tool_available("ffuf"):
+        print("[!] ffuf is not installed; skipping FFUF enumeration.")
+        return False
+
     discovered = []
     for port in web_ports:
         target_url = build_url(ip, port)
@@ -246,6 +250,10 @@ def run_gau_only(ip, target_dir):
     web_ports = get_web_ports(open_ports)
     if not web_ports:
         print("[-] No web ports found for GAU.")
+        return False
+
+    if not is_tool_available("gau"):
+        print("[!] gau is not installed; skipping GAU enumeration.")
         return False
 
     discovered = []

@@ -104,8 +104,6 @@ def update_self_repo():
                 print(exc.stderr.strip())
             print("[!] Please resolve the stash conflict manually.")
 
-from core.runner import select_tool_menu, run_selected_tool
-
 
 def auto_install_tools():
     print("[*] Checking dependencies and tools...")
@@ -174,7 +172,7 @@ def main():
     print(f"[*] Workspace created for target: {target_dir}\n")
 
     selection = select_tool_menu()
-    if selection == 9:
+    if selection == 11:
         print("[-] Exiting without running any tools.")
         return
 
@@ -183,8 +181,6 @@ def main():
     print("\n======================================================")
     if selection == 2:
         print("[*] Nmap-only execution completed.")
-    elif selection in [4, 8] and not exploited:
-        print("[*] Tool execution completed.")
     elif exploited:
         print("[★] SUCCESS: Tool found a likely issue or exploitation succeeded!")
     else:
