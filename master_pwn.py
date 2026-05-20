@@ -5,6 +5,7 @@ import sys
 import os
 import subprocess
 from core.runner import select_tool_menu, run_selected_tool
+from core.web_enum import update_nuclei_templates
 
 def update_self_repo():
     base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -160,6 +161,11 @@ def main():
     # التحقق من التحديثات من GitHub قبل التشغيل
     update_self_repo()
     auto_install_tools()
+    # تأكد من أن قوالب Nuclei محدثة عند بداية التشغيل
+    try:
+        update_nuclei_templates()
+    except Exception:
+        print("[!] Warning: failed to update Nuclei templates at startup; continuing.")
 
     print(f"======================================================")
     print(f"      TARGET ACQUIRED: {ip}                           ")
