@@ -16,12 +16,26 @@ def nuclei_templates_installed():
     candidates = [
         os.path.expanduser("~/.nuclei/templates"),
         os.path.expanduser("~/.config/nuclei/templates"),
+        os.path.join(os.path.expanduser("~"), ".local", "nuclei-templates"),
+        os.path.join(os.path.expanduser("~"), ".local", "share", "nuclei-templates"),
         os.path.join(TOOLS_DIR, "nuclei-templates"),
         os.path.join("/usr/share/nuclei-templates"),
     ]
     for c in candidates:
         if os.path.exists(c) and any(glob.glob(os.path.join(c, "**", "*.yaml"), recursive=True)):
             return True
+    # As a fallback, search the user's home for any nuclei-templates folder containing yaml files
+    try:
+        home = os.path.expanduser("~")
+        patterns = [
+            os.path.join(home, "**", "nuclei-templates", "**", "*.yaml"),
+            os.path.join(home, "**", "nuclei", "**", "*.yaml"),
+        ]
+        for pat in patterns:
+            if any(glob.glob(pat, recursive=True)):
+                return True
+    except Exception:
+        pass
     return False
 
 
