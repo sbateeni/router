@@ -146,7 +146,7 @@ def auto_install_tools():
     if missing_tools or not os.path.exists(flag_file):
         print("[*] Installing Python requirements (This might take a moment)...")
         if os.path.exists(req_path):
-            subprocess.run(["pip3", "install", "-r", req_path, "--break-system-packages"])
+            subprocess.run([sys.executable, "-m", "pip", "install", "-r", req_path, "--break-system-packages"])
         with open(flag_file, "w") as f:
             f.write("done")
             

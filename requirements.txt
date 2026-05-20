@@ -17,6 +17,7 @@ paramiko
 pysnmp
 pwntools
 pwn
+telnetlib3
 
 # Cryptography
 pycryptodome
