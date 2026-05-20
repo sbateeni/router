@@ -33,7 +33,6 @@ def auto_install_tools():
         "ingram": "https://github.com/jorhelp/Ingram.git",
         "dirsearch": "https://github.com/maurosoria/dirsearch.git",
         "sqlmap": "https://github.com/sqlmapproject/sqlmap.git",
-        "nuclei": "https://github.com/projectdiscovery/nuclei.git",
         "DefaultCreds-cheat-sheet": "https://github.com/ihebski/DefaultCreds-cheat-sheet.git"
     }
     
