@@ -200,8 +200,9 @@ def run_nuclei_only(ip, target_dir):
         return False
     web_ports = get_web_ports(open_ports)
     if not web_ports:
-        print("[-] No web ports found for Nuclei.")
-        return False
+        # Fallback to common web ports if nmap didn't identify any
+        print("[!] No web ports detected by Nmap; falling back to common ports for Nuclei: 80,443,8080,8443")
+        web_ports = [80, 443, 8080, 8443]
     for port in web_ports:
         target_url = f"http://{ip}:{port}" if port not in [443, 8443] else f"https://{ip}:{port}"
         if run_nuclei(target_url, target_dir):
