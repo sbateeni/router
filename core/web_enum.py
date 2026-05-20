@@ -44,17 +44,32 @@ def run_dirsearch(target_url, target_dir):
     print("\n[+] Running Dirsearch (Path Enumeration)...")
     if not os.path.exists(DIRSEARCH_PATH):
         print(f"[-] Dirsearch not found at {DIRSEARCH_PATH}")
-        return False
+        return []
         
     port = target_url.split(":")[-1] if ":" in target_url.replace("https://", "").replace("http://", "") else "80"
     log_file = os.path.join(target_dir, f"dirsearch_port_{port}.txt")
     
     # Dirsearch لديه خاصية للحفظ بشكل منظم، يمكننا استخدام -o أيضاً
     command = ["python3", DIRSEARCH_PATH, "-u", target_url, "-e", "php,html,bak", "-x", "400,404,403,500", "-t", "50", "-o", log_file]
-    success, _ = run_cmd(command, capture=False)
+    success, _ = run_cmd(command, capture=True, log_file=log_file)
     
+    discovered = []
+    if os.path.exists(log_file):
+        with open(log_file, "r", encoding="utf-8", errors="ignore") as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                if line.startswith("http://") or line.startswith("https://"):
+                    discovered.append(line)
+                elif line.startswith("/"):
+                    base = target_url.rstrip("/")
+                    discovered.append(base + line)
+    discovered = list(dict.fromkeys(discovered))
     print(f"[+] Dirsearch results saved to: {log_file}")
-    return False
+    if discovered:
+        print(f"[+] Dirsearch discovered {len(discovered)} paths.")
+    return discovered
 
 def run_sqlmap(target_url, target_dir):
     print("\n[+] Running SQLMap (SQL Injection Test)...")
