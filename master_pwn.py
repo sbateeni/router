@@ -4,10 +4,7 @@ import argparse
 import sys
 import os
 import subprocess
-from core.scanner import run_nmap
-from core.web_enum import run_nuclei, run_dirsearch, run_sqlmap
-from core.exploitation import run_routersploit, run_ingram
-from core.bruteforce import run_hydra
+from core.runner import select_tool_menu, run_selected_tool
 
 def update_self_repo():
     base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -107,14 +104,7 @@ def update_self_repo():
                 print(exc.stderr.strip())
             print("[!] Please resolve the stash conflict manually.")
 
-def prompt_next_stage():
-    while True:
-        choice = input("\n[!] Ctrl+C detected. Do you want to skip the current phase and continue to the next stage? [Y/n] ").strip().lower()
-        if choice in ("", "y", "yes"):
-            return True
-        if choice in ("n", "no", "q", "quit", "exit"):
-            return False
-        print("Please enter 'y' to continue or 'n' to exit.")
+from core.runner import select_tool_menu, run_selected_tool
 
 
 def auto_install_tools():
@@ -183,77 +173,23 @@ def main():
     os.makedirs(target_dir, exist_ok=True)
     print(f"[*] Workspace created for target: {target_dir}\n")
 
-    # المرحلة الأولى: الاستطلاع
-    print(">>> PHASE 1: Scanning & Reconnaissance")
-    try:
-        open_ports = run_nmap(ip, target_dir)
-    except KeyboardInterrupt:
-        if not prompt_next_stage():
-            print("\n[-] Exiting as requested.")
-            sys.exit(0)
-        open_ports = []
-    
-    if not open_ports:
-        print(f"[-] No open ports found on {ip}. Moving on to the next phases.")
-        open_ports = []
-        web_ports = []
-        login_ports = []
-    else:
-        web_ports = [p['port'] for p in open_ports if p['port'] in [80, 443, 8080, 8443] or 'http' in p['service'].lower()]
-        login_ports = [p for p in open_ports if p['port'] in [21, 22, 23] or p['service'].lower() in ['ssh', 'ftp', 'telnet']]
-    
-    exploited = False
+    selection = select_tool_menu()
+    if selection == 9:
+        print("[-] Exiting without running any tools.")
+        return
 
-    # المرحلة الثانية: استغلال الويب (إن وجد)
-    if web_ports and not exploited:
-        print("\n======================================================")
-        print(">>> PHASE 2: Web Enumeration & Vulnerability Scanning")
-        print("======================================================")
-        try:
-            for port in web_ports:
-                target_url = f"http://{ip}:{port}" if port not in [443, 8443] else f"https://{ip}:{port}"
-                print(f"\n[*] Target URL: {target_url}")
-                
-                if run_nuclei(target_url, target_dir):
-                    exploited = True
-                    break
-                
-                run_dirsearch(target_url, target_dir)
-        except KeyboardInterrupt:
-            if not prompt_next_stage():
-                print("\n[-] Exiting as requested.")
-                sys.exit(0)
-
-    # المرحلة الثالثة: استغلال الراوترات والأجهزة المدمجة
-    if not exploited:
-        print("\n======================================================")
-        print(">>> PHASE 3: Router & Device Exploitation")
-        print("======================================================")
-        try:
-            if run_routersploit(ip, target_dir):
-                exploited = True
-            elif run_ingram(ip, target_dir):
-                exploited = True
-        except KeyboardInterrupt:
-            if not prompt_next_stage():
-                print("\n[-] Exiting as requested.")
-                sys.exit(0)
-
-    # المرحلة الرابعة: التخمين كملاذ أخير
-    if not exploited and login_ports:
-        try:
-            if run_hydra(ip, login_ports, target_dir):
-                exploited = True
-        except KeyboardInterrupt:
-            if not prompt_next_stage():
-                print("\n[-] Exiting as requested.")
-                sys.exit(0)
+    exploited = run_selected_tool(selection, ip, target_dir)
 
     print("\n======================================================")
-    if exploited:
-        print("[★] SUCCESS: Target has been compromised!")
+    if selection == 2:
+        print("[*] Nmap-only execution completed.")
+    elif selection in [4, 8] and not exploited:
+        print("[*] Tool execution completed.")
+    elif exploited:
+        print("[★] SUCCESS: Tool found a likely issue or exploitation succeeded!")
     else:
-        print("[-] FAILURE: Could not exploit the target with available tools.")
+        print("[-] Tool execution completed without finding a successful exploit.")
+
     print(f"[*] All output logs for {ip} have been saved in: {target_dir}")
     print("======================================================")
 
