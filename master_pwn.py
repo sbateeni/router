@@ -4,6 +4,8 @@ import argparse
 import sys
 import os
 import subprocess
+import hashlib
+import importlib.util
 from core.runner import select_tool_menu, run_selected_tool
 from core.web_enum import update_nuclei_templates
 
@@ -85,7 +87,7 @@ def update_self_repo():
         print("[*] Restoring your local changes...")
         try:
             pop = subprocess.run(
-                ["git", "stash", "pop"],
+                ["git", "stash", "apply"],
                 cwd=base_dir,
                 check=True,
                 stdout=subprocess.PIPE,
@@ -96,6 +98,18 @@ def update_self_repo():
                 print(pop.stdout.strip())
             if pop.stderr:
                 print(pop.stderr.strip())
+            drop = subprocess.run(
+                ["git", "stash", "drop"],
+                cwd=base_dir,
+                check=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True
+            )
+            if drop.stdout:
+                print(drop.stdout.strip())
+            if drop.stderr:
+                print(drop.stderr.strip())
             print("[+] Local changes restored.")
         except subprocess.CalledProcessError as exc:
             print("[!] Failed to restore stashed changes automatically.")
@@ -103,7 +117,7 @@ def update_self_repo():
                 print(exc.stdout.strip())
             if exc.stderr:
                 print(exc.stderr.strip())
-            print("[!] Please resolve the stash conflict manually.")
+            print("[!] Your stash has been preserved for manual resolution.")
 
 
 def auto_install_tools():
@@ -142,13 +156,32 @@ def auto_install_tools():
             
     req_path = os.path.join(base_dir, "requirements.txt")
     flag_file = os.path.join(tools_dir, ".installed")
-    
-    if missing_tools or not os.path.exists(flag_file):
+    req_hash = None
+    installed_hash = None
+    if os.path.exists(req_path):
+        sha256 = hashlib.sha256()
+        with open(req_path, "rb") as f:
+            sha256.update(f.read())
+        req_hash = sha256.hexdigest()
+
+    if os.path.exists(flag_file):
+        try:
+            with open(flag_file, "r", encoding="utf-8") as f:
+                installed_hash = f.read().strip()
+        except OSError:
+            installed_hash = None
+
+    telnetlib3_installed = importlib.util.find_spec("telnetlib3") is not None
+    needs_install = missing_tools or req_hash is None or installed_hash != req_hash or not telnetlib3_installed
+    if needs_install:
         print("[*] Installing Python requirements (This might take a moment)...")
         if os.path.exists(req_path):
-            subprocess.run([sys.executable, "-m", "pip", "install", "-r", req_path, "--break-system-packages"])
-        with open(flag_file, "w") as f:
-            f.write("done")
+            result = subprocess.run([sys.executable, "-m", "pip", "install", "-r", req_path, "--break-system-packages"])
+            if result.returncode != 0:
+                print("[!] Python requirements installation failed. Please check the output above.")
+                return
+        with open(flag_file, "w", encoding="utf-8") as f:
+            f.write(req_hash or "")
             
     print("[+] All tools and dependencies are ready!\n")
 
