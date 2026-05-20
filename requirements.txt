@@ -1,0 +1,42 @@
+# ==========================================
+# MASTER REQUIREMENTS FOR ALL AUTO-PWN TOOLS
+# ==========================================
+
+# Core HTTP & Network
+requests
+httpx
+requests-ntlm
+httpx-ntlm
+requests-toolbelt
+ntlm-auth
+PySocks
+IPy
+
+# Protocols & Exploitation
+paramiko
+pysnmp
+pwntools
+pwn
+
+# Cryptography
+pycryptodome
+pyopenssl
+
+# Web Scraping & Data Parsing
+beautifulsoup4
+lxml
+Jinja2
+defusedxml
+defusedcsv
+ndjson
+
+# Databases
+mysql-connector-python
+psycopg[binary]
+
+# Concurrency & Utils
+gevent
+colorama
+loguru
+tzlocal
+setuptools
