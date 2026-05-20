@@ -3,6 +3,12 @@ import os
 
 TOOLS_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "tools")
 
+def ensure_parent_dir(file_path):
+    directory = os.path.dirname(file_path)
+    if directory and not os.path.exists(directory):
+        os.makedirs(directory, exist_ok=True)
+
+
 def run_cmd(command, capture=False, log_file=None):
     """
     دالة مساعدة لتشغيل الأوامر وحفظ المخرجات إذا تم تحديد log_file.
@@ -17,9 +23,16 @@ def run_cmd(command, capture=False, log_file=None):
             
             # حفظ المخرجات في الملف إذا طُلب ذلك
             if log_file:
-                with open(log_file, "w", encoding="utf-8") as f:
-                    f.write(output)
-                    
+                try:
+                    ensure_parent_dir(log_file)
+                    with open(log_file, "w", encoding="utf-8") as f:
+                        f.write(output)
+                except PermissionError as e:
+                    print(f"[-] Permission denied writing log file: {log_file}")
+                    if capture:
+                        return result.returncode == 0, output
+                    return result.returncode == 0, output
+            
             if capture:
                 return True, output
             else:

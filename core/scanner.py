@@ -11,8 +11,9 @@ def run_nmap(ip, target_dir):
     if not success and not output:
         print("[-] Nmap scan failed or Nmap is not installed.")
         return []
-        
-    print(f"[+] Nmap results saved to: {log_file}")
+
+    if success and os.path.exists(log_file):
+        print(f"[+] Nmap results saved to: {log_file}")
     return parse_nmap(output)
 
 def parse_nmap(nmap_output):

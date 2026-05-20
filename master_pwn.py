@@ -175,6 +175,10 @@ def main():
     # إذا كنت تستخدم كالي، سيتم إنشاؤه داخل مجلد targets في نفس مسار السكربت
     target_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "targets", ip)
     os.makedirs(target_dir, exist_ok=True)
+    try:
+        os.chmod(target_dir, 0o755)
+    except PermissionError:
+        pass
     print(f"[*] Workspace created for target: {target_dir}\n")
 
     selection = select_tool_menu()
