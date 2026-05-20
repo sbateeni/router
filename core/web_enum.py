@@ -24,7 +24,7 @@ def run_nuclei(target_url, target_dir):
     port = target_url.split(":")[-1] if ":" in target_url.replace("https://", "").replace("http://", "") else "80"
     log_file = os.path.join(target_dir, f"nuclei_port_{port}.txt")
     
-    command = [NUCLEI_CMD, "-u", target_url, "-t", "default-logins,cves,misconfiguration"]
+    command = [NUCLEI_CMD, "-u", target_url, "-tags", "default-logins,cves,misconfiguration"]
     success, output = run_cmd(command, capture=True, log_file=log_file)
     
     if "no templates provided for scan" in output.lower() or "could not find template" in output.lower():
