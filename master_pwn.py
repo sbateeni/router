@@ -13,30 +13,99 @@ def update_self_repo():
     base_dir = os.path.dirname(os.path.abspath(__file__))
     git_dir = os.path.join(base_dir, ".git")
     print(f"[*] Repository base path: {base_dir}")
-    if os.path.exists(git_dir):
-        print("[*] Updating local repository from GitHub...")
+    if not os.path.exists(git_dir):
+        print("[*] No local Git repository found; skipping repository update.")
+        return
+
+    print("[*] Checking local repository status...")
+    try:
+        status = subprocess.run(
+            ["git", "status", "--porcelain", "--untracked-files=all"],
+            cwd=base_dir,
+            check=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True
+        )
+    except FileNotFoundError:
+        print("[!] Git is not installed or not available in PATH.")
+        return
+    except subprocess.CalledProcessError as exc:
+        print("[!] Unable to check Git status.")
+        if exc.stderr:
+            print(exc.stderr.strip())
+        return
+
+    dirty = bool(status.stdout.strip())
+    stash_created = False
+    if dirty:
+        print("[!] Local changes detected. Stashing changes before pulling updates...")
         try:
-            result = subprocess.run(
-                ["git", "pull", "--ff-only"],
+            stash = subprocess.run(
+                ["git", "stash", "push", "--include-untracked", "-m", "router auto-update"],
                 cwd=base_dir,
                 check=True,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 text=True
             )
-            if result.stdout:
-                print(result.stdout.strip())
-            print("[+] Repository update completed.")
-        except FileNotFoundError:
-            print("[!] Git is not installed or not available in PATH.")
+            stash_output = stash.stdout.strip()
+            if stash_output:
+                print(stash_output)
+            if "No local changes to save" not in stash_output:
+                stash_created = True
         except subprocess.CalledProcessError as exc:
-            print("[!] Failed to pull latest repository updates.")
+            print("[!] Failed to stash local changes.")
+            if exc.stderr:
+                print(exc.stderr.strip())
+            return
+
+    print("[*] Updating local repository from GitHub...")
+    try:
+        result = subprocess.run(
+            ["git", "pull", "--ff-only"],
+            cwd=base_dir,
+            check=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True
+        )
+        if result.stdout:
+            print(result.stdout.strip())
+        if result.stderr:
+            print(result.stderr.strip())
+        print("[+] Repository update completed.")
+    except subprocess.CalledProcessError as exc:
+        print("[!] Failed to pull latest repository updates.")
+        if exc.stdout:
+            print(exc.stdout.strip())
+        if exc.stderr:
+            print(exc.stderr.strip())
+        return
+
+    if stash_created:
+        print("[*] Restoring your local changes...")
+        try:
+            pop = subprocess.run(
+                ["git", "stash", "pop"],
+                cwd=base_dir,
+                check=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True
+            )
+            if pop.stdout:
+                print(pop.stdout.strip())
+            if pop.stderr:
+                print(pop.stderr.strip())
+            print("[+] Local changes restored.")
+        except subprocess.CalledProcessError as exc:
+            print("[!] Failed to restore stashed changes automatically.")
             if exc.stdout:
                 print(exc.stdout.strip())
             if exc.stderr:
                 print(exc.stderr.strip())
-    else:
-        print("[*] No local Git repository found; skipping repository update.")
+            print("[!] Please resolve the stash conflict manually.")
 
 def prompt_next_stage():
     while True:
