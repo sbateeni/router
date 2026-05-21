@@ -2,6 +2,7 @@ import sys
 import os
 import re
 import shutil
+import json
 
 from core.scanner import run_nmap
 from core.utils import run_cmd
@@ -204,9 +205,30 @@ def prompt_next_stage():
         print("Please enter 'y' to continue or 'n' to exit.")
 
 
+def build_context_from_ports(open_ports):
+    context = ScanContext()
+    context.open_ports = open_ports or []
+    context.web_ports = get_web_ports(context.open_ports)
+    context.login_ports = get_login_ports(context.open_ports)
+    return context
+
+
+def load_existing_scan_plan(target_dir):
+    path = os.path.join(target_dir, "AI_SCAN_PLAN.json")
+    if not os.path.exists(path):
+        return None
+    try:
+        with open(path, "r", encoding="utf-8") as fh:
+            return json.load(fh)
+    except (OSError, json.JSONDecodeError):
+        return None
+
+
 def select_tool_menu():
     print("\nAvailable tools:")
-    print("  1) All tools")
+    print("  1) All tools (full scan)")
+    print("")
+    print("  Classic tools (individual):")
     print("  2) Nmap scan only")
     print("  3) Nuclei only")
     print("  4) Dirsearch only")
@@ -214,16 +236,23 @@ def select_tool_menu():
     print("  6) RouterSploit only")
     print("  7) Ingram only")
     print("  8) Hydra only")
-    print("  9) FFUF only (optional)")
-    print(" 10) GAU only (optional)")
-    print(" 11) Exit")
+    print("  9) FFUF only")
+    print(" 10) GAU only")
+    print("")
+    print("  AI tools (individual):")
+    print(" 11) AI scan plan only (Nmap + tool selection)")
+    print(" 12) AI Hydra commands only (Nmap + Hydra plan)")
+    print(" 13) AI RouterSploit + follow-up modules")
+    print(" 14) AI final report only (from existing scan data)")
+    print("")
+    print(" 15) Exit")
 
-    valid_choices = {str(i) for i in range(1, 12)}
+    valid_choices = {str(i) for i in range(1, 16)}
     while True:
-        choice = input("Select an option [1-11]: ").strip()
+        choice = input("Select an option [1-15]: ").strip()
         if choice in valid_choices:
             return int(choice)
-        print("Please enter a number between 1 and 11.")
+        print("Please enter a number between 1 and 15.")
 
 
 def get_web_ports(open_ports):
@@ -308,17 +337,26 @@ def run_ingram_only(ip, target_dir):
     return run_ingram(ip, target_dir)
 
 
-def run_hydra_only(ip, target_dir):
+def run_hydra_only(ip, target_dir, use_ai=False):
     open_ports = run_nmap(ip, target_dir)
     if not open_ports:
         return False
-    login_ports = get_login_ports(open_ports)
-    web_ports = get_web_ports(open_ports)
+    context = build_context_from_ports(open_ports)
+    login_ports = context.login_ports
+    web_ports = context.web_ports
+    hydra_plan = None
+    if use_ai:
+        scan_plan = load_existing_scan_plan(target_dir) or plan_scan_tools(
+            ip, target_dir, context, use_ai=True,
+        )
+        hydra_plan = recommend_hydra_commands(
+            ip, target_dir, context, scan_plan=scan_plan, use_ai=True,
+        )
     success = False
     if login_ports:
         success = run_hydra(ip, login_ports, target_dir) or success
     if web_ports:
-        success = run_web_hydra(ip, web_ports, target_dir) or success
+        success = run_web_hydra(ip, web_ports, target_dir, hydra_plan=hydra_plan) or success
     if not login_ports and not web_ports:
         print("[-] No login or web ports found for Hydra.")
     return success
@@ -367,6 +405,45 @@ def run_gau_only(ip, target_dir):
 
     if discovered:
         print(f"[+] GAU discovered {len(set(discovered))} unique URLs.")
+    return False
+
+
+def run_ai_scan_plan_only(ip, target_dir, use_ai=True):
+    print("\n>>> TOOL: AI scan plan only")
+    open_ports = run_nmap(ip, target_dir)
+    context = build_context_from_ports(open_ports)
+    context.ai_scan_plan = plan_scan_tools(ip, target_dir, context, use_ai=use_ai)
+    save_scan_context(target_dir, context, "AI Scan Plan", get_profile_name(), False)
+    print(f"[+] Saved: {os.path.join(target_dir, 'AI_SCAN_PLAN.json')}")
+    return False
+
+
+def run_ai_hydra_plan_only(ip, target_dir, use_ai=True):
+    print("\n>>> TOOL: AI Hydra commands only")
+    open_ports = run_nmap(ip, target_dir)
+    context = build_context_from_ports(open_ports)
+    scan_plan = load_existing_scan_plan(target_dir) or plan_scan_tools(
+        ip, target_dir, context, use_ai=use_ai,
+    )
+    context.ai_scan_plan = scan_plan
+    context.ai_hydra_plan = recommend_hydra_commands(
+        ip, target_dir, context, scan_plan=scan_plan, use_ai=use_ai,
+    )
+    save_scan_context(target_dir, context, "AI Hydra Plan", get_profile_name(), False)
+    print(f"[+] Saved: {os.path.join(target_dir, 'AI_HYDRA_PLAN.json')}")
+    print(f"[+] Saved: {os.path.join(target_dir, 'AI_HYDRA_COMMANDS.txt')}")
+    return False
+
+
+def run_ai_routersploit_plan_only(ip, target_dir):
+    print("\n>>> TOOL: AI RouterSploit + follow-up")
+    return run_routersploit_with_ai_followup(ip, target_dir, use_ai=True)
+
+
+def run_ai_report_only(ip, target_dir):
+    print("\n>>> TOOL: AI final report only")
+    from core.ai_analyst import generate_ai_analysis
+    generate_ai_analysis(ip, target_dir)
     return False
 
 
@@ -551,6 +628,10 @@ def should_run_ingram(open_ports):
 
 def run_selected_tool(selection, ip, target_dir, profile="normal", use_ai=False):
     set_scan_profile(profile)
+    ai_individual = {11, 12, 13, 14}
+    if selection in ai_individual:
+        use_ai = True
+
     if selection == 1:
         return run_all_tools(ip, target_dir, selection=selection, use_ai=use_ai)
     if selection == 2:
@@ -566,9 +647,18 @@ def run_selected_tool(selection, ip, target_dir, profile="normal", use_ai=False)
     if selection == 7:
         return run_ingram_only(ip, target_dir)
     if selection == 8:
-        return run_hydra_only(ip, target_dir)
+        return run_hydra_only(ip, target_dir, use_ai=use_ai)
     if selection == 9:
         return run_ffuf_only(ip, target_dir)
     if selection == 10:
         return run_gau_only(ip, target_dir)
+    if selection == 11:
+        return run_ai_scan_plan_only(ip, target_dir, use_ai=True)
+    if selection == 12:
+        return run_ai_hydra_plan_only(ip, target_dir, use_ai=True)
+    if selection == 13:
+        return run_ai_routersploit_plan_only(ip, target_dir)
+    if selection == 14:
+        run_ai_report_only(ip, target_dir)
+        return False
     return False

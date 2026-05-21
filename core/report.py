@@ -405,7 +405,11 @@ MODE_LABELS = {
     8: "Hydra only",
     9: "FFUF only",
     10: "GAU only",
-    11: "Exit",
+    11: "AI scan plan only",
+    12: "AI Hydra commands only",
+    13: "AI RouterSploit + follow-up",
+    14: "AI final report only",
+    15: "Exit",
 }
 
 

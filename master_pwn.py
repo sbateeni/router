@@ -352,9 +352,13 @@ def main():
         print("[*] AI enabled: smart tool selection, Hydra hints, RouterSploit follow-up.\n")
 
     selection = 1 if args.auto else select_tool_menu()
-    if selection == 11:
+    if selection == 15:
         print("[-] Exiting without running any tools.")
         return
+
+    ai_individual_modes = {11, 12, 13, 14}
+    if selection in ai_individual_modes:
+        use_ai = True
 
     exploited = run_selected_tool(selection, ip, target_dir, profile=scan_profile, use_ai=use_ai)
 
@@ -364,7 +368,12 @@ def main():
     )
 
     ai_analysis = None
-    if use_ai:
+    if selection == 14:
+        ai_path = os.path.join(target_dir, "AI_ANALYSIS.txt")
+        if os.path.exists(ai_path):
+            with open(ai_path, "r", encoding="utf-8") as fh:
+                ai_analysis = fh.read()
+    elif use_ai and selection not in ai_individual_modes:
         ai_analysis = generate_ai_analysis(ip, target_dir)
 
     print("\n======================================================")
