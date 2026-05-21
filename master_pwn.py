@@ -8,9 +8,9 @@ import hashlib
 import importlib.util
 from core.runner import select_tool_menu, run_selected_tool
 from core.web_enum import update_nuclei_templates, ensure_dirsearch_deps
-from core.utils import missing_python_modules, reset_target_workspace
+from core.utils import missing_python_modules, reset_target_workspace, install_python_packages, ensure_routersploit_deps
 from core.report import generate_scan_report
-from core.notify import load_dotenv, notify_scan_complete
+from core.notify import load_dotenv, notify_scan_complete, telegram_placeholder_keys_present
 from core.ai_analyst import generate_ai_analysis, ai_configured, ai_placeholder_keys_present
 
 
@@ -41,8 +41,9 @@ DEFAULT_BRANCH = "main"
 
 
 def run_git(args, base_dir, check=True):
+    safe_dir = os.path.abspath(base_dir)
     result = subprocess.run(
-        ["git"] + args,
+        ["git", "-c", f"safe.directory={safe_dir}"] + args,
         cwd=base_dir,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
@@ -59,10 +60,9 @@ def run_git(args, base_dir, check=True):
 
 
 def print_git_sync_fix(base_dir):
-    user = current_user_name()
     print("\n[!] Unable to sync repository automatically.")
-    print("[!] Run these commands once on Kali:\n")
-    print(f"    sudo chown -R {user}:{user} {base_dir}")
+    print("[!] Run these commands once on Kali (as normal user kali, NOT sudo):\n")
+    print(f"    sudo chown -R kali:kali {base_dir}")
     print(f"    cd {base_dir}")
     print("    git fetch origin")
     print(f"    git checkout -B {DEFAULT_BRANCH} origin/{DEFAULT_BRANCH}")
@@ -239,7 +239,11 @@ def auto_install_tools():
             if os.path.exists(git_dir):
                 print(f"[*] Updating {tool_name} to latest version...")
                 try:
-                    subprocess.run(["git", "pull", "--ff-only"], cwd=tool_path, check=True)
+                    subprocess.run(
+                        ["git", "-c", f"safe.directory={os.path.abspath(tool_path)}", "pull", "--ff-only"],
+                        cwd=tool_path,
+                        check=True,
+                    )
                 except subprocess.CalledProcessError:
                     print(f"[!] Failed to update {tool_name}. Skipping.")
             
@@ -275,17 +279,19 @@ def auto_install_tools():
             pip_cmd = [sys.executable, "-m", "pip", "install", "-r", req_path, "--break-system-packages"]
             result = subprocess.run(pip_cmd)
             if result.returncode != 0:
-                print("[!] Python requirements installation failed. Please check the output above.")
-                return
+                print("[!] Full requirements install failed; installing critical packages individually...")
+                install_python_packages([
+                    "mysql-connector-python", "defusedxml", "colorama", "requests",
+                    "pycryptodome", "telnetlib3", "paramiko",
+                ])
         if missing_modules:
-            subprocess.run([
-                sys.executable, "-m", "pip", "install",
+            install_python_packages([
                 "mysql-connector-python", "defusedxml", "colorama",
-                "--break-system-packages",
             ])
         with open(flag_file, "w", encoding="utf-8") as f:
             f.write(req_hash or "")
 
+    ensure_routersploit_deps()
     ensure_dirsearch_deps()
             
     print("[+] All tools and dependencies are ready!\n")
@@ -295,6 +301,8 @@ def main():
     load_dotenv(repo_base_dir())
     if ai_placeholder_keys_present():
         print("[!] .env still has placeholder API keys (your_*_here). Replace them with real keys for AI.\n")
+    if telegram_placeholder_keys_present():
+        print("[!] .env still has placeholder Telegram values. Replace them for notifications.\n")
 
     # تحديث الكود من GitHub قبل قراءة أي معاملات جديدة (مثل --auto)
     if update_self_repo():

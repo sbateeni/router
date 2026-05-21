@@ -3,6 +3,7 @@ import os
 import re
 
 from core.ai_analyst import ai_configured, call_ai_json, _read_optional
+from core.utils import normalize_routersploit_module, sanitize_routersploit_modules
 
 SCAN_PLAN_FILE = "AI_SCAN_PLAN.json"
 HYDRA_PLAN_FILE = "AI_HYDRA_PLAN.json"
@@ -306,13 +307,13 @@ def _write_hydra_text_plan(target_dir, ip, plan):
 def _parse_routersploit_modules(text):
     modules = []
     patterns = [
-        r"(?:exploits|scanners|creds)/[\w./-]+",
-        r"routers/[\w./-]+",
+        r"routersploit/modules/((?:exploits|creds)/[\w./-]+)",
+        r"((?:exploits|creds)/[\w./-]+)",
     ]
     for pattern in patterns:
         for match in re.findall(pattern, text):
-            module = match.strip(".")
-            if module not in modules:
+            module = normalize_routersploit_module(match)
+            if module and module not in modules:
                 modules.append(module)
     return modules
 
@@ -334,7 +335,7 @@ def heuristic_routersploit_plan(target_dir):
 
     return {
         "promising_modules": promising[:5],
-        "modules_to_run": modules[:3],
+        "modules_to_run": sanitize_routersploit_modules(modules)[:3],
         "summary_ar": "تحليل محلي لملف RouterSploit.",
         "source": "heuristic",
     }
@@ -364,8 +365,9 @@ Return ONLY valid JSON:
 
 Rules:
 - Include modules marked 'Could not be verified' — they may still work manually
-- modules_to_run: max 3 RouterSploit module paths to try next
-- Use exact module paths from the log when possible
+- modules_to_run: max 3 RouterSploit exploit/creds module paths to try next
+- Use paths like exploits/routers/vendor/module_name (NO .py extension)
+- NEVER include scanners/autopwn in modules_to_run
 - Do not invent modules not suggested by the scan
 
 === ROUTERSPLOIT LOG ===
@@ -383,6 +385,19 @@ Rules:
     modules = plan.get("modules_to_run")
     if not isinstance(modules, list) or not modules:
         plan["modules_to_run"] = heuristic_routersploit_plan(target_dir).get("modules_to_run", [])
+
+    plan["modules_to_run"] = sanitize_routersploit_modules(plan.get("modules_to_run"))
+    promising = []
+    for entry in plan.get("promising_modules", []):
+        if isinstance(entry, dict):
+            module = normalize_routersploit_module(entry.get("module"))
+            if module:
+                promising.append({**entry, "module": module})
+        else:
+            module = normalize_routersploit_module(entry)
+            if module:
+                promising.append(module)
+    plan["promising_modules"] = promising[:5]
 
     _write_routersploit_plan(target_dir, ip, plan)
     print(f"[+] AI RouterSploit plan saved ({plan.get('source', 'unknown')})")

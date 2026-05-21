@@ -13,6 +13,25 @@ CRITICAL_MODULES = (
     "defusedxml",
 )
 
+ROUTERSPLOIT_PACKAGES = (
+    "pycryptodome",
+    "paramiko",
+    "requests",
+)
+
+PLACEHOLDER_MARKERS = ("your_", "_here", "changeme", "placeholder", "example")
+
+
+def looks_like_placeholder(value):
+    if not value or not str(value).strip():
+        return True
+    lowered = str(value).strip().lower()
+    return any(marker in lowered for marker in PLACEHOLDER_MARKERS)
+
+
+def valid_env_value(value):
+    return bool(value) and not looks_like_placeholder(value)
+
 
 def ensure_parent_dir(file_path):
     directory = os.path.dirname(file_path)
@@ -51,6 +70,70 @@ def missing_python_modules():
         except ImportError:
             missing.append(module_name)
     return missing
+
+
+def routersploit_python_ready():
+    try:
+        from Crypto.Cipher import AES  # noqa: F401
+        return True
+    except ImportError:
+        return False
+
+
+def install_python_packages(packages):
+    if not packages:
+        return True
+    command = [
+        PYTHON, "-m", "pip", "install",
+        *packages,
+        "--break-system-packages",
+        "--ignore-installed",
+    ]
+    print(f"[*] Installing Python packages: {', '.join(packages)}")
+    result = subprocess.run(command)
+    return result.returncode == 0
+
+
+def ensure_routersploit_deps():
+    if routersploit_python_ready():
+        return True
+    print("[*] RouterSploit needs pycryptodome (Crypto module)...")
+    if not install_python_packages(list(ROUTERSPLOIT_PACKAGES)):
+        print("[!] Failed to install RouterSploit Python dependencies.")
+        return False
+    if routersploit_python_ready():
+        print("[+] RouterSploit Python dependencies are ready.")
+        return True
+    print("[!] pycryptodome is still missing after install.")
+    return False
+
+
+SKIP_RSF_MODULES = {"scanners/autopwn"}
+
+
+def normalize_routersploit_module(raw):
+    if not raw:
+        return None
+    module = str(raw).strip().replace("\\", "/")
+    if "routersploit/modules/" in module:
+        module = module.split("routersploit/modules/", 1)[1]
+    module = module.replace(".py", "").strip("/")
+    if not module or module in SKIP_RSF_MODULES:
+        return None
+    if module.startswith("scanners/"):
+        return None
+    if not module.startswith(("exploits/", "creds/")):
+        return None
+    return module
+
+
+def sanitize_routersploit_modules(modules):
+    cleaned = []
+    for entry in modules or []:
+        module = normalize_routersploit_module(entry)
+        if module and module not in cleaned:
+            cleaned.append(module)
+    return cleaned
 
 
 def run_cmd(command, capture=False, log_file=None):

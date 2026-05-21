@@ -1,6 +1,8 @@
 import os
 import requests
 
+from core.utils import looks_like_placeholder, valid_env_value
+
 TELEGRAM_API = "https://api.telegram.org/bot{token}/{method}"
 MAX_MESSAGE_LEN = 3900
 
@@ -26,7 +28,15 @@ def load_dotenv(base_dir):
 
 
 def telegram_configured():
-    return bool(os.environ.get("TELEGRAM_BOT_TOKEN") and os.environ.get("TELEGRAM_CHAT_ID"))
+    token = os.environ.get("TELEGRAM_BOT_TOKEN", "")
+    chat_id = os.environ.get("TELEGRAM_CHAT_ID", "")
+    return valid_env_value(token) and valid_env_value(chat_id)
+
+
+def telegram_placeholder_keys_present():
+    token = os.environ.get("TELEGRAM_BOT_TOKEN", "")
+    chat_id = os.environ.get("TELEGRAM_CHAT_ID", "")
+    return (token and looks_like_placeholder(token)) or (chat_id and looks_like_placeholder(chat_id))
 
 
 def _telegram_request(method, token, payload=None, files=None):
@@ -97,6 +107,10 @@ def send_telegram_document(file_path, caption=""):
 
 
 def notify_scan_complete(ip, target_dir, report_path, exploited, profile="normal", ai_analysis=None):
+    if telegram_placeholder_keys_present():
+        print("[!] Telegram skipped: .env still has placeholder bot token or chat id.")
+        return False
+
     status = "SUCCESS - likely exploit/findings" if exploited else "COMPLETED - no confirmed exploit"
     summary = (
         "Router Auto-Pwn scan finished\n"
