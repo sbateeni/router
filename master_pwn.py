@@ -9,6 +9,7 @@ import importlib.util
 from core.runner import select_tool_menu, run_selected_tool
 from core.web_enum import update_nuclei_templates, ensure_dirsearch_deps
 from core.utils import missing_python_modules
+from core.report import generate_scan_report
 
 def update_self_repo():
     base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -268,6 +269,8 @@ def main():
 
     exploited = run_selected_tool(selection, ip, target_dir)
 
+    report_path = generate_scan_report(ip, target_dir, selection, exploited)
+
     print("\n======================================================")
     if selection == 2:
         print("[*] Nmap-only execution completed.")
@@ -277,6 +280,8 @@ def main():
         print("[-] Tool execution completed without finding a successful exploit.")
 
     print(f"[*] All output logs for {ip} have been saved in: {target_dir}")
+    print(f"[*] Results summary report: {report_path}")
+    print("[*] Share RESULTS_SUMMARY.txt to review tool health and findings.")
     print("======================================================")
 
 if __name__ == "__main__":
