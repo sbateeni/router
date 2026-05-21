@@ -302,8 +302,14 @@ def main():
         action="store_true",
         help="Run all tools automatically without showing the menu",
     )
+    parser.add_argument(
+        "--deep",
+        action="store_true",
+        help="Use deep/full-power scan profile (slower, more thorough)",
+    )
     args = parser.parse_args()
     ip = args.target
+    scan_profile = "deep" if args.deep else "normal"
 
     auto_install_tools()
     # تأكد من أن قوالب Nuclei محدثة عند بداية التشغيل
@@ -328,15 +334,20 @@ def main():
 
     if args.auto:
         print("[*] Auto mode enabled: running all tools without menu.\n")
+    if args.deep:
+        print("[*] Deep scan profile enabled: all tools will run at full power.\n")
 
     selection = 1 if args.auto else select_tool_menu()
     if selection == 11:
         print("[-] Exiting without running any tools.")
         return
 
-    exploited = run_selected_tool(selection, ip, target_dir)
+    exploited = run_selected_tool(selection, ip, target_dir, profile=scan_profile)
 
-    report_path = generate_scan_report(ip, target_dir, selection, exploited)
+    report_path = generate_scan_report(
+        ip, target_dir, selection, exploited,
+        current_phase="Completed", profile=scan_profile,
+    )
 
     print("\n======================================================")
     if selection == 2:

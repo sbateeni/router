@@ -6,6 +6,7 @@ import sys
 import importlib.util
 
 from core.utils import run_cmd, TOOLS_DIR, PYTHON, missing_python_modules
+from core.scan_config import get_scan_profile
 
 DIRSEARCH_PATH = os.path.join(TOOLS_DIR, "dirsearch", "dirsearch.py")
 DIRSEARCH_REQUIREMENTS = os.path.join(TOOLS_DIR, "dirsearch", "requirements.txt")
@@ -129,7 +130,8 @@ def parse_nuclei_jsonl(jsonl_path):
 
 
 def run_nuclei(target_url, target_dir):
-    print("\n[+] Running Nuclei (Vulnerability Scanning)...")
+    profile = get_scan_profile()
+    print(f"\n[+] Running Nuclei (Vulnerability Scanning) [{profile['label']}]...")
     port = target_url.split(":")[-1] if ":" in target_url.replace("https://", "").replace("http://", "") else "80"
     log_txt = os.path.join(target_dir, f"nuclei_port_{port}.txt")
     log_jsonl = os.path.join(target_dir, f"nuclei_port_{port}.jsonl")
@@ -151,7 +153,10 @@ def run_nuclei(target_url, target_dir):
         return run_cmd(command, capture=True, log_file=stdout_log)
 
     base_cmd = [NUCLEI_CMD, "-u", target_url, "-no-color"]
-    tag_cmd = base_cmd + ["-tags", "default-logins,cves,misconfiguration"]
+    if profile["nuclei_all_templates"]:
+        tag_cmd = base_cmd
+    else:
+        tag_cmd = base_cmd + ["-tags", "default-logins,cves,misconfiguration"]
 
     success, output = run_scan(tag_cmd, log_jsonl)
     findings = parse_nuclei_jsonl(log_jsonl)
@@ -196,7 +201,8 @@ def run_nuclei(target_url, target_dir):
 
 
 def run_dirsearch(target_url, target_dir):
-    print("\n[+] Running Dirsearch (Path Enumeration)...")
+    profile = get_scan_profile()
+    print(f"\n[+] Running Dirsearch (Path Enumeration) [{profile['label']}]...")
     if not os.path.exists(DIRSEARCH_PATH):
         print(f"[-] Dirsearch not found at {DIRSEARCH_PATH}")
         return []
@@ -214,7 +220,7 @@ def run_dirsearch(target_url, target_dir):
         "-u", target_url,
         "-e", "php,html,bak,js,txt,xml,conf",
         "-x", "404,500",
-        "-t", "50",
+        "-t", str(profile["dirsearch_threads"]),
         "-o", log_file,
         "--no-color",
     ]
@@ -261,8 +267,13 @@ def run_sqlmap(target_url, target_dir):
         print(f"[-] SQLMap not found at {SQLMAP_PATH}")
         return False
 
+    profile = get_scan_profile()
     log_file = os.path.join(target_dir, "sqlmap_scan.txt")
-    command = [PYTHON, SQLMAP_PATH, "-u", target_url, "--forms", "--batch", "--level=2", "--risk=2"]
+    command = [
+        PYTHON, SQLMAP_PATH, "-u", target_url, "--forms", "--batch",
+        f"--level={profile['sqlmap_level']}", f"--risk={profile['sqlmap_risk']}",
+        "--crawl=2",
+    ]
     success, output = run_cmd(command, capture=True, log_file=log_file)
 
     if output:

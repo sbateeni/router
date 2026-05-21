@@ -8,6 +8,9 @@ from core.utils import run_cmd
 from core.web_enum import run_nuclei, run_dirsearch, run_sqlmap, run_searchsploit
 from core.exploitation import run_routersploit, run_ingram
 from core.bruteforce import run_hydra, run_web_hydra
+from core.scan_config import set_scan_profile, get_profile_name
+from core.context_store import save_scan_context
+from core.report import generate_scan_report
 
 
 class ScanContext:
@@ -105,19 +108,40 @@ def run_gau(target_url, target_dir):
 
 
 def find_common_wordlist():
-    candidates = [
-        "/usr/share/wordlists/dirb/common.txt",
-        "/usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt",
-        "/usr/share/wordlists/rockyou.txt",
-        "/usr/share/seclists/Discovery/Web-Content/common.txt",
-    ]
+    from core.scan_config import get_scan_profile
+    profile = get_scan_profile()
+    if profile["ffuf_wordlist"] == "medium":
+        candidates = [
+            "/usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt",
+            "/usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt",
+            "/usr/share/seclists/Discovery/Web-Content/common.txt",
+            "/usr/share/wordlists/dirb/common.txt",
+        ]
+    else:
+        candidates = [
+            "/usr/share/wordlists/dirb/common.txt",
+            "/usr/share/seclists/Discovery/Web-Content/common.txt",
+            "/usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt",
+            "/usr/share/wordlists/rockyou.txt",
+        ]
     for path in candidates:
         if os.path.exists(path):
             return path
     return None
 
 
+def refresh_report(ip, target_dir, selection, exploited, context, phase):
+    save_scan_context(target_dir, context, phase, get_profile_name(), exploited)
+    report_path = generate_scan_report(
+        ip, target_dir, selection, exploited, current_phase=phase, profile=get_profile_name()
+    )
+    print(f"[*] Report updated after {phase}: {report_path}")
+    return report_path
+
+
 def run_ffuf(target_url, target_dir):
+    from core.scan_config import get_scan_profile
+    profile = get_scan_profile()
     if not is_tool_available("ffuf"):
         print("[!] ffuf is not installed; skipping FFUF enumeration.")
         return []
@@ -134,7 +158,7 @@ def run_ffuf(target_url, target_dir):
     fuzz_url = normalize_url(target_url) + "/FUZZ"
     command = [
         "ffuf", "-u", fuzz_url, "-w", wordlist,
-        "-t", "50", "-s",
+        "-t", str(profile["ffuf_threads"]), "-s",
         "-o", json_file, "-of", "json",
         "-mc", "200,204,301,302,307,401,403,405,500",
     ]
@@ -342,9 +366,9 @@ def run_gau_only(ip, target_dir):
     return False
 
 
-def run_all_tools(ip, target_dir):
+def run_all_tools(ip, target_dir, selection=1):
     context = ScanContext()
-    print("\n>>> PHASE 1: Scanning & Reconnaissance")
+    print(f"\n>>> PHASE 1: Scanning & Reconnaissance [{get_profile_name()}]")
     try:
         context.open_ports = run_nmap(ip, target_dir)
     except KeyboardInterrupt:
@@ -361,7 +385,6 @@ def run_all_tools(ip, target_dir):
         context.web_ports = get_web_ports(context.open_ports)
         context.login_ports = get_login_ports(context.open_ports)
 
-        # Link Nmap results to SearchSploit and Metasploit lookups
         try:
             service_queries = extract_service_queries(context.open_ports)
             if service_queries:
@@ -369,10 +392,11 @@ def run_all_tools(ip, target_dir):
                 for q in service_queries:
                     found = run_searchsploit(q, target_dir)
                     if found:
-                        # If searchsploit returned something, try a metasploit search as well
                         run_metasploit_search(q, target_dir)
         except Exception:
             pass
+
+    refresh_report(ip, target_dir, selection, context.exploited, context, "Phase 1 - Reconnaissance")
 
     if context.web_ports:
         print("\n======================================================")
@@ -414,8 +438,10 @@ def run_all_tools(ip, target_dir):
                 query_urls = [build_url(ip, port) for port in context.web_ports]
 
             if query_urls:
-                print("\n[+] Running Nuclei on discovered URL candidates...")
-                for target_url in query_urls[:20]:
+                from core.scan_config import get_scan_profile
+                url_limit = get_scan_profile()["nuclei_url_limit"]
+                print(f"\n[+] Running Nuclei on discovered URL candidates (limit: {url_limit})...")
+                for target_url in query_urls[:url_limit]:
                     if run_nuclei(target_url, target_dir):
                         context.exploited = True
 
@@ -428,6 +454,8 @@ def run_all_tools(ip, target_dir):
             if not prompt_next_stage():
                 print("\n[-] Exiting as requested.")
                 sys.exit(0)
+
+        refresh_report(ip, target_dir, selection, context.exploited, context, "Phase 2 - Web Enumeration")
 
     print("\n======================================================")
     print(">>> PHASE 3: Router & Device Exploitation")
@@ -445,6 +473,8 @@ def run_all_tools(ip, target_dir):
             print("\n[-] Exiting as requested.")
             sys.exit(0)
 
+    refresh_report(ip, target_dir, selection, context.exploited, context, "Phase 3 - Exploitation")
+
     if context.login_ports or context.web_ports:
         print("\n======================================================")
         print(">>> PHASE 4: Credential Brute-Forcing (Last Resort)")
@@ -458,6 +488,8 @@ def run_all_tools(ip, target_dir):
             if not prompt_next_stage():
                 print("\n[-] Exiting as requested.")
                 sys.exit(0)
+
+    refresh_report(ip, target_dir, selection, context.exploited, context, "Phase 4 - Brute Force")
 
     return context.exploited
 
@@ -475,9 +507,10 @@ def should_run_ingram(open_ports):
     return False
 
 
-def run_selected_tool(selection, ip, target_dir):
+def run_selected_tool(selection, ip, target_dir, profile="normal"):
+    set_scan_profile(profile)
     if selection == 1:
-        return run_all_tools(ip, target_dir)
+        return run_all_tools(ip, target_dir, selection=selection)
     if selection == 2:
         return run_nmap_only(ip, target_dir)
     if selection == 3:

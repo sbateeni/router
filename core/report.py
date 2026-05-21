@@ -30,7 +30,7 @@ SUCCESS_PATTERNS = [
 TOOL_CHECKS = [
     {
         "name": "Nmap",
-        "outputs": ["nmap_scan.txt"],
+        "outputs": ["nmap_scan.txt", "nmap_deep_scan.txt", "recon_summary.json"],
         "findings_if": lambda text: False,
         "ran_if": lambda text: "/tcp" in text and "open" in text.lower(),
     },
@@ -282,10 +282,15 @@ def build_report_text(ip, target_dir, selection, exploited, payload):
         "============================================================",
         f"Target IP      : {ip}",
         f"Generated At   : {payload['generated_at']}",
+        f"Scan Profile   : {payload.get('profile', 'normal')}",
+        f"Last Phase     : {payload.get('current_phase', 'Final')}",
         f"Mode Selected  : {payload['mode_label']}",
         f"Overall Status : {payload['overall_status']}",
         f"Exploit Found  : {'YES' if exploited else 'NO'}",
         f"Report Folder  : {target_dir}",
+        "",
+        "Context File   : scan_context.json (shared data for all tools)",
+        "Recon File     : recon_summary.json (from Nmap)",
         "",
         "------------------------------------------------------------",
         " QUICK OVERVIEW",
@@ -420,7 +425,7 @@ def list_target_files(target_dir):
     return sorted(files), sizes
 
 
-def generate_scan_report(ip, target_dir, selection, exploited):
+def generate_scan_report(ip, target_dir, selection, exploited, current_phase="Final", profile="normal"):
     tool_results = [assess_tool(target_dir, tool) for tool in TOOL_CHECKS]
     nuclei_findings = count_nuclei_findings(target_dir)
     actionable_nuclei = significant_nuclei_findings(nuclei_findings)
@@ -449,6 +454,8 @@ def generate_scan_report(ip, target_dir, selection, exploited):
         "mode_label": MODE_LABELS.get(selection, f"Mode {selection}"),
         "exploited": exploited,
         "overall_status": overall_status(tool_results, exploited),
+        "profile": profile,
+        "current_phase": current_phase,
         "nmap": parse_nmap_summary(target_dir),
         "tools": tool_results,
         "nuclei_findings": nuclei_findings,

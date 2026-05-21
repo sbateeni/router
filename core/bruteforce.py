@@ -2,6 +2,7 @@ import os
 import shutil
 
 from core.utils import run_cmd, TOOLS_DIR
+from core.scan_config import get_scan_profile
 
 HYDRA_CMD = "hydra"
 DEFAULT_USER = "admin"
@@ -36,6 +37,7 @@ def hydra_found_credentials(output):
 
 
 def run_hydra(ip, login_ports, target_dir):
+    profile = get_scan_profile()
     passwords_file = resolve_password_file()
     if not passwords_file:
         print("[!] No password wordlist found for Hydra.")
@@ -53,7 +55,7 @@ def run_hydra(ip, login_ports, target_dir):
 
         target_str = f"{service}://{ip}:{port}"
         log_file = os.path.join(target_dir, f"hydra_{service}_{port}.txt")
-        command = [HYDRA_CMD, "-l", DEFAULT_USER, "-P", passwords_file, "-t", "4", "-f", target_str]
+        command = [HYDRA_CMD, "-l", DEFAULT_USER, "-P", passwords_file, "-t", str(profile["hydra_threads"]), "-f", target_str]
         success, output = run_cmd(command, capture=True, log_file=log_file)
         if output:
             print(output)
@@ -67,6 +69,7 @@ def run_hydra(ip, login_ports, target_dir):
 
 
 def run_web_hydra(ip, web_ports, target_dir):
+    profile = get_scan_profile()
     if not shutil.which(HYDRA_CMD):
         print("[!] Hydra is not installed; skipping web login brute-force.")
         return False
@@ -82,11 +85,11 @@ def run_web_hydra(ip, web_ports, target_dir):
         service = "https-get" if port in [443, 8443] else "http-get"
         print(f"\n[+] Brute-forcing router web login on port {port}...")
 
-        for user in COMMON_USERS[:3]:
+        for user in COMMON_USERS[: profile["hydra_users"]]:
             log_file = os.path.join(target_dir, f"hydra_web_{port}_{user}.txt")
             command = [
                 HYDRA_CMD, "-l", user, "-P", passwords_file,
-                "-t", "4", "-f", "-s", str(port),
+                "-t", str(profile["hydra_threads"]), "-f", "-s", str(port),
                 ip, service,
             ]
             success, output = run_cmd(command, capture=True, log_file=log_file)
@@ -100,7 +103,7 @@ def run_web_hydra(ip, web_ports, target_dir):
         if success_flag:
             break
 
-        for form in ROUTER_HTTP_FORMS[:4]:
+        for form in ROUTER_HTTP_FORMS[: profile["hydra_forms"]]:
             form_name = form.split(":")[0].replace("/", "_").strip("_") or "root"
             log_file = os.path.join(target_dir, f"hydra_web_{port}_form_{form_name}.txt")
             users_file = os.path.join(target_dir, f"hydra_users_{port}.txt")
@@ -108,7 +111,7 @@ def run_web_hydra(ip, web_ports, target_dir):
                 fh.write("\n".join(COMMON_USERS))
             command = [
                 HYDRA_CMD, "-L", users_file, "-P", passwords_file,
-                "-t", "4", "-f", "-s", str(port),
+                "-t", str(profile["hydra_threads"]), "-f", "-s", str(port),
                 ip, "http-post-form", form,
             ]
             success, output = run_cmd(command, capture=True, log_file=log_file)
