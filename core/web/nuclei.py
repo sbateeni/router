@@ -3,11 +3,8 @@ import json
 import os
 
 from core.scan_config import get_scan_profile
-from core.utils import TOOLS_DIR, run_cmd
-
-NUCLEI_CMD = os.path.join(TOOLS_DIR, "nuclei", "v2", "cmd", "nuclei", "nuclei")
-if not os.path.exists(NUCLEI_CMD):
-    NUCLEI_CMD = "nuclei"
+from core.utils import run_cmd
+from core.web.nuclei_config import build_nuclei_base_cmd, custom_template_dir, nuclei_tags_for_profile, resolve_nuclei_cmd
 
 SIGNIFICANT_NUCLEI_SEVERITIES = {"critical", "high", "medium"}
 ACTIONABLE_NUCLEI_TAGS = ("default-login", "default-logins", "cve", "rce", "auth-bypass")
@@ -37,29 +34,18 @@ def nuclei_templates_installed():
         os.path.expanduser("~/.config/nuclei/templates"),
         os.path.join(os.path.expanduser("~"), ".local", "nuclei-templates"),
         os.path.join(os.path.expanduser("~"), ".local", "share", "nuclei-templates"),
-        os.path.join(TOOLS_DIR, "nuclei-templates"),
         "/usr/share/nuclei-templates",
     ]
     for c in candidates:
         if os.path.exists(c) and any(glob.glob(os.path.join(c, "**", "*.yaml"), recursive=True)):
             return True
-    try:
-        home = os.path.expanduser("~")
-        patterns = [
-            os.path.join(home, "**", "nuclei-templates", "**", "*.yaml"),
-            os.path.join(home, "**", "nuclei", "**", "*.yaml"),
-        ]
-        for pat in patterns:
-            if any(glob.glob(pat, recursive=True)):
-                return True
-    except Exception:
-        pass
-    return False
+    return custom_template_dir() is not None
 
 
 def update_nuclei_templates():
-    print("\n[+] Ensuring Nuclei templates are up-to-date...")
-    commands = [[NUCLEI_CMD, "-ut"], [NUCLEI_CMD, "-update-templates"], [NUCLEI_CMD, "-ut", "-no-colors"]]
+    nuclei_cmd = resolve_nuclei_cmd()
+    print(f"\n[+] Ensuring Nuclei templates are up-to-date...")
+    commands = [[nuclei_cmd, "-ut"], [nuclei_cmd, "-update-templates"], [nuclei_cmd, "-ut", "-no-colors"]]
     success = False
     for command in commands:
         success, output = run_cmd(command, capture=True)
@@ -93,10 +79,15 @@ def parse_nuclei_jsonl(jsonl_path):
 def run_nuclei(target_url, target_dir):
     profile = get_scan_profile()
     print(f"\n[+] Running Nuclei (Vulnerability Scanning) [{profile['label']}]...")
+    custom = custom_template_dir()
+    if custom:
+        print(f"[*] Custom templates: {custom}")
+
     port = target_url.split(":")[-1] if ":" in target_url.replace("https://", "").replace("http://", "") else "80"
     log_txt = os.path.join(target_dir, f"nuclei_port_{port}.txt")
     log_jsonl = os.path.join(target_dir, f"nuclei_port_{port}.jsonl")
     stdout_log = os.path.join(target_dir, f"nuclei_port_{port}_stdout.txt")
+    nuclei_cmd = resolve_nuclei_cmd()
 
     if not nuclei_templates_installed():
         ok = update_nuclei_templates()
@@ -105,7 +96,7 @@ def run_nuclei(target_url, target_dir):
             return False
 
     validate_log = os.path.join(target_dir, "nuclei_validate.txt")
-    run_cmd([NUCLEI_CMD, "-validate"], capture=True, log_file=validate_log)
+    run_cmd([nuclei_cmd, "-validate"], capture=True, log_file=validate_log)
 
     def run_scan(base_command, export_path):
         if os.path.exists(export_path):
@@ -113,13 +104,14 @@ def run_nuclei(target_url, target_dir):
         command = base_command + ["-silent", "-jle", export_path]
         return run_cmd(command, capture=True, log_file=stdout_log)
 
-    base_cmd = [NUCLEI_CMD, "-u", target_url, "-no-color"]
-    tag_cmd = base_cmd if profile["nuclei_all_templates"] else base_cmd + ["-tags", "default-logins,cves,misconfiguration"]
+    base_cmd = build_nuclei_base_cmd(target_url)
+    tags = nuclei_tags_for_profile(profile)
+    tag_cmd = list(base_cmd) if tags is None else base_cmd + ["-tags", tags]
 
     success, output = run_scan(tag_cmd, log_jsonl)
     findings = parse_nuclei_jsonl(log_jsonl)
 
-    if not findings:
+    if not findings and tags is not None:
         log_jsonl2 = os.path.join(target_dir, f"nuclei_port_{port}_notags.jsonl")
         success2, output2 = run_scan(base_cmd, log_jsonl2)
         findings = parse_nuclei_jsonl(log_jsonl2)
