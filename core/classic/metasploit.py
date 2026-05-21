@@ -79,6 +79,14 @@ def build_search_queries(open_ports, vendor=None):
     return list(dict.fromkeys(queries))[:8]
 
 
+def build_fallback_search_queries(vendor=None):
+    """Generic router/web searches when vendor-specific search returns nothing."""
+    fallbacks = ["router", "http login", "nginx"]
+    if vendor and "fiberhome" in vendor.lower():
+        fallbacks = ["fiberhome", "router web", "nginx"] + fallbacks
+    return list(dict.fromkeys(fallbacks))[:5]
+
+
 def _default_port(module, web_ports, login_ports):
     mod = module.lower()
     if "ssh" in mod and login_ports:
@@ -88,6 +96,22 @@ def _default_port(module, web_ports, login_ports):
     if "http" in mod or "web" in mod:
         return 80 if 80 in web_ports else (web_ports[0] if web_ports else 80)
     return web_ports[0] if web_ports else 80
+
+
+def build_msf_one_liner(module, ip, port, use_ssl=False):
+    """Copy-paste msfconsole -x one-liner for a real module path."""
+    parts = [f"use {module}", f"set RHOSTS {ip}"]
+    mod = module.lower()
+    if module.startswith("exploit/") or "http" in mod or "browser" in mod:
+        parts.append(f"set RPORT {port}")
+    if use_ssl or port in (443, 8443):
+        parts.append("set SSL true")
+    if module.startswith("exploit/"):
+        parts.extend(["check", "run"])
+    else:
+        parts.append("run")
+    parts.append("exit")
+    return "msfconsole -q -x \"" + "; ".join(parts) + "\""
 
 
 def build_msf_command_block(module, ip, port, use_ssl=False):
@@ -127,16 +151,61 @@ def generate_msf_exploit_commands(ip, target_dir, modules, web_ports=None, login
         f"Target IP: {ip}",
         f"Web ports: {', '.join(str(p) for p in web_ports)}",
         "",
-        "Run interactively:",
-        "  msfconsole -q",
+        "IMPORTANT:",
+        "  - Do NOT type 'exploit/...' literally — that is a placeholder.",
+        "  - Copy a REAL module path from msf_modules.json or the blocks below.",
+        "  - 'check' and 'run' only work AFTER 'use <real_module>' succeeds.",
         "",
-        "Or run one module:",
-        "  msfconsole -q -x \"use exploit/...; set RHOSTS IP; set RPORT 80; check; run; exit\"",
+        "Find modules manually:",
+        f"  msfconsole -q -x \"search fiberhome; exit\"",
+        f"  msfconsole -q -x \"search type:exploit router; exit\"",
+        "",
+        "Run interactively (recommended):",
+        "  msfconsole -q",
+        "  search fiberhome",
+        "  use exploit/<path/from/search/results>",
+        f"  set RHOSTS {ip}",
+        "  set RPORT 80",
+        "  show options",
+        "  check",
+        "  run",
         "",
         "------------------------------------------------------------",
-        " EXPLOIT MODULES (higher priority)",
+        " READY ONE-LINERS (copy exactly — real module paths only)",
         "------------------------------------------------------------",
     ]
+
+    if not exploits and not aux:
+        lines.extend([
+            "No modules were parsed from msf_search.txt (search may have returned empty).",
+            "Try these searches, then re-open this file after re-scanning:",
+            f"  msfconsole -q -x \"search fiberhome; exit\"",
+            f"  msfconsole -q -x \"search type:exploit name:router; exit\"",
+            "",
+            "If search shows 'No results' — Metasploit has no public exploit for this vendor.",
+            "That is normal for home routers (Fiberhome, etc.). Metasploit is NOT broken.",
+            "",
+            "Note on auxiliary/scanner/http/http_login:",
+            "  - Only works when the site asks for HTTP Basic/Digest auth (browser popup).",
+            "  - Most routers use HTML login forms — http_login will say 'No URI found'.",
+            "  - For form login: verify Hydra creds in browser at http://192.168.1.1",
+            "",
+        ])
+    else:
+        for module in exploits[:5]:
+            port = _default_port(module, web_ports, login_ports)
+            lines.append(build_msf_one_liner(module, ip, port, use_ssl=port in (443, 8443)))
+        if not exploits and aux:
+            for module in aux[:3]:
+                port = _default_port(module, web_ports, login_ports)
+                lines.append(build_msf_one_liner(module, ip, port, use_ssl=port in (443, 8443)))
+        lines.append("")
+
+    lines.extend([
+        "------------------------------------------------------------",
+        " EXPLOIT MODULES (interactive steps)",
+        "------------------------------------------------------------",
+    ])
 
     if not exploits and not aux:
         lines.append("No Metasploit modules parsed from msf_search.txt.")
@@ -164,8 +233,8 @@ def generate_msf_exploit_commands(ip, target_dir, modules, web_ports=None, login
         f"  search cve:2024",
         "",
         "After login (if Hydra found creds):",
-        f"  use auxiliary/admin/http/tomcat_administration",
-        f"  set RHOSTS {ip}",
+        "  Open http://TARGET in browser — routers rarely use Metasploit http_login.",
+        "  Try discovered paths: /html /menu /cgi-bin (from FFUF/dirsearch output).",
         "============================================================",
     ])
 
@@ -210,6 +279,14 @@ def run_metasploit_recon(ip, target_dir, open_ports, vendor=None):
             search_text = fh.read()
 
     modules = parse_msf_modules(search_text)
+    if not modules:
+        print("[*] No modules from initial search — trying fallback queries...")
+        for query in build_fallback_search_queries(vendor=vendor):
+            run_metasploit_search(query, target_dir, append=True)
+        if os.path.exists(search_path):
+            with open(search_path, "r", encoding="utf-8", errors="ignore") as fh:
+                search_text = fh.read()
+            modules = parse_msf_modules(search_text)
     web_ports = []
     login_ports = []
     for entry in open_ports or []:
