@@ -93,11 +93,22 @@ def parse_sqlmap_summary(target_dir):
     text = read_file(os.path.join(target_dir, "sqlmap_scan.txt"))
     if not text.strip():
         return {"ran": False, "vulnerable": False, "summary": "SQLMap did not run."}
-    vulnerable = "is vulnerable" in text.lower()
+    lowered = text.lower()
+    connectivity_failed = any(
+        x in lowered for x in ("no route to host", "unable to connect", "connection exception")
+    )
+    vulnerable = "is vulnerable" in lowered
+    if connectivity_failed and not vulnerable:
+        summary = "SQLMap could not reach target reliably — result inconclusive (retry when host responds to curl)."
+    elif vulnerable:
+        summary = "SQL injection confirmed."
+    else:
+        summary = "No SQL injection confirmed."
     return {
         "ran": True,
         "vulnerable": vulnerable,
-        "summary": "SQL injection confirmed." if vulnerable else "No SQL injection confirmed.",
+        "connectivity_failed": connectivity_failed,
+        "summary": summary,
     }
 
 

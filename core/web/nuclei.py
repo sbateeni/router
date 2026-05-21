@@ -76,9 +76,11 @@ def parse_nuclei_jsonl(jsonl_path):
     return findings
 
 
-def run_nuclei(target_url, target_dir):
+def run_nuclei(target_url, target_dir, tags=None):
     profile = get_scan_profile()
     print(f"\n[+] Running Nuclei (Vulnerability Scanning) [{profile['label']}]...")
+    if tags:
+        print(f"[*] Nuclei tags (from target profile): {tags}")
     custom = custom_template_dir()
     if custom:
         print(f"[*] Custom templates: {custom}")
@@ -105,13 +107,13 @@ def run_nuclei(target_url, target_dir):
         return run_cmd(command, capture=True, log_file=stdout_log)
 
     base_cmd = build_nuclei_base_cmd(target_url)
-    tags = nuclei_tags_for_profile(profile)
-    tag_cmd = list(base_cmd) if tags is None else base_cmd + ["-tags", tags]
+    tag_list = tags if tags else nuclei_tags_for_profile(profile)
+    tag_cmd = list(base_cmd) if not tag_list else base_cmd + ["-tags", tag_list]
 
     success, output = run_scan(tag_cmd, log_jsonl)
     findings = parse_nuclei_jsonl(log_jsonl)
 
-    if not findings and tags is not None:
+    if not findings and tag_list:
         log_jsonl2 = os.path.join(target_dir, f"nuclei_port_{port}_notags.jsonl")
         success2, output2 = run_scan(base_cmd, log_jsonl2)
         findings = parse_nuclei_jsonl(log_jsonl2)

@@ -21,6 +21,16 @@ def save_scan_context(target_dir, context, phase, profile_name, exploited=False)
         "ai_scan_plan": getattr(context, "ai_scan_plan", {}),
         "ai_hydra_plan": getattr(context, "ai_hydra_plan", {}),
     }
+    profile_path = os.path.join(target_dir, "target_profile.json")
+    if os.path.exists(profile_path):
+        try:
+            with open(profile_path, "r", encoding="utf-8") as fh:
+                prof = json.load(fh)
+            payload["target_type"] = prof.get("target_type")
+            payload["target_summary"] = prof.get("summary")
+            payload["tool_plan"] = prof.get("tool_plan")
+        except (OSError, json.JSONDecodeError):
+            pass
     path = os.path.join(target_dir, CONTEXT_FILE)
     with open(path, "w", encoding="utf-8") as fh:
         json.dump(payload, fh, indent=2, ensure_ascii=False)

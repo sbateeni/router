@@ -5,9 +5,13 @@ import re
 from datetime import datetime
 
 from core.report.analysis import analyze_exploit_status, dedupe_nuclei_findings
+from core.report.enrichment import build_scan_enrichment
 from core.report.parsers import (
+    count_ffuf_paths,
     count_nuclei_findings,
     find_files,
+    parse_dirsearch_paths,
+    parse_nmap_summary,
     read_file,
     significant_nuclei_findings,
     strip_ansi,
@@ -157,44 +161,6 @@ def ingram_has_results(target_dir):
         return False
 
 
-def count_ffuf_paths(target_dir):
-    paths = []
-    for path in find_files(target_dir, "ffuf_port_*.json"):
-        try:
-            with open(path, "r", encoding="utf-8", errors="ignore") as fh:
-                data = json.load(fh)
-            for result in data.get("results", []):
-                url = result.get("url")
-                if url:
-                    paths.append(url)
-        except (OSError, json.JSONDecodeError):
-            continue
-    return list(dict.fromkeys(paths))
-
-
-def parse_nmap_summary(target_dir):
-    path = os.path.join(target_dir, "nmap_scan.txt")
-    text = read_file(path)
-    ports = re.findall(r"^(\d+)/tcp\s+open\s+(.+)$", text, re.MULTILINE)
-    vendor = re.search(r"MAC Address:.*\((.+)\)", text)
-    return {
-        "ports": [{"port": int(p), "service": s.strip()} for p, s in ports],
-        "vendor": vendor.group(1).strip() if vendor else None,
-    }
-
-
-def parse_dirsearch_paths(target_dir):
-    paths = []
-    for path in find_files(target_dir, "dirsearch_port_*.txt"):
-        if path.endswith("_stdout.txt"):
-            continue
-        for line in read_file(path).splitlines():
-            line = line.strip()
-            if line.startswith("http://") or line.startswith("https://") or line.startswith("/"):
-                paths.append(line)
-    return list(dict.fromkeys(paths))[:30]
-
-
 def parse_hydra_hits(target_dir):
     hits = []
     for path in find_files(target_dir, "hydra_*.txt"):
@@ -303,7 +269,9 @@ def build_report_text(ip, target_dir, selection, exploited, payload):
     lines.extend([
         "",
         f"Nuclei Findings : {len(nuclei_findings)} unique / {len(payload.get('actionable_nuclei', []))} actionable",
-        f"Dirsearch Paths : {len(payload['dirsearch_paths'])}",
+        f"Target Type     : {payload.get('target_profile', {}).get('target_type') or payload.get('enrichment', {}).get('target_class', 'unknown')}",
+        f"Profile Summary : {payload.get('target_profile', {}).get('summary', 'n/a')}",
+        f"Dirsearch Paths : {len(payload['dirsearch_paths'])} ({len(payload.get('enrichment', {}).get('dirsearch_interesting', []))} x HTTP 200)",
         f"FFUF Paths      : {len(payload['ffuf_paths'])}",
         f"Hydra Hits      : {len(payload.get('hydra_hits', []))} (verify manually)",
         "",
@@ -331,6 +299,78 @@ def build_report_text(ip, target_dir, selection, exploited, payload):
         "------------------------------------------------------------",
         f"  {sqlmap.get('summary', 'No SQLMap data.')}",
         "",
+    ])
+
+    tp = payload.get("target_profile") or {}
+    if tp.get("routing_notes"):
+        lines.extend([
+            "------------------------------------------------------------",
+            " TARGET INTELLIGENCE (auto-routing)",
+            "------------------------------------------------------------",
+            f"  Type: {tp.get('target_type')} ({tp.get('confidence')})",
+            f"  {tp.get('summary', '')}",
+        ])
+        stack = tp.get("stack") or {}
+        if stack.get("http_server"):
+            lines.append(f"  Stack: {stack.get('http_server')}" + (f" + PHP {stack['php']}" if stack.get("php") else ""))
+        for note in tp.get("routing_notes", [])[:12]:
+            lines.append(f"  • {note}")
+        lines.append("")
+
+    enrichment = payload.get("enrichment") or {}
+    if enrichment.get("connectivity_issues"):
+        lines.extend([
+            "------------------------------------------------------------",
+            " CONNECTIVITY WARNINGS",
+            "------------------------------------------------------------",
+        ])
+        for issue in enrichment["connectivity_issues"]:
+            lines.append(f"  ! {issue}")
+        lines.append("")
+
+    ss = enrichment.get("searchsploit") or {}
+    if ss.get("ran"):
+        lines.extend([
+            "------------------------------------------------------------",
+            " SEARCHSPLOIT SUMMARY",
+            "------------------------------------------------------------",
+            f"  {ss.get('summary', '')}",
+        ])
+        for title in ss.get("samples") or []:
+            lines.append(f"  - {title}")
+        lines.append("")
+
+    if enrichment.get("dirsearch_interesting"):
+        lines.extend([
+            "------------------------------------------------------------",
+            " DIRSEARCH — HTTP 200 (priority review)",
+            "------------------------------------------------------------",
+        ])
+        for item in enrichment["dirsearch_interesting"][:15]:
+            lines.append(f"  [{item.get('status', '?')}] {item.get('url')} ({item.get('size', '?')})")
+        lines.append("")
+
+    if enrichment.get("priority_targets"):
+        lines.extend([
+            "------------------------------------------------------------",
+            " PRIORITY URLS (SQLMap / manual)",
+            "------------------------------------------------------------",
+        ])
+        for url in enrichment["priority_targets"]:
+            lines.append(f"  - {url}")
+        lines.append("")
+
+    if enrichment.get("recommendations"):
+        lines.extend([
+            "------------------------------------------------------------",
+            " RECOMMENDED NEXT STEPS",
+            "------------------------------------------------------------",
+        ])
+        for rec in enrichment["recommendations"]:
+            lines.append(f"  - {rec}")
+        lines.append("")
+
+    lines.extend([
         "------------------------------------------------------------",
         " TOOL STATUS",
         "------------------------------------------------------------",
@@ -476,9 +516,21 @@ def generate_scan_report(ip, target_dir, selection, exploited, current_phase="Fi
     nuclei_deduped = dedupe_nuclei_findings(nuclei_findings)
     actionable_nuclei = significant_nuclei_findings(nuclei_deduped)
 
+    enrichment = build_scan_enrichment(target_dir, ip=ip)
+    from core.recon.target_profile import load_target_profile
+    target_profile = load_target_profile(target_dir) or {}
+
     for item in tool_results:
         if item["tool"] == "Nuclei":
-            if actionable_nuclei:
+            nuclei_files = [f for f in item.get("files", []) if f.endswith(".jsonl")]
+            empty_jsonl = nuclei_files and all(
+                os.path.getsize(os.path.join(target_dir, f)) == 0 for f in nuclei_files
+                if os.path.exists(os.path.join(target_dir, f))
+            )
+            if empty_jsonl and enrichment.get("connectivity_issues"):
+                item["status"] = "ERROR"
+                item["notes"] = ["Nuclei output empty — target may have blocked scans (see CONNECTIVITY WARNINGS)."]
+            elif actionable_nuclei:
                 item["status"] = "FINDINGS"
                 item["notes"] = [f"Found {len(actionable_nuclei)} actionable Nuclei result(s)."]
             elif nuclei_deduped:
@@ -487,6 +539,12 @@ def generate_scan_report(ip, target_dir, selection, exploited, current_phase="Fi
                     f"Found {len(nuclei_deduped)} unique informational/low result(s).",
                     "Tool ran successfully.",
                 ]
+        if item["tool"] == "SQLMap" and analysis.get("sqlmap", {}).get("connectivity_failed"):
+            item["status"] = "WARNING"
+            item["notes"] = [analysis["sqlmap"]["summary"]]
+        if item["tool"] == "SearchSploit" and enrichment.get("searchsploit", {}).get("count", 0) > 0:
+            item["status"] = "FINDINGS"
+            item["notes"] = [enrichment["searchsploit"]["summary"]]
         if item["tool"] == "Hydra":
             if analysis["hydra_hits"]:
                 if analysis["hydra_unverified"] and not analysis["hydra_verified_candidates"]:
@@ -533,6 +591,8 @@ def generate_scan_report(ip, target_dir, selection, exploited, current_phase="Fi
         "manual_verification": analysis["manual_verification"],
         "routersploit": analysis["routersploit"],
         "sqlmap": analysis["sqlmap"],
+        "enrichment": enrichment,
+        "target_profile": target_profile,
         "msf_commands_preview": msf_preview,
         "all_files": all_files,
         "file_sizes": file_sizes,

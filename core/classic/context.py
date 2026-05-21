@@ -13,7 +13,12 @@ class ScanContext:
 
 
 def build_url(ip, port):
-    return f"http://{ip}:{port}" if port not in [443, 8443] else f"https://{ip}:{port}"
+    from core.report.parsers import normalize_target_url
+    if port in (443, 8443):
+        return normalize_target_url(f"https://{ip}:{port}")
+    if port == 80:
+        return normalize_target_url(f"http://{ip}")
+    return normalize_target_url(f"http://{ip}:{port}")
 
 
 def normalize_url(url):
