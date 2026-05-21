@@ -15,8 +15,7 @@ CRITICAL_MODULES = (
 
 ROUTERSPLOIT_PACKAGES = (
     "pycryptodome",
-    "paramiko",
-    "requests",
+    "paramiko==2.12.0",
 )
 
 PLACEHOLDER_MARKERS = ("your_", "_here", "changeme", "placeholder", "example")
@@ -75,7 +74,8 @@ def missing_python_modules():
 def routersploit_python_ready():
     try:
         from Crypto.Cipher import AES  # noqa: F401
-        return True
+        import paramiko
+        return hasattr(paramiko, "DSSKey")
     except ImportError:
         return False
 

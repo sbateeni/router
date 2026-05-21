@@ -282,7 +282,7 @@ def auto_install_tools():
                 print("[!] Full requirements install failed; installing critical packages individually...")
                 install_python_packages([
                     "mysql-connector-python", "defusedxml", "colorama", "requests",
-                    "pycryptodome", "telnetlib3", "paramiko",
+                    "pycryptodome", "telnetlib3",
                 ])
         if missing_modules:
             install_python_packages([

@@ -4,7 +4,7 @@ import glob
 import shutil
 import sys
 
-from core.utils import run_cmd, TOOLS_DIR, PYTHON, missing_python_modules
+from core.utils import run_cmd, TOOLS_DIR, PYTHON, missing_python_modules, install_python_packages
 from core.scan_config import get_scan_profile
 
 DIRSEARCH_PATH = os.path.join(TOOLS_DIR, "dirsearch", "dirsearch.py")
@@ -40,22 +40,13 @@ def nuclei_actionable_findings(findings):
 
 def ensure_dirsearch_deps():
     missing = missing_python_modules()
-
-    if not missing and not os.path.exists(DIRSEARCH_REQUIREMENTS):
+    if not missing:
         return True
 
     print("[*] Ensuring Python dependencies required by Dirsearch...")
-    commands = []
-    if os.path.exists(DIRSEARCH_REQUIREMENTS):
-        commands.append([PYTHON, "-m", "pip", "install", "-r", DIRSEARCH_REQUIREMENTS, "--break-system-packages"])
-    if missing:
-        commands.append([PYTHON, "-m", "pip", "install", "mysql-connector-python", "defusedxml", "colorama", "--break-system-packages"])
-
-    for command in commands:
-        result = __import__("subprocess").run(command)
-        if result.returncode != 0:
-            print("[!] Failed to install Dirsearch dependencies.")
-            return False
+    if not install_python_packages(["mysql-connector-python", "defusedxml", "colorama"]):
+        print("[!] Failed to install Dirsearch core dependencies.")
+        return False
 
     still_missing = missing_python_modules()
     if still_missing:
