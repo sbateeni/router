@@ -58,25 +58,49 @@ def parse_msf_modules(text):
     return modules
 
 
+GENERIC_SKIP = {"http", "https", "ssl", "tcp", "nginx", "httpd", "unknown"}
+VENDOR_NOISE = {
+    "telecommunication", "telecommunications", "technologies", "technology",
+    "communication", "communications", "corporation", "corp", "inc", "ltd",
+    "limited", "company", "group", "international", "systems", "network",
+    "networks", "device", "devices", "electronic", "electronics",
+}
+
+
+def _meaningful_vendor_tokens(vendor):
+    if not vendor:
+        return []
+    tokens = []
+    lower = vendor.lower()
+    if "fiberhome" in lower:
+        tokens.append("fiberhome")
+    for token in re.split(r"[\s,/]+", vendor):
+        token = token.strip()
+        if len(token) <= 3:
+            continue
+        key = token.lower()
+        if key in GENERIC_SKIP or key in VENDOR_NOISE:
+            continue
+        tokens.append(token)
+    return list(dict.fromkeys(tokens))
+
+
 def build_search_queries(open_ports, vendor=None):
     queries = []
     if vendor:
-        for token in re.split(r"[\s,]+", vendor):
-            token = token.strip()
-            if len(token) > 3 and token.lower() not in GENERIC_SKIP:
-                queries.append(token)
+        queries.extend(_meaningful_vendor_tokens(vendor))
         if "fiberhome" in vendor.lower():
-            queries.extend(["fiberhome", "fiberhome router"])
+            queries.extend(["fiberhome router"])
 
     for entry in open_ports or []:
         if not isinstance(entry, dict):
             continue
         svc = (entry.get("service") or "").lower()
-        for token in svc.split():
-            if len(token) > 3 and token not in GENERIC_SKIP:
+        for token in re.split(r"[\s/]+", svc):
+            if len(token) > 3 and token not in GENERIC_SKIP and token not in VENDOR_NOISE:
                 queries.append(token)
 
-    return list(dict.fromkeys(queries))[:8]
+    return list(dict.fromkeys(queries))[:6]
 
 
 def build_fallback_search_queries(vendor=None):
@@ -86,11 +110,8 @@ def build_fallback_search_queries(vendor=None):
     queries = []
     lower = vendor.lower()
     if "fiberhome" in lower:
-        queries.extend(["fiberhome", "fiberhome router", "fiberhome telecom"])
-    for token in re.split(r"[\s,]+", vendor):
-        token = token.strip()
-        if len(token) > 4 and token.lower() not in GENERIC_SKIP:
-            queries.append(token)
+        queries.extend(["fiberhome router", "fiberhome telecom"])
+    queries.extend(_meaningful_vendor_tokens(vendor))
     return list(dict.fromkeys(queries))[:4]
 
 
