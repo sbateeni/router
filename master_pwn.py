@@ -11,12 +11,58 @@ from core.web_enum import update_nuclei_templates, ensure_dirsearch_deps
 from core.utils import missing_python_modules
 from core.report import generate_scan_report
 
+
+def repo_base_dir():
+    return os.path.dirname(os.path.abspath(__file__))
+
+
+def current_user_name():
+    try:
+        import pwd
+        return pwd.getpwuid(os.getuid()).pw_name
+    except Exception:
+        return os.environ.get("USER") or os.environ.get("LOGNAME") or "kali"
+
+
+def git_permission_problem(base_dir):
+    git_dir = os.path.join(base_dir, ".git")
+    objects_dir = os.path.join(git_dir, "objects")
+    if not os.path.exists(git_dir):
+        return False
+    for path in (git_dir, objects_dir):
+        if os.path.exists(path) and not os.access(path, os.W_OK):
+            return True
+    return False
+
+
+def print_git_permission_fix(base_dir):
+    user = current_user_name()
+    print("\n[!] Git permission problem detected in this repository.")
+    print("[!] This usually happens after running the project with sudo.")
+    print("[!] Fix it once with these commands:\n")
+    print(f"    sudo chown -R {user}:{user} {base_dir}")
+    print(f"    cd {base_dir}")
+    print("    git pull origin main")
+    print("    python3 master_pwn.py -t 192.168.1.1 --auto\n")
+    print("[!] Do NOT use sudo when running master_pwn.py after fixing permissions.")
+
+
+def warn_if_running_as_root():
+    if hasattr(os, "geteuid") and os.geteuid() == 0:
+        print("[!] Warning: running as root/sudo can break git and file ownership.")
+        print("[!] Prefer running as your normal user inside the virtualenv.\n")
+
+
 def update_self_repo():
-    base_dir = os.path.dirname(os.path.abspath(__file__))
+    base_dir = repo_base_dir()
     git_dir = os.path.join(base_dir, ".git")
     print(f"[*] Repository base path: {base_dir}")
     if not os.path.exists(git_dir):
         print("[*] No local Git repository found; skipping repository update.")
+        return False
+
+    if git_permission_problem(base_dir):
+        print_git_permission_fix(base_dir)
         return False
 
     def current_head():
@@ -96,6 +142,9 @@ def update_self_repo():
             print(exc.stdout.strip())
         if exc.stderr:
             print(exc.stderr.strip())
+        combined = f"{exc.stdout or ''}\n{exc.stderr or ''}".lower()
+        if "insufficient permission" in combined or "failed to write object" in combined:
+            print_git_permission_fix(base_dir)
         return False
 
     head_after = current_head()
@@ -224,6 +273,8 @@ def auto_install_tools():
     print("[+] All tools and dependencies are ready!\n")
 
 def main():
+    warn_if_running_as_root()
+
     # تحديث الكود من GitHub قبل قراءة أي معاملات جديدة (مثل --auto)
     if update_self_repo():
         os.execv(sys.executable, [sys.executable] + sys.argv)
