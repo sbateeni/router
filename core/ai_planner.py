@@ -91,6 +91,39 @@ def _merge_plan(defaults, overrides):
     return plan
 
 
+def enforce_minimum_scan_plan(plan, context):
+    """Keep essential web tools enabled for routers/cameras even if AI disables them."""
+    device_type = plan.get("device_type", "unknown")
+    if not context.web_ports:
+        return plan
+
+    router_types = {"fiberhome_router", "generic_router", "unknown"}
+    camera_types = {"hikvision_camera", "dahua_camera", "ip_camera"}
+
+    if device_type in router_types or device_type in camera_types:
+        plan["run_dirsearch"] = True
+        plan["run_nuclei"] = True
+        plan["run_sqlmap"] = True
+        if device_type in router_types:
+            plan["run_ffuf"] = True
+            plan["run_hydra"] = True
+            plan["run_routersploit"] = True
+            plan["run_ingram"] = False
+            plan["run_gau"] = False
+        if device_type in camera_types:
+            plan["run_ffuf"] = True
+            plan["run_hydra"] = True
+            plan["run_ingram"] = True
+
+    if context.login_ports or context.web_ports:
+        plan["run_hydra"] = True
+
+    if not plan.get("device_label_ar"):
+        _, plan["device_label_ar"] = detect_device_from_ports(context.open_ports)
+
+    return plan
+
+
 def detect_device_from_ports(open_ports):
     vendor = ""
     services_text = ""
@@ -191,6 +224,8 @@ Login ports: {[entry.get('port') for entry in context.login_ports]}
     else:
         plan = _merge_plan(DEFAULT_SCAN_PLAN, data)
         plan["source"] = "ai"
+
+    plan = enforce_minimum_scan_plan(plan, context)
 
     _save_json(target_dir, SCAN_PLAN_FILE, plan)
     print(f"[+] AI scan plan: {plan.get('device_label_ar')} ({plan.get('source')})")
