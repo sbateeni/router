@@ -80,11 +80,29 @@ def build_search_queries(open_ports, vendor=None):
 
 
 def build_fallback_search_queries(vendor=None):
-    """Generic router/web searches when vendor-specific search returns nothing."""
-    fallbacks = ["router", "http login", "nginx"]
-    if vendor and "fiberhome" in vendor.lower():
-        fallbacks = ["fiberhome", "router web", "nginx"] + fallbacks
-    return list(dict.fromkeys(fallbacks))[:5]
+    """Vendor-only retries — never generic 'router' (matches Cisco/D-Link, not Fiberhome)."""
+    if not vendor:
+        return []
+    queries = []
+    lower = vendor.lower()
+    if "fiberhome" in lower:
+        queries.extend(["fiberhome", "fiberhome router", "fiberhome telecom"])
+    for token in re.split(r"[\s,]+", vendor):
+        token = token.strip()
+        if len(token) > 4 and token.lower() not in GENERIC_SKIP:
+            queries.append(token)
+    return list(dict.fromkeys(queries))[:4]
+
+
+def vendor_matches_module(vendor, module):
+    if not vendor or not module:
+        return True
+    vendor_l = vendor.lower()
+    module_l = module.lower()
+    tokens = [t for t in re.split(r"[\s,_-]+", vendor_l) if len(t) > 4 and t not in GENERIC_SKIP]
+    if "fiberhome" in vendor_l:
+        return "fiberhome" in module_l
+    return any(token in module_l for token in tokens)
 
 
 def _default_port(module, web_ports, login_ports):
@@ -138,32 +156,36 @@ def build_msf_command_block(module, ip, port, use_ssl=False):
     return lines
 
 
-def generate_msf_exploit_commands(ip, target_dir, modules, web_ports=None, login_ports=None):
+def generate_msf_exploit_commands(ip, target_dir, modules, web_ports=None, login_ports=None, vendor=None):
     web_ports = web_ports or [80, 443]
     login_ports = login_ports or []
+    if vendor:
+        modules = [m for m in modules if vendor_matches_module(vendor, m)]
     exploits = [m for m in modules if m.startswith("exploit/")]
     aux = [m for m in modules if m.startswith("auxiliary/")]
+    vendor_label = (vendor or "unknown").strip()
 
     lines = [
         "============================================================",
         " METASPLOIT — suggested commands (review before running)",
         "============================================================",
         f"Target IP: {ip}",
+        f"Vendor hint: {vendor_label}",
         f"Web ports: {', '.join(str(p) for p in web_ports)}",
         "",
         "IMPORTANT:",
-        "  - Do NOT type 'exploit/...' literally — that is a placeholder.",
-        "  - Copy a REAL module path from msf_modules.json or the blocks below.",
+        "  - Only run modules that match YOUR router vendor/firmware.",
+        "  - 'search type:exploit router' lists Cisco/D-Link/Netgear — NOT Fiberhome.",
+        "  - Do NOT run unrelated exploits (may crash or brick the device).",
         "  - 'check' and 'run' only work AFTER 'use <real_module>' succeeds.",
         "",
-        "Find modules manually:",
+        "Find modules for this vendor:",
         f"  msfconsole -q -x \"search fiberhome; exit\"",
-        f"  msfconsole -q -x \"search type:exploit router; exit\"",
         "",
-        "Run interactively (recommended):",
+        "Run interactively (when a matching module exists):",
         "  msfconsole -q",
         "  search fiberhome",
-        "  use exploit/<path/from/search/results>",
+        f"  use exploit/<exact/path/from/search>",
         f"  set RHOSTS {ip}",
         "  set RPORT 80",
         "  show options",
@@ -171,24 +193,28 @@ def generate_msf_exploit_commands(ip, target_dir, modules, web_ports=None, login
         "  run",
         "",
         "------------------------------------------------------------",
-        " READY ONE-LINERS (copy exactly — real module paths only)",
+        " READY ONE-LINERS (vendor-matched modules only)",
         "------------------------------------------------------------",
     ]
 
     if not exploits and not aux:
         lines.extend([
-            "No modules were parsed from msf_search.txt (search may have returned empty).",
-            "Try these searches, then re-open this file after re-scanning:",
-            f"  msfconsole -q -x \"search fiberhome; exit\"",
-            f"  msfconsole -q -x \"search type:exploit name:router; exit\"",
+            f"No Metasploit modules matched vendor: {vendor_label}",
             "",
-            "If search shows 'No results' — Metasploit has no public exploit for this vendor.",
-            "That is normal for home routers (Fiberhome, etc.). Metasploit is NOT broken.",
+            "Your manual search confirmed:",
+            "  search fiberhome  -> No results (expected for Fiberhome)",
+            "  search type:exploit router -> lists OTHER brands only",
+            "",
+            "For Fiberhome / ISP CPE routers, Metasploit usually has NO public exploit.",
+            "Focus instead on:",
+            "  1. Browser login at http://192.168.1.1 (verify Hydra creds manually)",
+            "  2. FFUF/dirsearch paths: /html /menu /cgi-bin",
+            "  3. RouterSploit output in routersploit_scan.txt",
+            "  4. SearchSploit + Nuclei findings in RESULTS_SUMMARY.txt",
             "",
             "Note on auxiliary/scanner/http/http_login:",
-            "  - Only works when the site asks for HTTP Basic/Digest auth (browser popup).",
-            "  - Most routers use HTML login forms — http_login will say 'No URI found'.",
-            "  - For form login: verify Hydra creds in browser at http://192.168.1.1",
+            "  - Only for HTTP Basic/Digest auth (browser popup).",
+            "  - Fiberhome uses HTML login forms — 'No URI found' is normal.",
             "",
         ])
     else:
@@ -208,8 +234,8 @@ def generate_msf_exploit_commands(ip, target_dir, modules, web_ports=None, login
     ])
 
     if not exploits and not aux:
-        lines.append("No Metasploit modules parsed from msf_search.txt.")
-        lines.append("Run searches manually: search fiberhome | search router")
+        lines.append("No vendor-matched exploit modules to list.")
+        lines.append("(Generic 'search router' hits are intentionally excluded.)")
     else:
         for module in exploits[:15]:
             port = _default_port(module, web_ports, login_ports)
@@ -229,7 +255,7 @@ def generate_msf_exploit_commands(ip, target_dir, modules, web_ports=None, login
         " USEFUL MANUAL SEARCHES",
         "------------------------------------------------------------",
         f"  search fiberhome",
-        f"  search type:exploit name:router",
+        f"  search type:exploit name:<your_vendor>",
         f"  search cve:2024",
         "",
         "After login (if Hydra found creds):",
@@ -245,6 +271,8 @@ def generate_msf_exploit_commands(ip, target_dir, modules, web_ports=None, login
 
     payload = {
         "target": ip,
+        "vendor": vendor_label,
+        "vendor_matched_modules": bool(modules),
         "exploit_modules": exploits[:15],
         "auxiliary_modules": aux[:10],
         "all_modules": modules[:25],
@@ -279,14 +307,20 @@ def run_metasploit_recon(ip, target_dir, open_ports, vendor=None):
             search_text = fh.read()
 
     modules = parse_msf_modules(search_text)
+    if vendor:
+        modules = [m for m in modules if vendor_matches_module(vendor, m)]
     if not modules:
-        print("[*] No modules from initial search — trying fallback queries...")
-        for query in build_fallback_search_queries(vendor=vendor):
-            run_metasploit_search(query, target_dir, append=True)
-        if os.path.exists(search_path):
-            with open(search_path, "r", encoding="utf-8", errors="ignore") as fh:
-                search_text = fh.read()
-            modules = parse_msf_modules(search_text)
+        extra = build_fallback_search_queries(vendor=vendor)
+        if extra:
+            print("[*] No vendor modules yet — retrying vendor-specific searches only...")
+            for query in extra:
+                run_metasploit_search(query, target_dir, append=True)
+            if os.path.exists(search_path):
+                with open(search_path, "r", encoding="utf-8", errors="ignore") as fh:
+                    search_text = fh.read()
+                modules = parse_msf_modules(search_text)
+        if vendor:
+            modules = [m for m in modules if vendor_matches_module(vendor, m)]
     web_ports = []
     login_ports = []
     for entry in open_ports or []:
@@ -299,7 +333,10 @@ def run_metasploit_recon(ip, target_dir, open_ports, vendor=None):
         if port in (21, 22, 23) or svc.split()[0] in ("ssh", "ftp", "telnet"):
             login_ports.append(entry)
 
-    generate_msf_exploit_commands(ip, target_dir, modules, web_ports=web_ports, login_ports=login_ports)
+    generate_msf_exploit_commands(
+        ip, target_dir, modules,
+        web_ports=web_ports, login_ports=login_ports, vendor=vendor,
+    )
     if modules:
         print(f"[+] Parsed {len(modules)} Metasploit module(s) — see {MSF_COMMANDS_FILE}")
     else:
