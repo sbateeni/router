@@ -12,7 +12,7 @@ from core.web_enum import update_nuclei_templates, ensure_dirsearch_deps
 from core.utils import missing_python_modules, reset_target_workspace, install_python_packages, ensure_routersploit_deps
 from core.report import generate_scan_report
 from core.notify import load_dotenv, notify_scan_complete, telegram_placeholder_keys_present
-from core.ai_analyst import generate_ai_analysis, ai_configured, ai_placeholder_keys_present
+from core.ai.analyst import ai_placeholder_keys_present
 
 
 def repo_base_dir():
@@ -298,8 +298,8 @@ def auto_install_tools():
     print("[+] All tools and dependencies are ready!\n")
 
 
-def run_scan_for_target(ip, args, selection, scan_profile, use_ai, base_dir):
-    ai_individual_modes = {11, 12, 13, 14}
+def run_scan_for_target(ip, args, selection, scan_profile, base_dir):
+    from core.menu import AI_CHOICES
 
     print("======================================================")
     print(f"      TARGET ACQUIRED: {ip}                           ")
@@ -314,12 +314,9 @@ def run_scan_for_target(ip, args, selection, scan_profile, use_ai, base_dir):
     reset_target_workspace(target_dir)
     print(f"[*] Workspace ready for target: {target_dir}\n")
 
-    if selection in ai_individual_modes:
-        use_ai = True
-
     exploited = run_selected_tool(
         selection, ip, target_dir,
-        profile=scan_profile, use_ai=use_ai, subnet=getattr(args, "subnet", None),
+        profile=scan_profile, subnet=getattr(args, "subnet", None),
     )
 
     report_path = generate_scan_report(
@@ -333,8 +330,8 @@ def run_scan_for_target(ip, args, selection, scan_profile, use_ai, base_dir):
         if os.path.exists(ai_path):
             with open(ai_path, "r", encoding="utf-8") as fh:
                 ai_analysis = fh.read()
-    elif use_ai and selection not in ai_individual_modes:
-        ai_analysis = generate_ai_analysis(ip, target_dir)
+    elif selection in AI_CHOICES:
+        print("[*] AI tool finished (classic pipeline was not modified).")
 
     print("\n======================================================")
     if selection == 2:
@@ -387,14 +384,8 @@ def main():
         action="store_true",
         help="Use deep/full-power scan profile (slower, more thorough)",
     )
-    parser.add_argument(
-        "--ai",
-        action="store_true",
-        help="Enable AI planning during scan + final analysis (requires API keys in .env)",
-    )
     args = parser.parse_args()
     scan_profile = "deep" if args.deep else "normal"
-    use_ai = args.ai or ai_configured()
     base_dir = repo_base_dir()
 
     auto_install_tools()
@@ -404,11 +395,9 @@ def main():
         print("[!] Warning: failed to update Nuclei templates at startup; continuing.")
 
     if args.auto:
-        print("[*] Auto mode enabled: running all tools without tool menu.\n")
+        print("[*] Auto mode enabled: running all classic tools without tool menu.\n")
     if args.deep:
         print("[*] Deep scan profile enabled: all tools will run at full power.\n")
-    if use_ai:
-        print("[*] AI enabled: smart tool selection, Hydra hints, RouterSploit follow-up.\n")
 
     targets = resolve_target_list(args, base_dir)
 
@@ -438,7 +427,7 @@ def main():
 
     any_exploited = False
     for ip in targets:
-        exploited = run_scan_for_target(ip, args, selection, scan_profile, use_ai, base_dir)
+        exploited = run_scan_for_target(ip, args, selection, scan_profile, base_dir)
         any_exploited = any_exploited or exploited
 
     if len(targets) > 1:

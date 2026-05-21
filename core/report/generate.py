@@ -413,7 +413,7 @@ def build_report_text(ip, target_dir, selection, exploited, payload):
 
 
 MODE_LABELS = {
-    1: "All tools",
+    1: "All tools (classic only)",
     2: "Nmap only",
     3: "Nuclei only",
     4: "Dirsearch only",
