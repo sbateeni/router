@@ -11,7 +11,7 @@ from core.web_enum import update_nuclei_templates, ensure_dirsearch_deps
 from core.utils import missing_python_modules, reset_target_workspace
 from core.report import generate_scan_report
 from core.notify import load_dotenv, notify_scan_complete
-from core.ai_analyst import generate_ai_analysis, ai_configured
+from core.ai_analyst import generate_ai_analysis, ai_configured, ai_placeholder_keys_present
 
 
 def repo_base_dir():
@@ -293,6 +293,8 @@ def auto_install_tools():
 def main():
     warn_if_running_as_root()
     load_dotenv(repo_base_dir())
+    if ai_placeholder_keys_present():
+        print("[!] .env still has placeholder API keys (your_*_here). Replace them with real keys for AI.\n")
 
     # تحديث الكود من GitHub قبل قراءة أي معاملات جديدة (مثل --auto)
     if update_self_repo():

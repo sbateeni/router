@@ -7,14 +7,32 @@ from core.notify import load_dotenv
 
 AI_REPORT_FILE = "AI_ANALYSIS.txt"
 MAX_INPUT_CHARS = 12000
+PLACEHOLDER_MARKERS = ("your_", "_here", "changeme", "placeholder", "example")
+
+
+def _looks_like_placeholder(value):
+    if not value or not str(value).strip():
+        return True
+    lowered = str(value).strip().lower()
+    return any(marker in lowered for marker in PLACEHOLDER_MARKERS)
+
+
+def _valid_api_key(env_name):
+    value = os.environ.get(env_name, "")
+    return bool(value) and not _looks_like_placeholder(value)
 
 
 def ai_configured():
-    return bool(
-        os.environ.get("OPENROUTER_API_KEY")
-        or os.environ.get("GEMINI_API_KEY")
-        or os.environ.get("NVIDIA_API_KEY")
+    return (
+        _valid_api_key("OPENROUTER_API_KEY")
+        or _valid_api_key("GEMINI_API_KEY")
+        or _valid_api_key("NVIDIA_API_KEY")
     )
+
+
+def ai_placeholder_keys_present():
+    keys = ("OPENROUTER_API_KEY", "GEMINI_API_KEY", "NVIDIA_API_KEY")
+    return any(os.environ.get(name) and _looks_like_placeholder(os.environ.get(name)) for name in keys)
 
 
 def _read_optional(path, limit=MAX_INPUT_CHARS):

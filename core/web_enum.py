@@ -3,7 +3,6 @@ import os
 import glob
 import shutil
 import sys
-import importlib.util
 
 from core.utils import run_cmd, TOOLS_DIR, PYTHON, missing_python_modules
 from core.scan_config import get_scan_profile
@@ -41,16 +40,15 @@ def nuclei_actionable_findings(findings):
 
 def ensure_dirsearch_deps():
     missing = missing_python_modules()
-    needs_mysql = importlib.util.find_spec("mysql.connector") is None
 
-    if not missing and not needs_mysql and not os.path.exists(DIRSEARCH_REQUIREMENTS):
+    if not missing and not os.path.exists(DIRSEARCH_REQUIREMENTS):
         return True
 
     print("[*] Ensuring Python dependencies required by Dirsearch...")
     commands = []
     if os.path.exists(DIRSEARCH_REQUIREMENTS):
         commands.append([PYTHON, "-m", "pip", "install", "-r", DIRSEARCH_REQUIREMENTS, "--break-system-packages"])
-    if missing or needs_mysql:
+    if missing:
         commands.append([PYTHON, "-m", "pip", "install", "mysql-connector-python", "defusedxml", "colorama", "--break-system-packages"])
 
     for command in commands:
@@ -60,8 +58,8 @@ def ensure_dirsearch_deps():
             return False
 
     still_missing = missing_python_modules()
-    if still_missing or importlib.util.find_spec("mysql.connector") is None:
-        print(f"[!] Missing Python modules after install: {', '.join(still_missing or ['mysql.connector'])}")
+    if still_missing:
+        print(f"[!] Missing Python modules after install: {', '.join(still_missing)}")
         return False
     return True
 
