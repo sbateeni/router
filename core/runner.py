@@ -6,11 +6,12 @@ import shutil
 from core.scanner import run_nmap
 from core.utils import run_cmd
 from core.web_enum import run_nuclei, run_dirsearch, run_sqlmap, run_searchsploit
-from core.exploitation import run_routersploit, run_ingram
+from core.exploitation import run_routersploit_with_ai_followup, run_ingram
 from core.bruteforce import run_hydra, run_web_hydra
 from core.scan_config import set_scan_profile, get_profile_name
 from core.context_store import save_scan_context
 from core.report import generate_scan_report
+from core.ai_planner import plan_scan_tools, recommend_hydra_commands
 
 
 class ScanContext:
@@ -25,6 +26,8 @@ class ScanContext:
         self.ffuf_candidates = []
         self.gau_urls = []
         self.exploited = False
+        self.ai_scan_plan = {}
+        self.ai_hydra_plan = {}
 
 
 def is_tool_available(tool_name):
@@ -296,8 +299,9 @@ def run_sqlmap_only(ip, target_dir):
     return False
 
 
-def run_routersploit_only(ip, target_dir):
-    return run_routersploit(ip, target_dir)
+def run_routersploit_only(ip, target_dir, use_ai=False):
+    from core.exploitation import run_routersploit_with_ai_followup
+    return run_routersploit_with_ai_followup(ip, target_dir, use_ai=use_ai)
 
 
 def run_ingram_only(ip, target_dir):
@@ -366,7 +370,13 @@ def run_gau_only(ip, target_dir):
     return False
 
 
-def run_all_tools(ip, target_dir, selection=1):
+def should_run_tool(scan_plan, tool_key, default=True):
+    if not scan_plan:
+        return default
+    return bool(scan_plan.get(tool_key, default))
+
+
+def run_all_tools(ip, target_dir, selection=1, use_ai=False):
     context = ScanContext()
     print(f"\n>>> PHASE 1: Scanning & Reconnaissance [{get_profile_name()}]")
     try:
@@ -398,7 +408,14 @@ def run_all_tools(ip, target_dir, selection=1):
 
     refresh_report(ip, target_dir, selection, context.exploited, context, "Phase 1 - Reconnaissance")
 
-    if context.web_ports:
+    context.ai_scan_plan = plan_scan_tools(ip, target_dir, context, use_ai=use_ai)
+    refresh_report(ip, target_dir, selection, context.exploited, context, "Phase 1 - AI Planning")
+
+    scan_plan = context.ai_scan_plan
+    phase2_tools = ("run_dirsearch", "run_nuclei", "run_ffuf", "run_gau", "run_sqlmap")
+    run_phase2 = context.web_ports and any(should_run_tool(scan_plan, key) for key in phase2_tools)
+
+    if run_phase2:
         print("\n======================================================")
         print(">>> PHASE 2: Web Enumeration & Vulnerability Scanning")
         print("======================================================")
@@ -407,27 +424,34 @@ def run_all_tools(ip, target_dir, selection=1):
                 target_url = build_url(ip, port)
                 print(f"\n[*] Target URL: {target_url}")
 
-                paths = run_dirsearch(target_url, target_dir)
-                context.discovered_paths.extend(paths)
+                if should_run_tool(scan_plan, "run_dirsearch"):
+                    paths = run_dirsearch(target_url, target_dir)
+                    context.discovered_paths.extend(paths)
+                else:
+                    print("[*] AI/heuristic plan: skipping Dirsearch on this port.")
 
-                if run_nuclei(target_url, target_dir):
+                if should_run_tool(scan_plan, "run_nuclei") and run_nuclei(target_url, target_dir):
                     context.exploited = True
 
             context.discovered_paths = list(dict.fromkeys(context.discovered_paths))
             if context.discovered_paths:
                 print(f"[+] Total discovered paths: {len(context.discovered_paths)}")
 
-            if is_tool_available("gau"):
+            if should_run_tool(scan_plan, "run_gau") and is_tool_available("gau"):
                 for port in context.web_ports:
                     target_url = build_url(ip, port)
                     context.gau_urls.extend(run_gau(target_url, target_dir))
                 context.gau_urls = list(dict.fromkeys(context.gau_urls))
+            elif not should_run_tool(scan_plan, "run_gau"):
+                print("[*] AI/heuristic plan: skipping GAU.")
 
-            if is_tool_available("ffuf"):
+            if should_run_tool(scan_plan, "run_ffuf") and is_tool_available("ffuf"):
                 for port in context.web_ports:
                     target_url = build_url(ip, port)
                     context.ffuf_candidates.extend(run_ffuf(target_url, target_dir))
                 context.ffuf_candidates = list(dict.fromkeys(context.ffuf_candidates))
+            elif not should_run_tool(scan_plan, "run_ffuf"):
+                print("[*] AI/heuristic plan: skipping FFUF.")
 
             context.discovered_urls = list(dict.fromkeys(
                 context.discovered_paths + context.gau_urls + context.ffuf_candidates
@@ -437,7 +461,7 @@ def run_all_tools(ip, target_dir, selection=1):
             if not query_urls:
                 query_urls = [build_url(ip, port) for port in context.web_ports]
 
-            if query_urls:
+            if should_run_tool(scan_plan, "run_nuclei") and query_urls:
                 from core.scan_config import get_scan_profile
                 url_limit = get_scan_profile()["nuclei_url_limit"]
                 print(f"\n[+] Running Nuclei on discovered URL candidates (limit: {url_limit})...")
@@ -445,10 +469,13 @@ def run_all_tools(ip, target_dir, selection=1):
                     if run_nuclei(target_url, target_dir):
                         context.exploited = True
 
-            print("\n[+] Running SQLMap on candidate URLs...")
-            for target_url in query_urls:
-                if run_sqlmap(target_url, target_dir):
-                    context.exploited = True
+            if should_run_tool(scan_plan, "run_sqlmap"):
+                print("\n[+] Running SQLMap on candidate URLs...")
+                for target_url in query_urls:
+                    if run_sqlmap(target_url, target_dir):
+                        context.exploited = True
+            else:
+                print("[*] AI/heuristic plan: skipping SQLMap.")
 
         except KeyboardInterrupt:
             if not prompt_next_stage():
@@ -456,17 +483,25 @@ def run_all_tools(ip, target_dir, selection=1):
                 sys.exit(0)
 
         refresh_report(ip, target_dir, selection, context.exploited, context, "Phase 2 - Web Enumeration")
+    elif context.web_ports:
+        print("[*] AI/heuristic plan: skipping all Phase 2 web tools.")
 
     print("\n======================================================")
     print(">>> PHASE 3: Router & Device Exploitation")
     print("======================================================")
     try:
-        if run_routersploit(ip, target_dir):
-            context.exploited = True
-        elif should_run_ingram(context.open_ports):
-            if run_ingram(ip, target_dir):
+        if should_run_tool(scan_plan, "run_routersploit"):
+            if run_routersploit_with_ai_followup(ip, target_dir, use_ai=use_ai):
                 context.exploited = True
         else:
+            print("[*] AI/heuristic plan: skipping RouterSploit AutoPwn.")
+
+        if not context.exploited and should_run_tool(scan_plan, "run_ingram") and should_run_ingram(context.open_ports):
+            if run_ingram(ip, target_dir):
+                context.exploited = True
+        elif should_run_tool(scan_plan, "run_ingram") is False:
+            print("[*] AI/heuristic plan: skipping Ingram (not a camera target).")
+        elif not should_run_ingram(context.open_ports):
             print("[*] Skipping Ingram (target looks like a router/web UI, not a camera).")
     except KeyboardInterrupt:
         if not prompt_next_stage():
@@ -475,19 +510,26 @@ def run_all_tools(ip, target_dir, selection=1):
 
     refresh_report(ip, target_dir, selection, context.exploited, context, "Phase 3 - Exploitation")
 
-    if context.login_ports or context.web_ports:
+    if (context.login_ports or context.web_ports) and should_run_tool(scan_plan, "run_hydra"):
         print("\n======================================================")
         print(">>> PHASE 4: Credential Brute-Forcing (Last Resort)")
         print("======================================================")
         try:
+            context.ai_hydra_plan = recommend_hydra_commands(
+                ip, target_dir, context, scan_plan=scan_plan, use_ai=use_ai,
+            )
             if context.login_ports and run_hydra(ip, context.login_ports, target_dir):
                 context.exploited = True
-            if context.web_ports and run_web_hydra(ip, context.web_ports, target_dir):
+            if context.web_ports and run_web_hydra(
+                ip, context.web_ports, target_dir, hydra_plan=context.ai_hydra_plan,
+            ):
                 context.exploited = True
         except KeyboardInterrupt:
             if not prompt_next_stage():
                 print("\n[-] Exiting as requested.")
                 sys.exit(0)
+    elif context.login_ports or context.web_ports:
+        print("[*] AI/heuristic plan: skipping Hydra brute-force.")
 
     refresh_report(ip, target_dir, selection, context.exploited, context, "Phase 4 - Brute Force")
 
@@ -507,10 +549,10 @@ def should_run_ingram(open_ports):
     return False
 
 
-def run_selected_tool(selection, ip, target_dir, profile="normal"):
+def run_selected_tool(selection, ip, target_dir, profile="normal", use_ai=False):
     set_scan_profile(profile)
     if selection == 1:
-        return run_all_tools(ip, target_dir, selection=selection)
+        return run_all_tools(ip, target_dir, selection=selection, use_ai=use_ai)
     if selection == 2:
         return run_nmap_only(ip, target_dir)
     if selection == 3:
@@ -520,7 +562,7 @@ def run_selected_tool(selection, ip, target_dir, profile="normal"):
     if selection == 5:
         return run_sqlmap_only(ip, target_dir)
     if selection == 6:
-        return run_routersploit_only(ip, target_dir)
+        return run_routersploit_only(ip, target_dir, use_ai=use_ai)
     if selection == 7:
         return run_ingram_only(ip, target_dir)
     if selection == 8:

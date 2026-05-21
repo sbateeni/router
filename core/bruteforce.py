@@ -68,7 +68,7 @@ def run_hydra(ip, login_ports, target_dir):
     return success_flag
 
 
-def run_web_hydra(ip, web_ports, target_dir):
+def run_web_hydra(ip, web_ports, target_dir, hydra_plan=None):
     profile = get_scan_profile()
     if not shutil.which(HYDRA_CMD):
         print("[!] Hydra is not installed; skipping web login brute-force.")
@@ -79,13 +79,21 @@ def run_web_hydra(ip, web_ports, target_dir):
         print("[!] No password wordlist found for web Hydra.")
         return False
 
+    users = COMMON_USERS
+    forms = ROUTER_HTTP_FORMS
+    if hydra_plan:
+        users = hydra_plan.get("users") or users
+        forms = hydra_plan.get("http_forms") or forms
+        source = hydra_plan.get("source", "custom")
+        print(f"[*] Using {source} Hydra plan: {len(users)} users, {len(forms)} forms")
+
     success_flag = False
 
     for port in web_ports:
         service = "https-get" if port in [443, 8443] else "http-get"
         print(f"\n[+] Brute-forcing router web login on port {port}...")
 
-        for user in COMMON_USERS[: profile["hydra_users"]]:
+        for user in users[: profile["hydra_users"]]:
             log_file = os.path.join(target_dir, f"hydra_web_{port}_{user}.txt")
             command = [
                 HYDRA_CMD, "-l", user, "-P", passwords_file,
@@ -103,12 +111,12 @@ def run_web_hydra(ip, web_ports, target_dir):
         if success_flag:
             break
 
-        for form in ROUTER_HTTP_FORMS[: profile["hydra_forms"]]:
+        for form in forms[: profile["hydra_forms"]]:
             form_name = form.split(":")[0].replace("/", "_").strip("_") or "root"
             log_file = os.path.join(target_dir, f"hydra_web_{port}_form_{form_name}.txt")
             users_file = os.path.join(target_dir, f"hydra_users_{port}.txt")
             with open(users_file, "w", encoding="utf-8") as fh:
-                fh.write("\n".join(COMMON_USERS))
+                fh.write("\n".join(users))
             command = [
                 HYDRA_CMD, "-L", users_file, "-P", passwords_file,
                 "-t", str(profile["hydra_threads"]), "-f", "-s", str(port),

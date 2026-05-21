@@ -8,8 +8,10 @@ import hashlib
 import importlib.util
 from core.runner import select_tool_menu, run_selected_tool
 from core.web_enum import update_nuclei_templates, ensure_dirsearch_deps
-from core.utils import missing_python_modules
+from core.utils import missing_python_modules, reset_target_workspace
 from core.report import generate_scan_report
+from core.notify import load_dotenv, notify_scan_complete
+from core.ai_analyst import generate_ai_analysis, ai_configured
 
 
 def repo_base_dir():
@@ -290,6 +292,7 @@ def auto_install_tools():
 
 def main():
     warn_if_running_as_root()
+    load_dotenv(repo_base_dir())
 
     # تحديث الكود من GitHub قبل قراءة أي معاملات جديدة (مثل --auto)
     if update_self_repo():
@@ -307,9 +310,15 @@ def main():
         action="store_true",
         help="Use deep/full-power scan profile (slower, more thorough)",
     )
+    parser.add_argument(
+        "--ai",
+        action="store_true",
+        help="Enable AI planning during scan + final analysis (requires API keys in .env)",
+    )
     args = parser.parse_args()
     ip = args.target
     scan_profile = "deep" if args.deep else "normal"
+    use_ai = args.ai or ai_configured()
 
     auto_install_tools()
     # تأكد من أن قوالب Nuclei محدثة عند بداية التشغيل
@@ -330,24 +339,31 @@ def main():
         os.chmod(target_dir, 0o755)
     except PermissionError:
         pass
-    print(f"[*] Workspace created for target: {target_dir}\n")
+    reset_target_workspace(target_dir)
+    print(f"[*] Workspace ready for target: {target_dir}\n")
 
     if args.auto:
         print("[*] Auto mode enabled: running all tools without menu.\n")
     if args.deep:
         print("[*] Deep scan profile enabled: all tools will run at full power.\n")
+    if use_ai:
+        print("[*] AI enabled: smart tool selection, Hydra hints, RouterSploit follow-up.\n")
 
     selection = 1 if args.auto else select_tool_menu()
     if selection == 11:
         print("[-] Exiting without running any tools.")
         return
 
-    exploited = run_selected_tool(selection, ip, target_dir, profile=scan_profile)
+    exploited = run_selected_tool(selection, ip, target_dir, profile=scan_profile, use_ai=use_ai)
 
     report_path = generate_scan_report(
         ip, target_dir, selection, exploited,
         current_phase="Completed", profile=scan_profile,
     )
+
+    ai_analysis = None
+    if use_ai:
+        ai_analysis = generate_ai_analysis(ip, target_dir)
 
     print("\n======================================================")
     if selection == 2:
@@ -360,6 +376,10 @@ def main():
     print(f"[*] All output logs for {ip} have been saved in: {target_dir}")
     print(f"[*] Results summary report: {report_path}")
     print("[*] Share RESULTS_SUMMARY.txt to review tool health and findings.")
+    notify_scan_complete(
+        ip, target_dir, report_path, exploited,
+        profile=scan_profile, ai_analysis=ai_analysis,
+    )
     print("======================================================")
 
 if __name__ == "__main__":

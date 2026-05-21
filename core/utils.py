@@ -1,5 +1,6 @@
 import subprocess
 import os
+import shutil
 import sys
 
 TOOLS_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "tools")
@@ -17,6 +18,28 @@ def ensure_parent_dir(file_path):
     directory = os.path.dirname(file_path)
     if directory and not os.path.exists(directory):
         os.makedirs(directory, exist_ok=True)
+
+
+def reset_target_workspace(target_dir):
+    """Delete previous scan artifacts so re-scanning the same IP starts fresh."""
+    if not os.path.isdir(target_dir):
+        return 0
+
+    removed = 0
+    for name in os.listdir(target_dir):
+        path = os.path.join(target_dir, name)
+        try:
+            if os.path.isdir(path) and not os.path.islink(path):
+                shutil.rmtree(path)
+            else:
+                os.remove(path)
+            removed += 1
+        except OSError as exc:
+            print(f"[!] Could not remove {path}: {exc}")
+
+    if removed:
+        print(f"[*] Cleared {removed} previous file(s) from target workspace.")
+    return removed
 
 
 def missing_python_modules():

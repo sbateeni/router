@@ -18,6 +18,8 @@ def save_scan_context(target_dir, context, phase, profile_name, exploited=False)
         "discovered_urls": context.discovered_urls,
         "gau_urls": context.gau_urls,
         "ffuf_candidates": context.ffuf_candidates,
+        "ai_scan_plan": getattr(context, "ai_scan_plan", {}),
+        "ai_hydra_plan": getattr(context, "ai_hydra_plan", {}),
     }
     path = os.path.join(target_dir, CONTEXT_FILE)
     with open(path, "w", encoding="utf-8") as fh:

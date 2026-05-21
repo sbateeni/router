@@ -308,6 +308,7 @@ def build_report_text(ip, target_dir, selection, exploited, payload):
     if nmap.get("vendor"):
         lines.append(f"Vendor/MAC Info: {nmap['vendor']}")
 
+    nuclei_findings = payload.get("nuclei_findings", [])
     lines.extend([
         "",
         f"Nuclei Findings : {len(nuclei_findings)} total / {len(payload.get('actionable_nuclei', []))} actionable",
