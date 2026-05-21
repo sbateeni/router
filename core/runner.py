@@ -12,7 +12,8 @@ from core.bruteforce import run_hydra, run_web_hydra
 from core.scan_config import set_scan_profile, get_profile_name
 from core.context_store import save_scan_context
 from core.report import generate_scan_report
-from core.ai_planner import plan_scan_tools, recommend_hydra_commands
+from core.recon_tools import run_nikto_only, run_whatweb_only, run_nmap_vuln_only
+from core.network_discovery import discover_lan_hosts, guess_local_subnet, prompt_subnet
 
 
 class ScanContext:
@@ -245,14 +246,20 @@ def select_tool_menu():
     print(" 13) AI RouterSploit + follow-up modules")
     print(" 14) AI final report only (from existing scan data)")
     print("")
-    print(" 15) Exit")
+    print("  Extra recon tools:")
+    print(" 16) LAN network discovery (find live hosts)")
+    print(" 17) Nikto web scan only")
+    print(" 18) WhatWeb fingerprint only")
+    print(" 19) Nmap vuln scripts only")
+    print("")
+    print(" 20) Exit")
 
-    valid_choices = {str(i) for i in range(1, 16)}
+    valid_choices = {str(i) for i in list(range(1, 16)) + [16, 17, 18, 19, 20]}
     while True:
-        choice = input("Select an option [1-15]: ").strip()
+        choice = input("Select an option [1-20]: ").strip()
         if choice in valid_choices:
             return int(choice)
-        print("Please enter a number between 1 and 15.")
+        print("Please enter a valid option number.")
 
 
 def get_web_ports(open_ports):
@@ -626,7 +633,14 @@ def should_run_ingram(open_ports):
     return False
 
 
-def run_selected_tool(selection, ip, target_dir, profile="normal", use_ai=False):
+def run_lan_discovery_only(target_dir, subnet=None):
+    print("\n>>> TOOL: LAN network discovery")
+    cidr = subnet or prompt_subnet(guess_local_subnet())
+    hosts = discover_lan_hosts(cidr, target_dir)
+    return bool(hosts)
+
+
+def run_selected_tool(selection, ip, target_dir, profile="normal", use_ai=False, subnet=None):
     set_scan_profile(profile)
     ai_individual = {11, 12, 13, 14}
     if selection in ai_individual:
@@ -661,4 +675,12 @@ def run_selected_tool(selection, ip, target_dir, profile="normal", use_ai=False)
     if selection == 14:
         run_ai_report_only(ip, target_dir)
         return False
+    if selection == 16:
+        return run_lan_discovery_only(target_dir, subnet=subnet)
+    if selection == 17:
+        return run_nikto_only(ip, target_dir)
+    if selection == 18:
+        return run_whatweb_only(ip, target_dir)
+    if selection == 19:
+        return run_nmap_vuln_only(ip, target_dir)
     return False

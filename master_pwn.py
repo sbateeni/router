@@ -7,6 +7,7 @@ import subprocess
 import hashlib
 import importlib.util
 from core.runner import select_tool_menu, run_selected_tool
+from core.network_discovery import resolve_target_list
 from core.web_enum import update_nuclei_templates, ensure_dirsearch_deps
 from core.utils import missing_python_modules, reset_target_workspace, install_python_packages, ensure_routersploit_deps
 from core.report import generate_scan_report
@@ -296,54 +297,15 @@ def auto_install_tools():
             
     print("[+] All tools and dependencies are ready!\n")
 
-def main():
-    warn_if_running_as_root()
-    load_dotenv(repo_base_dir())
-    if ai_placeholder_keys_present():
-        print("[!] .env still has placeholder API keys (your_*_here). Replace them with real keys for AI.\n")
-    if telegram_placeholder_keys_present():
-        print("[!] .env still has placeholder Telegram values. Replace them for notifications.\n")
 
-    # تحديث الكود من GitHub قبل قراءة أي معاملات جديدة (مثل --auto)
-    if update_self_repo():
-        os.execv(sys.executable, [sys.executable] + sys.argv)
+def run_scan_for_target(ip, args, selection, scan_profile, use_ai, base_dir):
+    ai_individual_modes = {11, 12, 13, 14}
 
-    parser = argparse.ArgumentParser(description="Master Auto-Pwn Script for Routers (Modular Version)")
-    parser.add_argument("-t", "--target", required=True, help="Target IP address")
-    parser.add_argument(
-        "-a", "--auto",
-        action="store_true",
-        help="Run all tools automatically without showing the menu",
-    )
-    parser.add_argument(
-        "--deep",
-        action="store_true",
-        help="Use deep/full-power scan profile (slower, more thorough)",
-    )
-    parser.add_argument(
-        "--ai",
-        action="store_true",
-        help="Enable AI planning during scan + final analysis (requires API keys in .env)",
-    )
-    args = parser.parse_args()
-    ip = args.target
-    scan_profile = "deep" if args.deep else "normal"
-    use_ai = args.ai or ai_configured()
-
-    auto_install_tools()
-    # تأكد من أن قوالب Nuclei محدثة عند بداية التشغيل
-    try:
-        update_nuclei_templates()
-    except Exception:
-        print("[!] Warning: failed to update Nuclei templates at startup; continuing.")
-
-    print(f"======================================================")
+    print("======================================================")
     print(f"      TARGET ACQUIRED: {ip}                           ")
-    print(f"======================================================\n")
+    print("======================================================\n")
 
-    # إنشاء مجلد مخصص للهدف
-    # إذا كنت تستخدم كالي، سيتم إنشاؤه داخل مجلد targets في نفس مسار السكربت
-    target_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "targets", ip)
+    target_dir = os.path.join(base_dir, "targets", ip)
     os.makedirs(target_dir, exist_ok=True)
     try:
         os.chmod(target_dir, 0o755)
@@ -352,23 +314,13 @@ def main():
     reset_target_workspace(target_dir)
     print(f"[*] Workspace ready for target: {target_dir}\n")
 
-    if args.auto:
-        print("[*] Auto mode enabled: running all tools without menu.\n")
-    if args.deep:
-        print("[*] Deep scan profile enabled: all tools will run at full power.\n")
-    if use_ai:
-        print("[*] AI enabled: smart tool selection, Hydra hints, RouterSploit follow-up.\n")
-
-    selection = 1 if args.auto else select_tool_menu()
-    if selection == 15:
-        print("[-] Exiting without running any tools.")
-        return
-
-    ai_individual_modes = {11, 12, 13, 14}
     if selection in ai_individual_modes:
         use_ai = True
 
-    exploited = run_selected_tool(selection, ip, target_dir, profile=scan_profile, use_ai=use_ai)
+    exploited = run_selected_tool(
+        selection, ip, target_dir,
+        profile=scan_profile, use_ai=use_ai, subnet=getattr(args, "subnet", None),
+    )
 
     report_path = generate_scan_report(
         ip, target_dir, selection, exploited,
@@ -390,16 +342,111 @@ def main():
     elif exploited:
         print("[★] SUCCESS: Tool found a likely issue or exploitation succeeded!")
     else:
-        print("[-] Tool execution completed without finding a successful exploit.")
+        print("[-] Tool execution completed without finding a confirmed exploit.")
 
     print(f"[*] All output logs for {ip} have been saved in: {target_dir}")
     print(f"[*] Results summary report: {report_path}")
-    print("[*] Share RESULTS_SUMMARY.txt to review tool health and findings.")
     notify_scan_complete(
         ip, target_dir, report_path, exploited,
         profile=scan_profile, ai_analysis=ai_analysis,
     )
-    print("======================================================")
+    print("======================================================\n")
+    return exploited
+
+
+def main():
+    warn_if_running_as_root()
+    load_dotenv(repo_base_dir())
+    if ai_placeholder_keys_present():
+        print("[!] .env still has placeholder API keys (your_*_here). Replace them with real keys for AI.\n")
+    if telegram_placeholder_keys_present():
+        print("[!] .env still has placeholder Telegram values. Replace them for notifications.\n")
+
+    # تحديث الكود من GitHub قبل قراءة أي معاملات جديدة (مثل --auto)
+    if update_self_repo():
+        os.execv(sys.executable, [sys.executable] + sys.argv)
+
+    parser = argparse.ArgumentParser(description="Master Auto-Pwn Script for Routers (Modular Version)")
+    parser.add_argument("-t", "--target", help="Target IP address (optional — interactive menu if omitted)")
+    parser.add_argument(
+        "--subnet",
+        help="Subnet to discover hosts on, e.g. 192.168.1.0/24",
+    )
+    parser.add_argument(
+        "--all",
+        action="store_true",
+        help="Scan all hosts discovered on --subnet (use with --auto)",
+    )
+    parser.add_argument(
+        "-a", "--auto",
+        action="store_true",
+        help="Run all tools automatically without showing the tool menu",
+    )
+    parser.add_argument(
+        "--deep",
+        action="store_true",
+        help="Use deep/full-power scan profile (slower, more thorough)",
+    )
+    parser.add_argument(
+        "--ai",
+        action="store_true",
+        help="Enable AI planning during scan + final analysis (requires API keys in .env)",
+    )
+    args = parser.parse_args()
+    scan_profile = "deep" if args.deep else "normal"
+    use_ai = args.ai or ai_configured()
+    base_dir = repo_base_dir()
+
+    auto_install_tools()
+    try:
+        update_nuclei_templates()
+    except Exception:
+        print("[!] Warning: failed to update Nuclei templates at startup; continuing.")
+
+    if args.auto:
+        print("[*] Auto mode enabled: running all tools without tool menu.\n")
+    if args.deep:
+        print("[*] Deep scan profile enabled: all tools will run at full power.\n")
+    if use_ai:
+        print("[*] AI enabled: smart tool selection, Hydra hints, RouterSploit follow-up.\n")
+
+    targets = resolve_target_list(args, base_dir)
+
+    if args.auto:
+        selection = 1
+    else:
+        selection = select_tool_menu()
+
+    if selection == 20:
+        print("[-] Exiting without running any tools.")
+        return
+
+    if selection == 16:
+        discovery_dir = os.path.join(base_dir, "targets", "_network_discovery")
+        os.makedirs(discovery_dir, exist_ok=True)
+        from core.runner import run_lan_discovery_only
+        run_lan_discovery_only(discovery_dir, subnet=args.subnet)
+        print(f"[*] Discovery results saved in: {discovery_dir}")
+        return
+
+    if not targets:
+        print("[-] No targets selected.")
+        return
+
+    if len(targets) > 1:
+        print(f"\n[*] Selected {len(targets)} target(s): {', '.join(targets)}\n")
+
+    any_exploited = False
+    for ip in targets:
+        exploited = run_scan_for_target(ip, args, selection, scan_profile, use_ai, base_dir)
+        any_exploited = any_exploited or exploited
+
+    if len(targets) > 1:
+        print(f"[*] Batch scan finished for {len(targets)} target(s).")
+        if any_exploited:
+            print("[★] At least one target reported a likely finding.")
+        else:
+            print("[-] No confirmed exploits across selected targets.")
 
 if __name__ == "__main__":
     main()

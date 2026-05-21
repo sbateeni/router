@@ -94,6 +94,24 @@ TOOL_CHECKS = [
         "findings_if": lambda text: "login:" in text.lower() and "password:" in text.lower(),
         "ran_if": lambda text: "hydra" in text.lower() or "brute" in text.lower(),
     },
+    {
+        "name": "Nikto",
+        "outputs": ["nikto_port_*.txt", "nikto_port_*_stdout.txt"],
+        "findings_if": lambda text: "+ " in text and "OSVDB" in text,
+        "ran_if": lambda text: "nikto" in text.lower() or bool(text.strip()),
+    },
+    {
+        "name": "WhatWeb",
+        "outputs": ["whatweb_port_*.txt"],
+        "findings_if": lambda text: False,
+        "ran_if": lambda text: bool(text.strip()),
+    },
+    {
+        "name": "Nmap Vuln Scripts",
+        "outputs": ["nmap_vuln_scripts.txt"],
+        "findings_if": lambda text: "vulnerable" in text.lower() or "cve-" in text.lower(),
+        "ran_if": lambda text: "nmap" in text.lower() and bool(text.strip()),
+    },
 ]
 
 
@@ -409,7 +427,11 @@ MODE_LABELS = {
     12: "AI Hydra commands only",
     13: "AI RouterSploit + follow-up",
     14: "AI final report only",
-    15: "Exit",
+    16: "LAN network discovery",
+    17: "Nikto only",
+    18: "WhatWeb only",
+    19: "Nmap vuln scripts only",
+    20: "Exit",
 }
 
 
