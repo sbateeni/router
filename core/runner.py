@@ -66,6 +66,10 @@ def run_metasploit_search(query, target_dir):
     if not shutil.which("msfconsole"):
         print("[!] Metasploit (msfconsole) not found; skipping Metasploit lookup.")
         return False
+    generic_queries = {"http", "https", "ssl", "tcp", "nginx", "httpd"}
+    if query.lower().strip() in generic_queries:
+        print(f"[*] Skipping generic Metasploit search for '{query}'.")
+        return False
     log_file = os.path.join(target_dir, "msf_search.txt")
     # run msfconsole in quiet mode and run a search command then exit
     msf_cmd = f"search {query}; exit"
@@ -425,31 +429,30 @@ def run_all_tools(ip, target_dir):
                 print("\n[-] Exiting as requested.")
                 sys.exit(0)
 
-    if not context.exploited:
-        print("\n======================================================")
-        print(">>> PHASE 3: Router & Device Exploitation")
-        print("======================================================")
-        try:
-            if run_routersploit(ip, target_dir):
+    print("\n======================================================")
+    print(">>> PHASE 3: Router & Device Exploitation")
+    print("======================================================")
+    try:
+        if run_routersploit(ip, target_dir):
+            context.exploited = True
+        elif should_run_ingram(context.open_ports):
+            if run_ingram(ip, target_dir):
                 context.exploited = True
-            elif should_run_ingram(context.open_ports):
-                if run_ingram(ip, target_dir):
-                    context.exploited = True
-            else:
-                print("[*] Skipping Ingram (target looks like a router/web UI, not a camera).")
-        except KeyboardInterrupt:
-            if not prompt_next_stage():
-                print("\n[-] Exiting as requested.")
-                sys.exit(0)
+        else:
+            print("[*] Skipping Ingram (target looks like a router/web UI, not a camera).")
+    except KeyboardInterrupt:
+        if not prompt_next_stage():
+            print("\n[-] Exiting as requested.")
+            sys.exit(0)
 
-    if not context.exploited:
+    if context.login_ports or context.web_ports:
         print("\n======================================================")
         print(">>> PHASE 4: Credential Brute-Forcing (Last Resort)")
         print("======================================================")
         try:
             if context.login_ports and run_hydra(ip, context.login_ports, target_dir):
                 context.exploited = True
-            elif context.web_ports and run_web_hydra(ip, context.web_ports, target_dir):
+            if context.web_ports and run_web_hydra(ip, context.web_ports, target_dir):
                 context.exploited = True
         except KeyboardInterrupt:
             if not prompt_next_stage():

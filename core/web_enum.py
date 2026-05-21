@@ -3,6 +3,7 @@ import os
 import glob
 import shutil
 import sys
+import importlib.util
 
 from core.utils import run_cmd, TOOLS_DIR, PYTHON, missing_python_modules
 
@@ -14,16 +15,41 @@ if not os.path.exists(NUCLEI_CMD):
     NUCLEI_CMD = "nuclei"
 
 
+SIGNIFICANT_NUCLEI_SEVERITIES = {"critical", "high", "medium"}
+ACTIONABLE_NUCLEI_TAGS = ("default-login", "default-logins", "cve", "rce", "auth-bypass")
+
+
+def nuclei_actionable_findings(findings):
+    actionable = []
+    for item in findings:
+        info = item.get("info", {})
+        severity = str(info.get("severity", "unknown")).lower()
+        template = str(item.get("template-id", "")).lower()
+        tags = [str(tag).lower() for tag in info.get("tags", [])]
+
+        if severity in SIGNIFICANT_NUCLEI_SEVERITIES:
+            actionable.append(item)
+            continue
+        if any(tag in tags for tag in ("default-login", "default-logins")):
+            actionable.append(item)
+            continue
+        if any(keyword in template for keyword in ACTIONABLE_NUCLEI_TAGS):
+            actionable.append(item)
+    return actionable
+
+
 def ensure_dirsearch_deps():
     missing = missing_python_modules()
-    if not missing and not os.path.exists(DIRSEARCH_REQUIREMENTS):
+    needs_mysql = importlib.util.find_spec("mysql.connector") is None
+
+    if not missing and not needs_mysql and not os.path.exists(DIRSEARCH_REQUIREMENTS):
         return True
 
-    print("[*] Installing Python dependencies required by Dirsearch...")
+    print("[*] Ensuring Python dependencies required by Dirsearch...")
     commands = []
     if os.path.exists(DIRSEARCH_REQUIREMENTS):
         commands.append([PYTHON, "-m", "pip", "install", "-r", DIRSEARCH_REQUIREMENTS, "--break-system-packages"])
-    if missing:
+    if missing or needs_mysql:
         commands.append([PYTHON, "-m", "pip", "install", "mysql-connector-python", "defusedxml", "colorama", "--break-system-packages"])
 
     for command in commands:
@@ -33,8 +59,8 @@ def ensure_dirsearch_deps():
             return False
 
     still_missing = missing_python_modules()
-    if still_missing:
-        print(f"[!] Missing Python modules after install: {', '.join(still_missing)}")
+    if still_missing or importlib.util.find_spec("mysql.connector") is None:
+        print(f"[!] Missing Python modules after install: {', '.join(still_missing or ['mysql.connector'])}")
         return False
     return True
 
@@ -157,8 +183,13 @@ def run_nuclei(target_url, target_dir):
         print(f"[-] Nuclei scan failed for {target_url}. Check {stdout_log}")
 
     if findings:
-        print(f"[!] Nuclei found {len(findings)} findings (saved to {log_jsonl}).")
-        return True
+        actionable = nuclei_actionable_findings(findings)
+        print(f"[+] Nuclei found {len(findings)} result(s) ({len(actionable)} actionable).")
+        if actionable:
+            print("[!] Nuclei reported actionable findings.")
+            return True
+        print("[*] Nuclei findings are informational/low severity only.")
+        return False
 
     print(f"[+] Nuclei scan completed for {target_url}. No results found.")
     return False
@@ -184,7 +215,6 @@ def run_dirsearch(target_url, target_dir):
         "-e", "php,html,bak,js,txt,xml,conf",
         "-x", "404,500",
         "-t", "50",
-        "--format", "plain",
         "-o", log_file,
         "--no-color",
     ]
@@ -193,17 +223,29 @@ def run_dirsearch(target_url, target_dir):
         print(f"[-] Dirsearch failed for {target_url}. Check {stdout_log}")
 
     discovered = []
-    if os.path.exists(log_file):
-        with open(log_file, "r", encoding="utf-8", errors="ignore") as f:
+    sources = [log_file, stdout_log]
+    for source in sources:
+        if not os.path.exists(source):
+            continue
+        with open(source, "r", encoding="utf-8", errors="ignore") as f:
             for line in f:
                 line = line.strip()
-                if not line or line.startswith("#"):
+                if not line or line.startswith("#") or line.startswith("Usage:"):
                     continue
                 if line.startswith("http://") or line.startswith("https://"):
                     discovered.append(line)
-                elif line.startswith("/"):
+                    continue
+                if line.startswith("/"):
                     discovered.append(target_url.rstrip("/") + line)
-                elif "://" not in line and line[0].isalnum():
+                    continue
+                parts = line.split()
+                if len(parts) >= 2 and parts[1].startswith(("http://", "https://")):
+                    discovered.append(parts[1])
+                    continue
+                if len(parts) >= 2 and parts[1].startswith("/"):
+                    discovered.append(target_url.rstrip("/") + parts[1])
+                    continue
+                if "://" not in line and line and line[0].isalnum() and "error" not in line.lower():
                     discovered.append(f"{target_url.rstrip('/')}/{line}")
 
     discovered = list(dict.fromkeys(discovered))

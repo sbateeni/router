@@ -22,10 +22,8 @@ ERROR_PATTERNS = [
 SUCCESS_PATTERNS = [
     r"device is vulnerable",
     r"exploit successful",
-    r"is vulnerable",
+    r"(?<!\bnot )is vulnerable",
     r"login:\s*\S+\s*password:",
-    r"\[!\]\s*nuclei found",
-    r"vulnerable",
     r"credentials found",
 ]
 
@@ -39,14 +37,14 @@ TOOL_CHECKS = [
     {
         "name": "SearchSploit",
         "outputs": ["searchsploit.txt"],
-        "findings_if": lambda text: "no results" not in text.lower() and text.strip(),
+        "findings_if": lambda text: "no results" not in text.lower() and "shellcodes:" in text.lower() and "exploits:" in text.lower() and len(text.strip()) > 60,
         "ran_if": lambda text: bool(text.strip()),
     },
     {
         "name": "Metasploit Search",
         "outputs": ["msf_search.txt"],
-        "findings_if": lambda text: "exploit/" in text.lower() or "matching modules" in text.lower(),
-        "ran_if": lambda text: bool(text.strip()),
+        "findings_if": lambda text: False,
+        "ran_if": lambda text: bool(text.strip()) and "no results from search" not in text.lower(),
     },
     {
         "name": "Dirsearch",
@@ -87,7 +85,7 @@ TOOL_CHECKS = [
     {
         "name": "Ingram",
         "outputs": ["ingram_scan.txt", "ingram_results/results.csv", "ingram_results/log.txt"],
-        "findings_if": lambda text: "vulnerable" in text.lower() and "not_vulnerable" not in text.lower(),
+        "findings_if": lambda text: False,
         "ran_if": lambda text: "running at" in text.lower() or "config is config" in text.lower(),
     },
     {
@@ -126,10 +124,25 @@ def detect_errors(text):
 
 def detect_success(text):
     cleaned = strip_ansi(text).lower()
+    if "not vulnerable" in cleaned or "no results" in cleaned:
+        return False
     for pattern in SUCCESS_PATTERNS:
         if re.search(pattern, cleaned, re.IGNORECASE):
             return True
     return False
+
+
+def significant_nuclei_findings(findings):
+    significant = {"critical", "high", "medium"}
+    return [item for item in findings if str(item.get("severity", "unknown")).lower() in significant]
+
+
+def ingram_has_results(target_dir):
+    results_csv = os.path.join(target_dir, "ingram_results", "results.csv")
+    try:
+        return os.path.exists(results_csv) and os.path.getsize(results_csv) > 0
+    except OSError:
+        return False
 
 
 def count_nuclei_findings(target_dir):
@@ -217,7 +230,9 @@ def assess_tool(target_dir, tool):
 
     combined = "\n".join(read_file(path) for path in files)
     errors = detect_errors(combined)
-    has_findings = tool.get("findings_if", lambda _t: False)(combined) or detect_success(combined)
+    has_findings = tool.get("findings_if", lambda _t: False)(combined)
+    if not has_findings:
+        has_findings = detect_success(combined)
     ran_ok = tool.get("ran_if", lambda _t: bool(combined.strip()))(combined)
 
     if errors and not ran_ok and not has_findings:
@@ -290,7 +305,7 @@ def build_report_text(ip, target_dir, selection, exploited, payload):
 
     lines.extend([
         "",
-        f"Nuclei Findings : {len(payload['nuclei_findings'])}",
+        f"Nuclei Findings : {len(nuclei_findings)} total / {len(payload.get('actionable_nuclei', []))} actionable",
         f"Dirsearch Paths : {len(payload['dirsearch_paths'])}",
         f"FFUF Paths      : {len(payload['ffuf_paths'])}",
         f"Hydra Hits      : {len(payload['hydra_hits'])}",
@@ -408,11 +423,22 @@ def list_target_files(target_dir):
 def generate_scan_report(ip, target_dir, selection, exploited):
     tool_results = [assess_tool(target_dir, tool) for tool in TOOL_CHECKS]
     nuclei_findings = count_nuclei_findings(target_dir)
+    actionable_nuclei = significant_nuclei_findings(nuclei_findings)
 
     for item in tool_results:
-        if item["tool"] == "Nuclei" and nuclei_findings:
+        if item["tool"] == "Nuclei":
+            if actionable_nuclei:
+                item["status"] = "FINDINGS"
+                item["notes"] = [f"Found {len(actionable_nuclei)} actionable Nuclei result(s)."]
+            elif nuclei_findings:
+                item["status"] = "OK"
+                item["notes"] = [
+                    f"Found {len(nuclei_findings)} informational/low result(s) only.",
+                    "Tool ran successfully.",
+                ]
+        if item["tool"] == "Ingram" and ingram_has_results(target_dir):
             item["status"] = "FINDINGS"
-            item["notes"].append(f"Found {len(nuclei_findings)} Nuclei result(s).")
+            item["notes"].append("Ingram results.csv contains entries.")
 
     all_files, file_sizes = list_target_files(target_dir)
 
@@ -426,6 +452,7 @@ def generate_scan_report(ip, target_dir, selection, exploited):
         "nmap": parse_nmap_summary(target_dir),
         "tools": tool_results,
         "nuclei_findings": nuclei_findings,
+        "actionable_nuclei": actionable_nuclei,
         "dirsearch_paths": parse_dirsearch_paths(target_dir),
         "ffuf_paths": count_ffuf_paths(target_dir),
         "hydra_hits": parse_hydra_hits(target_dir),
