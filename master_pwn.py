@@ -319,7 +319,7 @@ def run_scan_for_target(ip, args, selection, scan_profile, base_dir):
         profile=scan_profile, subnet=getattr(args, "subnet", None),
     )
 
-    report_path = generate_scan_report(
+    report_path, confirmed = generate_scan_report(
         ip, target_dir, selection, exploited,
         current_phase="Completed", profile=scan_profile,
     )
@@ -336,19 +336,21 @@ def run_scan_for_target(ip, args, selection, scan_profile, base_dir):
     print("\n======================================================")
     if selection == 2:
         print("[*] Nmap-only execution completed.")
-    elif exploited:
-        print("[★] SUCCESS: Tool found a likely issue or exploitation succeeded!")
+    elif confirmed:
+        print("[★] SUCCESS: Confirmed exploit or critical vulnerability found!")
+    elif exploited and not confirmed:
+        print("[!] Scan flagged findings but nothing confirmed — check Hydra manually and read MSF_EXPLOIT_COMMANDS.txt")
     else:
         print("[-] Tool execution completed without finding a confirmed exploit.")
 
     print(f"[*] All output logs for {ip} have been saved in: {target_dir}")
     print(f"[*] Results summary report: {report_path}")
     notify_scan_complete(
-        ip, target_dir, report_path, exploited,
+        ip, target_dir, report_path, confirmed,
         profile=scan_profile, ai_analysis=ai_analysis,
     )
     print("======================================================\n")
-    return exploited
+    return confirmed
 
 
 def main():

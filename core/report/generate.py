@@ -4,6 +4,15 @@ import os
 import re
 from datetime import datetime
 
+from core.report.analysis import analyze_exploit_status, dedupe_nuclei_findings
+from core.report.parsers import (
+    count_nuclei_findings,
+    find_files,
+    read_file,
+    significant_nuclei_findings,
+    strip_ansi,
+)
+
 REPORT_FILENAME = "RESULTS_SUMMARY.txt"
 REPORT_JSON = "results_summary.json"
 
@@ -45,6 +54,12 @@ TOOL_CHECKS = [
         "outputs": ["msf_search.txt"],
         "findings_if": lambda text: False,
         "ran_if": lambda text: bool(text.strip()) and "no results from search" not in text.lower(),
+    },
+    {
+        "name": "Metasploit Exploit Plan",
+        "outputs": ["MSF_EXPLOIT_COMMANDS.txt", "msf_modules.json"],
+        "findings_if": lambda text: "use exploit/" in text.lower(),
+        "ran_if": lambda text: bool(text.strip()),
     },
     {
         "name": "Dirsearch",
@@ -115,22 +130,6 @@ TOOL_CHECKS = [
 ]
 
 
-def read_file(path, max_chars=12000):
-    try:
-        with open(path, "r", encoding="utf-8", errors="ignore") as fh:
-            return fh.read(max_chars)
-    except OSError:
-        return ""
-
-
-def strip_ansi(text):
-    return re.sub(r"\x1b\[[0-9;]*m", "", text or "")
-
-
-def find_files(target_dir, pattern):
-    return sorted(glob.glob(os.path.join(target_dir, pattern)))
-
-
 def detect_errors(text):
     cleaned = strip_ansi(text).lower()
     hits = []
@@ -150,39 +149,12 @@ def detect_success(text):
     return False
 
 
-def significant_nuclei_findings(findings):
-    significant = {"critical", "high", "medium"}
-    return [item for item in findings if str(item.get("severity", "unknown")).lower() in significant]
-
-
 def ingram_has_results(target_dir):
     results_csv = os.path.join(target_dir, "ingram_results", "results.csv")
     try:
         return os.path.exists(results_csv) and os.path.getsize(results_csv) > 0
     except OSError:
         return False
-
-
-def count_nuclei_findings(target_dir):
-    findings = []
-    for path in find_files(target_dir, "nuclei_port_*.jsonl"):
-        with open(path, "r", encoding="utf-8", errors="ignore") as fh:
-            for line in fh:
-                line = line.strip()
-                if not line.startswith("{"):
-                    continue
-                try:
-                    item = json.loads(line)
-                    info = item.get("info", {})
-                    findings.append({
-                        "template": item.get("template-id", "unknown"),
-                        "severity": info.get("severity", "unknown"),
-                        "matched_at": item.get("matched-at", ""),
-                        "file": os.path.basename(path),
-                    })
-                except json.JSONDecodeError:
-                    continue
-    return findings
 
 
 def count_ffuf_paths(target_dir):
@@ -304,7 +276,8 @@ def build_report_text(ip, target_dir, selection, exploited, payload):
         f"Last Phase     : {payload.get('current_phase', 'Final')}",
         f"Mode Selected  : {payload['mode_label']}",
         f"Overall Status : {payload['overall_status']}",
-        f"Exploit Found  : {'YES' if exploited else 'NO'}",
+        f"Exploit Found  : {'YES' if payload.get('confirmed_exploited') else 'NO'}",
+        f"Exploit Detail : {payload.get('exploit_label', 'NONE')}",
         f"Report Folder  : {target_dir}",
         "",
         "Context File   : scan_context.json (shared data for all tools)",
@@ -326,13 +299,37 @@ def build_report_text(ip, target_dir, selection, exploited, payload):
     if nmap.get("vendor"):
         lines.append(f"Vendor/MAC Info: {nmap['vendor']}")
 
-    nuclei_findings = payload.get("nuclei_findings", [])
+    nuclei_findings = payload.get("nuclei_deduped") or payload.get("nuclei_findings", [])
     lines.extend([
         "",
-        f"Nuclei Findings : {len(nuclei_findings)} total / {len(payload.get('actionable_nuclei', []))} actionable",
+        f"Nuclei Findings : {len(nuclei_findings)} unique / {len(payload.get('actionable_nuclei', []))} actionable",
         f"Dirsearch Paths : {len(payload['dirsearch_paths'])}",
         f"FFUF Paths      : {len(payload['ffuf_paths'])}",
-        f"Hydra Hits      : {len(payload['hydra_hits'])}",
+        f"Hydra Hits      : {len(payload.get('hydra_hits', []))} (verify manually)",
+        "",
+        "------------------------------------------------------------",
+        " MANUAL VERIFICATION REQUIRED",
+        "------------------------------------------------------------",
+    ])
+    for step in payload.get("manual_verification") or ["No extra manual steps recorded."]:
+        lines.append(f"  - {step}")
+    lines.append("")
+
+    rsf = payload.get("routersploit") or {}
+    lines.extend([
+        "------------------------------------------------------------",
+        " ROUTERSPLOIT SUMMARY",
+        "------------------------------------------------------------",
+        f"  {rsf.get('summary', 'No RouterSploit data.')}",
+        "",
+    ])
+
+    sqlmap = payload.get("sqlmap") or {}
+    lines.extend([
+        "------------------------------------------------------------",
+        " SQLMAP SUMMARY",
+        "------------------------------------------------------------",
+        f"  {sqlmap.get('summary', 'No SQLMap data.')}",
         "",
         "------------------------------------------------------------",
         " TOOL STATUS",
@@ -350,16 +347,44 @@ def build_report_text(ip, target_dir, selection, exploited, payload):
     if payload["nuclei_findings"]:
         lines.extend([
             "------------------------------------------------------------",
-            " NUCLEI FINDINGS",
+            " NUCLEI FINDINGS (deduplicated)",
             "------------------------------------------------------------",
         ])
-        for finding in payload["nuclei_findings"][:20]:
+        for finding in (payload.get("nuclei_deduped") or payload["nuclei_findings"])[:20]:
             lines.append(
                 f"  - [{finding['severity']}] {finding['template']} -> {finding['matched_at']}"
             )
+        for note in payload.get("nuclei_notes") or []:
+            lines.append(f"  * {note}")
         lines.append("")
 
-    if payload["dirsearch_paths"]:
+    if payload.get("hydra_hits"):
+        lines.extend([
+            "------------------------------------------------------------",
+            " CREDENTIALS / HYDRA (unverified until login works)",
+            "------------------------------------------------------------",
+        ])
+        for hit in payload["hydra_hits"]:
+            if isinstance(hit, dict):
+                flag = " [likely false positive]" if hit.get("likely_false_positive") else ""
+                lines.append(f"  - user={hit.get('login')} pass={hit.get('password')}{flag}")
+            else:
+                lines.append(f"  - {hit}")
+        lines.append("")
+
+    msf_cmds = payload.get("msf_commands_preview") or []
+    if msf_cmds:
+        lines.extend([
+            "------------------------------------------------------------",
+            " METASPLOIT EXPLOIT COMMANDS (preview)",
+            "------------------------------------------------------------",
+            "  Full file: MSF_EXPLOIT_COMMANDS.txt",
+        ])
+        for line in msf_cmds[:40]:
+            lines.append(f"  {line}")
+        lines.append("")
+
+    if payload.get("dirsearch_paths"):
         lines.extend([
             "------------------------------------------------------------",
             " DISCOVERED PATHS (sample)",
@@ -377,16 +402,6 @@ def build_report_text(ip, target_dir, selection, exploited, payload):
         ])
         for path in payload["ffuf_paths"][:20]:
             lines.append(f"  - {path}")
-        lines.append("")
-
-    if payload["hydra_hits"]:
-        lines.extend([
-            "------------------------------------------------------------",
-            " CREDENTIALS / HYDRA HITS",
-            "------------------------------------------------------------",
-        ])
-        for hit in payload["hydra_hits"]:
-            lines.append(f"  - {hit}")
         lines.append("")
 
     lines.extend([
@@ -453,24 +468,44 @@ def list_target_files(target_dir):
 
 
 def generate_scan_report(ip, target_dir, selection, exploited, current_phase="Final", profile="normal"):
+    analysis = analyze_exploit_status(target_dir, runtime_exploited=exploited)
+    confirmed_exploited = analysis["confirmed_exploited"]
+
     tool_results = [assess_tool(target_dir, tool) for tool in TOOL_CHECKS]
     nuclei_findings = count_nuclei_findings(target_dir)
-    actionable_nuclei = significant_nuclei_findings(nuclei_findings)
+    nuclei_deduped = dedupe_nuclei_findings(nuclei_findings)
+    actionable_nuclei = significant_nuclei_findings(nuclei_deduped)
 
     for item in tool_results:
         if item["tool"] == "Nuclei":
             if actionable_nuclei:
                 item["status"] = "FINDINGS"
                 item["notes"] = [f"Found {len(actionable_nuclei)} actionable Nuclei result(s)."]
-            elif nuclei_findings:
+            elif nuclei_deduped:
                 item["status"] = "OK"
                 item["notes"] = [
-                    f"Found {len(nuclei_findings)} informational/low result(s) only.",
+                    f"Found {len(nuclei_deduped)} unique informational/low result(s).",
                     "Tool ran successfully.",
                 ]
+        if item["tool"] == "Hydra":
+            if analysis["hydra_hits"]:
+                if analysis["hydra_unverified"] and not analysis["hydra_verified_candidates"]:
+                    item["status"] = "WARNING"
+                    item["notes"] = ["Hydra reported credentials — likely false positive; verify in browser."]
+                elif analysis["hydra_verified_candidates"]:
+                    item["status"] = "WARNING"
+                    item["notes"] = ["Hydra found credentials — manual login verification required."]
+                else:
+                    item["status"] = "WARNING"
+                    item["notes"] = ["Hydra output present — verify manually."]
         if item["tool"] == "Ingram" and ingram_has_results(target_dir):
             item["status"] = "FINDINGS"
             item["notes"].append("Ingram results.csv contains entries.")
+
+    msf_preview = []
+    msf_path = os.path.join(target_dir, "MSF_EXPLOIT_COMMANDS.txt")
+    if os.path.exists(msf_path):
+        msf_preview = read_file(msf_path, 4000).splitlines()[:40]
 
     all_files, file_sizes = list_target_files(target_dir)
 
@@ -479,24 +514,33 @@ def generate_scan_report(ip, target_dir, selection, exploited, current_phase="Fi
         "target": ip,
         "mode": selection,
         "mode_label": MODE_LABELS.get(selection, f"Mode {selection}"),
-        "exploited": exploited,
-        "overall_status": overall_status(tool_results, exploited),
+        "exploited": confirmed_exploited,
+        "confirmed_exploited": confirmed_exploited,
+        "runtime_exploited": exploited,
+        "exploit_label": analysis["exploit_label"],
+        "overall_status": overall_status(tool_results, confirmed_exploited),
         "profile": profile,
         "current_phase": current_phase,
         "nmap": parse_nmap_summary(target_dir),
         "tools": tool_results,
         "nuclei_findings": nuclei_findings,
+        "nuclei_deduped": nuclei_deduped,
         "actionable_nuclei": actionable_nuclei,
+        "nuclei_notes": analysis.get("nuclei_notes", []),
         "dirsearch_paths": parse_dirsearch_paths(target_dir),
         "ffuf_paths": count_ffuf_paths(target_dir),
-        "hydra_hits": parse_hydra_hits(target_dir),
+        "hydra_hits": analysis["hydra_hits"],
+        "manual_verification": analysis["manual_verification"],
+        "routersploit": analysis["routersploit"],
+        "sqlmap": analysis["sqlmap"],
+        "msf_commands_preview": msf_preview,
         "all_files": all_files,
         "file_sizes": file_sizes,
     }
 
     report_path = os.path.join(target_dir, REPORT_FILENAME)
     json_path = os.path.join(target_dir, REPORT_JSON)
-    report_text = build_report_text(ip, target_dir, selection, exploited, payload)
+    report_text = build_report_text(ip, target_dir, selection, confirmed_exploited, payload)
 
     with open(report_path, "w", encoding="utf-8") as fh:
         fh.write(report_text)
@@ -504,4 +548,4 @@ def generate_scan_report(ip, target_dir, selection, exploited, current_phase="Fi
     with open(json_path, "w", encoding="utf-8") as fh:
         json.dump(payload, fh, indent=2, ensure_ascii=False)
 
-    return report_path
+    return report_path, confirmed_exploited

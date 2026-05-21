@@ -1,3 +1,5 @@
+import os
+import re
 import sys
 
 from core.bruteforce import run_hydra, run_web_hydra
@@ -16,8 +18,8 @@ from core.classic.helpers import (
     refresh_report,
     run_ffuf,
     run_gau,
-    run_metasploit_search,
 )
+from core.classic.metasploit import run_metasploit_recon
 from core.exploitation import run_ingram, run_routersploit
 from core.scan_config import get_profile_name, get_scan_profile
 from core.scanner import run_nmap
@@ -46,8 +48,21 @@ def run_all_classic_tools(ip, target_dir, selection=1):
             if service_queries:
                 print("\n[+] Performing SearchSploit lookups based on detected services...")
                 for q in service_queries:
-                    if run_searchsploit(q, target_dir):
-                        run_metasploit_search(q, target_dir)
+                    run_searchsploit(q, target_dir)
+
+            vendor = None
+            for entry in context.open_ports:
+                if isinstance(entry, dict) and entry.get("port") == 0:
+                    vendor = entry.get("vendor") or entry.get("service")
+                    break
+            if not vendor:
+                nmap_text_path = os.path.join(target_dir, "nmap_scan.txt")
+                if os.path.exists(nmap_text_path):
+                    with open(nmap_text_path, "r", encoding="utf-8", errors="ignore") as fh:
+                        m = re.search(r"MAC Address:.*\((.+)\)", fh.read())
+                        if m:
+                            vendor = m.group(1)
+            run_metasploit_recon(ip, target_dir, context.open_ports, vendor=vendor)
         except Exception:
             pass
 
@@ -126,11 +141,11 @@ def run_all_classic_tools(ip, target_dir, selection=1):
         print("======================================================")
         try:
             if context.login_ports and run_hydra(ip, context.login_ports, target_dir):
-                context.exploited = True
+                pass
             if context.web_ports and run_web_hydra(ip, context.web_ports, target_dir):
-                context.exploited = True
+                pass
         except KeyboardInterrupt:
             handle_keyboard_interrupt()
 
-    refresh_report(ip, target_dir, selection, context.exploited, context, "Phase 4 - Brute Force")
-    return context.exploited
+    _, confirmed = refresh_report(ip, target_dir, selection, context.exploited, context, "Phase 4 - Brute Force")
+    return confirmed

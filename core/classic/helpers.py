@@ -29,11 +29,13 @@ def prompt_next_stage():
 
 def refresh_report(ip, target_dir, selection, exploited, context, phase):
     save_scan_context(target_dir, context, phase, get_profile_name(), exploited)
-    report_path = generate_scan_report(
+    report_path, confirmed = generate_scan_report(
         ip, target_dir, selection, exploited, current_phase=phase, profile=get_profile_name()
     )
     print(f"[*] Report updated after {phase}: {report_path}")
-    return report_path
+    if confirmed != exploited:
+        print(f"[*] Confirmed exploit status: {'YES' if confirmed else 'NO (Hydra/creds need manual check)'}")
+    return report_path, confirmed
 
 
 def find_common_wordlist():
@@ -59,22 +61,8 @@ def find_common_wordlist():
 
 
 def run_metasploit_search(query, target_dir):
-    if not shutil.which("msfconsole"):
-        print("[!] Metasploit (msfconsole) not found; skipping Metasploit lookup.")
-        return False
-    generic_queries = {"http", "https", "ssl", "tcp", "nginx", "httpd"}
-    if query.lower().strip() in generic_queries:
-        print(f"[*] Skipping generic Metasploit search for '{query}'.")
-        return False
-    log_file = os.path.join(target_dir, "msf_search.txt")
-    msf_cmd = f"search {query}; exit"
-    command = ["msfconsole", "-q", "-x", msf_cmd]
-    success, output = run_cmd(command, capture=True, log_file=log_file)
-    if output:
-        print(output)
-        print(f"[+] Metasploit search results saved to: {log_file}")
-        return True
-    return False
+    from core.classic.metasploit import run_metasploit_search as _search
+    return _search(query, target_dir, append=True)
 
 
 def run_gau(target_url, target_dir):
