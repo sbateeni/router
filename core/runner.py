@@ -7,7 +7,7 @@ from core.scanner import run_nmap
 from core.utils import run_cmd
 from core.web_enum import run_nuclei, run_dirsearch, run_sqlmap, run_searchsploit
 from core.exploitation import run_routersploit, run_ingram
-from core.bruteforce import run_hydra
+from core.bruteforce import run_hydra, run_web_hydra
 
 
 class ScanContext:
@@ -44,19 +44,20 @@ def extract_service_queries(open_ports):
     """Create a list of service/product query strings from nmap results for searchsploit lookups."""
     queries = set()
     for p in open_ports:
-        # p may be dict with 'service' and 'version' or raw string; be defensive
-        svc = None
-        ver = None
-        try:
-            svc = p.get('service') if isinstance(p, dict) else str(p)
-        except Exception:
-            svc = str(p)
-        # try to split common banners like 'nginx 1.14.0'
-        if svc:
-            parts = svc.split()
-            if len(parts) >= 2:
-                queries.add(f"{parts[0]} {parts[1]}")
-            queries.add(parts[0])
+        if not isinstance(p, dict):
+            continue
+        if p.get("port") == 0:
+            vendor = p.get("vendor") or p.get("service")
+            if vendor:
+                queries.add(vendor.split()[0])
+            continue
+        svc = p.get("service", "")
+        if not svc:
+            continue
+        parts = svc.split()
+        if len(parts) >= 2:
+            queries.add(f"{parts[0]} {parts[1]}")
+        queries.add(parts[0])
     return list(queries)
 
 
@@ -123,22 +124,36 @@ def run_ffuf(target_url, target_dir):
         return []
 
     print("[+] Running ffuf for hidden content discovery...")
-    log_file = os.path.join(target_dir, "ffuf_results.txt")
+    port = target_url.split(":")[-1] if ":" in target_url.replace("https://", "").replace("http://", "") else "80"
+    json_file = os.path.join(target_dir, f"ffuf_port_{port}.json")
+    stdout_log = os.path.join(target_dir, f"ffuf_port_{port}_stdout.txt")
     fuzz_url = normalize_url(target_url) + "/FUZZ"
-    command = ["ffuf", "-u", fuzz_url, "-w", wordlist, "-t", "50", "-o", log_file, "-of", "json"]
-    success, output = run_cmd(command, capture=True, log_file=log_file)
+    command = [
+        "ffuf", "-u", fuzz_url, "-w", wordlist,
+        "-t", "50", "-s",
+        "-o", json_file, "-of", "json",
+        "-mc", "200,204,301,302,307,401,403,405,500",
+    ]
+    success, output = run_cmd(command, capture=True, log_file=stdout_log)
+    if not success:
+        print(f"[-] ffuf failed for {target_url}. Check {stdout_log}")
+
     urls = []
-    if os.path.exists(log_file):
+    if os.path.exists(json_file):
         try:
             import json
-            with open(log_file, "r", encoding="utf-8", errors="ignore") as fh:
+            with open(json_file, "r", encoding="utf-8", errors="ignore") as fh:
                 content = fh.read().strip()
                 if content:
                     data = json.loads(content)
                     for result in data.get("results", []):
-                        path = result.get("input", "").replace(fuzz_url.replace("FUZZ", ""), "")
-                        if path:
-                            urls.append(normalize_url(target_url) + path)
+                        url = result.get("url")
+                        if url:
+                            urls.append(url)
+                            continue
+                        fuzz_value = result.get("input", {}).get("FUZZ")
+                        if fuzz_value:
+                            urls.append(normalize_url(target_url) + "/" + fuzz_value.lstrip("/"))
         except Exception:
             pass
     urls = list(dict.fromkeys(urls))
@@ -181,11 +196,23 @@ def select_tool_menu():
 
 
 def get_web_ports(open_ports):
-    return [p['port'] for p in open_ports if p['port'] in [80, 443, 8080, 8443] or 'http' in p['service'].lower()]
+    ports = []
+    for p in open_ports:
+        if not isinstance(p, dict) or not p.get("port"):
+            continue
+        if p["port"] in [80, 443, 8080, 8443] or "http" in p["service"].lower():
+            ports.append(p["port"])
+    return ports
 
 
 def get_login_ports(open_ports):
-    return [p for p in open_ports if p['port'] in [21, 22, 23] or p['service'].lower() in ['ssh', 'ftp', 'telnet']]
+    login = []
+    for p in open_ports:
+        if not isinstance(p, dict) or not p.get("port"):
+            continue
+        if p["port"] in [21, 22, 23] or p["service"].lower().split()[0] in ["ssh", "ftp", "telnet"]:
+            login.append(p)
+    return login
 
 
 def run_nmap_only(ip, target_dir):
@@ -254,10 +281,15 @@ def run_hydra_only(ip, target_dir):
     if not open_ports:
         return False
     login_ports = get_login_ports(open_ports)
-    if not login_ports:
-        print("[-] No login ports found for Hydra.")
-        return False
-    return run_hydra(ip, login_ports, target_dir)
+    web_ports = get_web_ports(open_ports)
+    success = False
+    if login_ports:
+        success = run_hydra(ip, login_ports, target_dir) or success
+    if web_ports:
+        success = run_web_hydra(ip, web_ports, target_dir) or success
+    if not login_ports and not web_ports:
+        print("[-] No login or web ports found for Hydra.")
+    return success
 
 
 def run_ffuf_only(ip, target_dir):
@@ -400,16 +432,24 @@ def run_all_tools(ip, target_dir):
         try:
             if run_routersploit(ip, target_dir):
                 context.exploited = True
-            elif run_ingram(ip, target_dir):
-                context.exploited = True
+            elif should_run_ingram(context.open_ports):
+                if run_ingram(ip, target_dir):
+                    context.exploited = True
+            else:
+                print("[*] Skipping Ingram (target looks like a router/web UI, not a camera).")
         except KeyboardInterrupt:
             if not prompt_next_stage():
                 print("\n[-] Exiting as requested.")
                 sys.exit(0)
 
-    if not context.exploited and context.login_ports:
+    if not context.exploited:
+        print("\n======================================================")
+        print(">>> PHASE 4: Credential Brute-Forcing (Last Resort)")
+        print("======================================================")
         try:
-            if run_hydra(ip, context.login_ports, target_dir):
+            if context.login_ports and run_hydra(ip, context.login_ports, target_dir):
+                context.exploited = True
+            elif context.web_ports and run_web_hydra(ip, context.web_ports, target_dir):
                 context.exploited = True
         except KeyboardInterrupt:
             if not prompt_next_stage():
@@ -417,6 +457,19 @@ def run_all_tools(ip, target_dir):
                 sys.exit(0)
 
     return context.exploited
+
+
+def should_run_ingram(open_ports):
+    """Skip Ingram when the target looks like a generic router/web UI, not a camera."""
+    camera_services = {"rtsp", "onvif", "dvr", "ipcam", "hikvision", "dahua"}
+    for entry in open_ports:
+        service = str(entry.get("service", "")).lower()
+        port = entry.get("port")
+        if port in {554, 37777, 8000, 34567, 9000}:
+            return True
+        if any(token in service for token in camera_services):
+            return True
+    return False
 
 
 def run_selected_tool(selection, ip, target_dir):

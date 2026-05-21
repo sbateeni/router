@@ -7,7 +7,8 @@ import subprocess
 import hashlib
 import importlib.util
 from core.runner import select_tool_menu, run_selected_tool
-from core.web_enum import update_nuclei_templates
+from core.web_enum import update_nuclei_templates, ensure_dirsearch_deps
+from core.utils import missing_python_modules
 
 def update_self_repo():
     base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -172,22 +173,43 @@ def auto_install_tools():
             installed_hash = None
 
     telnetlib3_installed = importlib.util.find_spec("telnetlib3") is not None
-    needs_install = missing_tools or req_hash is None or installed_hash != req_hash or not telnetlib3_installed
+    missing_modules = missing_python_modules()
+    needs_install = (
+        missing_tools
+        or req_hash is None
+        or installed_hash != req_hash
+        or not telnetlib3_installed
+        or bool(missing_modules)
+    )
     if needs_install:
         print("[*] Installing Python requirements (This might take a moment)...")
         if os.path.exists(req_path):
-            result = subprocess.run([sys.executable, "-m", "pip", "install", "-r", req_path, "--break-system-packages"])
+            pip_cmd = [sys.executable, "-m", "pip", "install", "-r", req_path, "--break-system-packages"]
+            result = subprocess.run(pip_cmd)
             if result.returncode != 0:
                 print("[!] Python requirements installation failed. Please check the output above.")
                 return
+        if missing_modules:
+            subprocess.run([
+                sys.executable, "-m", "pip", "install",
+                "mysql-connector-python", "defusedxml", "colorama",
+                "--break-system-packages",
+            ])
         with open(flag_file, "w", encoding="utf-8") as f:
             f.write(req_hash or "")
+
+    ensure_dirsearch_deps()
             
     print("[+] All tools and dependencies are ready!\n")
 
 def main():
     parser = argparse.ArgumentParser(description="Master Auto-Pwn Script for Routers (Modular Version)")
     parser.add_argument("-t", "--target", required=True, help="Target IP address")
+    parser.add_argument(
+        "-a", "--auto",
+        action="store_true",
+        help="Run all tools automatically without showing the menu",
+    )
     args = parser.parse_args()
     ip = args.target
 
@@ -214,7 +236,10 @@ def main():
         pass
     print(f"[*] Workspace created for target: {target_dir}\n")
 
-    selection = select_tool_menu()
+    if args.auto:
+        print("[*] Auto mode enabled: running all tools without menu.\n")
+
+    selection = 1 if args.auto else select_tool_menu()
     if selection == 11:
         print("[-] Exiting without running any tools.")
         return

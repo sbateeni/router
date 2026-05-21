@@ -1,7 +1,17 @@
 import subprocess
 import os
+import sys
 
 TOOLS_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "tools")
+PYTHON = sys.executable
+
+CRITICAL_MODULES = (
+    "mysql.connector",
+    "requests",
+    "colorama",
+    "defusedxml",
+)
+
 
 def ensure_parent_dir(file_path):
     directory = os.path.dirname(file_path)
@@ -9,38 +19,48 @@ def ensure_parent_dir(file_path):
         os.makedirs(directory, exist_ok=True)
 
 
+def missing_python_modules():
+    missing = []
+    for module_name in CRITICAL_MODULES:
+        root = module_name.split(".", 1)[0]
+        try:
+            __import__(root if root != "mysql" else "mysql.connector")
+        except ImportError:
+            missing.append(module_name)
+    return missing
+
+
 def run_cmd(command, capture=False, log_file=None):
     """
-    دالة مساعدة لتشغيل الأوامر وحفظ المخرجات إذا تم تحديد log_file.
+    Run a shell command. When log_file is set, stdout/stderr are saved there.
+    Returns (success, combined_output) where success reflects the process exit code.
     """
     try:
         print(f"\n[>] Executing: {' '.join(command) if isinstance(command, list) else command}")
-        
-        # التقاط المخرجات دائماً إذا كان لدينا ملف لحفظه
+
         if capture or log_file:
             result = subprocess.run(command, capture_output=True, text=True)
-            output = result.stdout + "\n" + result.stderr
-            
-            # حفظ المخرجات في الملف إذا طُلب ذلك
+            output = (result.stdout or "") + ("\n" + result.stderr if result.stderr else "")
+            output = output.strip()
+            ok = result.returncode == 0
+
             if log_file:
                 try:
                     ensure_parent_dir(log_file)
                     with open(log_file, "w", encoding="utf-8") as f:
                         f.write(output)
-                except PermissionError as e:
+                except PermissionError:
                     print(f"[-] Permission denied writing log file: {log_file}")
-                    if capture:
-                        return result.returncode == 0, output
-                    return result.returncode == 0, output
-            
+
             if capture:
-                return True, output
-            else:
-                print(output) # طباعة المخرجات للمستخدم
-                return result.returncode == 0, ""
-        else:
-            result = subprocess.run(command)
-            return result.returncode == 0, ""
+                return ok, output
+
+            if output:
+                print(output)
+            return ok, ""
+
+        result = subprocess.run(command)
+        return result.returncode == 0, ""
     except Exception as e:
         print(f"[-] Failed to execute command: {e}")
         return False, str(e)
