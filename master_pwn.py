@@ -16,7 +16,19 @@ def update_self_repo():
     print(f"[*] Repository base path: {base_dir}")
     if not os.path.exists(git_dir):
         print("[*] No local Git repository found; skipping repository update.")
-        return
+        return False
+
+    def current_head():
+        result = subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            cwd=base_dir,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+        if result.returncode != 0:
+            return None
+        return result.stdout.strip()
 
     print("[*] Checking local repository status...")
     try:
@@ -30,12 +42,12 @@ def update_self_repo():
         )
     except FileNotFoundError:
         print("[!] Git is not installed or not available in PATH.")
-        return
+        return False
     except subprocess.CalledProcessError as exc:
         print("[!] Unable to check Git status.")
         if exc.stderr:
             print(exc.stderr.strip())
-        return
+        return False
 
     dirty = bool(status.stdout.strip())
     stash_created = False
@@ -59,8 +71,9 @@ def update_self_repo():
             print("[!] Failed to stash local changes.")
             if exc.stderr:
                 print(exc.stderr.strip())
-            return
+            return False
 
+    head_before = current_head()
     print("[*] Updating local repository from GitHub...")
     try:
         result = subprocess.run(
@@ -82,7 +95,10 @@ def update_self_repo():
             print(exc.stdout.strip())
         if exc.stderr:
             print(exc.stderr.strip())
-        return
+        return False
+
+    head_after = current_head()
+    updated = bool(head_before and head_after and head_before != head_after)
 
     if stash_created:
         print("[*] Restoring your local changes...")
@@ -119,6 +135,10 @@ def update_self_repo():
             if exc.stderr:
                 print(exc.stderr.strip())
             print("[!] Your stash has been preserved for manual resolution.")
+
+    if updated:
+        print("[*] New code downloaded. Restarting with the latest version...")
+    return updated
 
 
 def auto_install_tools():
@@ -203,6 +223,10 @@ def auto_install_tools():
     print("[+] All tools and dependencies are ready!\n")
 
 def main():
+    # تحديث الكود من GitHub قبل قراءة أي معاملات جديدة (مثل --auto)
+    if update_self_repo():
+        os.execv(sys.executable, [sys.executable] + sys.argv)
+
     parser = argparse.ArgumentParser(description="Master Auto-Pwn Script for Routers (Modular Version)")
     parser.add_argument("-t", "--target", required=True, help="Target IP address")
     parser.add_argument(
@@ -213,8 +237,6 @@ def main():
     args = parser.parse_args()
     ip = args.target
 
-    # التحقق من التحديثات من GitHub قبل التشغيل
-    update_self_repo()
     auto_install_tools()
     # تأكد من أن قوالب Nuclei محدثة عند بداية التشغيل
     try:
