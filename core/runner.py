@@ -12,6 +12,7 @@ from core.bruteforce import run_hydra, run_web_hydra
 from core.scan_config import set_scan_profile, get_profile_name
 from core.context_store import save_scan_context
 from core.report import generate_scan_report
+from core.ai_planner import plan_scan_tools, recommend_hydra_commands
 from core.recon_tools import run_nikto_only, run_whatweb_only, run_nmap_vuln_only
 from core.network_discovery import discover_lan_hosts, guess_local_subnet, prompt_subnet
 
