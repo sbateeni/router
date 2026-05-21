@@ -35,6 +35,39 @@ def git_permission_problem(base_dir):
     return False
 
 
+DEFAULT_BRANCH = "main"
+
+
+def run_git(args, base_dir, check=True):
+    result = subprocess.run(
+        ["git"] + args,
+        cwd=base_dir,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+    if check and result.returncode != 0:
+        raise subprocess.CalledProcessError(
+            result.returncode,
+            ["git"] + args,
+            result.stdout,
+            result.stderr,
+        )
+    return result
+
+
+def print_git_sync_fix(base_dir):
+    user = current_user_name()
+    print("\n[!] Unable to sync repository automatically.")
+    print("[!] Run these commands once on Kali:\n")
+    print(f"    sudo chown -R {user}:{user} {base_dir}")
+    print(f"    cd {base_dir}")
+    print("    git fetch origin")
+    print(f"    git checkout -B {DEFAULT_BRANCH} origin/{DEFAULT_BRANCH}")
+    print("    python3 master_pwn.py -t 192.168.1.1 --auto\n")
+    print("[!] Do NOT use sudo when running master_pwn.py.")
+
+
 def print_git_permission_fix(base_dir):
     user = current_user_name()
     print("\n[!] Git permission problem detected in this repository.")
@@ -42,7 +75,8 @@ def print_git_permission_fix(base_dir):
     print("[!] Fix it once with these commands:\n")
     print(f"    sudo chown -R {user}:{user} {base_dir}")
     print(f"    cd {base_dir}")
-    print("    git pull origin main")
+    print("    git fetch origin")
+    print(f"    git checkout -B {DEFAULT_BRANCH} origin/{DEFAULT_BRANCH}")
     print("    python3 master_pwn.py -t 192.168.1.1 --auto\n")
     print("[!] Do NOT use sudo when running master_pwn.py after fixing permissions.")
 
@@ -66,30 +100,32 @@ def update_self_repo():
         return False
 
     def current_head():
-        result = subprocess.run(
-            ["git", "rev-parse", "HEAD"],
-            cwd=base_dir,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True,
-        )
+        result = run_git(["rev-parse", "HEAD"], base_dir, check=False)
         if result.returncode != 0:
             return None
         return result.stdout.strip()
 
     print("[*] Checking local repository status...")
     try:
-        status = subprocess.run(
-            ["git", "status", "--porcelain", "--untracked-files=all"],
-            cwd=base_dir,
-            check=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True
-        )
+        run_git(["fetch", "origin"], base_dir)
     except FileNotFoundError:
         print("[!] Git is not installed or not available in PATH.")
         return False
+    except subprocess.CalledProcessError as exc:
+        print("[!] Failed to fetch updates from GitHub.")
+        if exc.stdout:
+            print(exc.stdout.strip())
+        if exc.stderr:
+            print(exc.stderr.strip())
+        combined = f"{exc.stdout or ''}\n{exc.stderr or ''}".lower()
+        if "insufficient permission" in combined or "failed to write object" in combined:
+            print_git_permission_fix(base_dir)
+        else:
+            print_git_sync_fix(base_dir)
+        return False
+
+    try:
+        status = run_git(["status", "--porcelain"], base_dir)
     except subprocess.CalledProcessError as exc:
         print("[!] Unable to check Git status.")
         if exc.stderr:
@@ -99,15 +135,11 @@ def update_self_repo():
     dirty = bool(status.stdout.strip())
     stash_created = False
     if dirty:
-        print("[!] Local changes detected. Stashing changes before pulling updates...")
+        print("[!] Local tracked changes detected. Stashing before syncing with origin/main...")
         try:
-            stash = subprocess.run(
-                ["git", "stash", "push", "--include-untracked", "-m", "router auto-update"],
-                cwd=base_dir,
-                check=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                text=True
+            stash = run_git(
+                ["stash", "push", "-m", "router auto-update"],
+                base_dir,
             )
             stash_output = stash.stdout.strip()
             if stash_output:
@@ -118,73 +150,57 @@ def update_self_repo():
             print("[!] Failed to stash local changes.")
             if exc.stderr:
                 print(exc.stderr.strip())
+            print_git_sync_fix(base_dir)
             return False
 
     head_before = current_head()
-    print("[*] Updating local repository from GitHub...")
+    branch_result = run_git(["rev-parse", "--abbrev-ref", "HEAD"], base_dir, check=False)
+    current_branch = branch_result.stdout.strip() if branch_result.returncode == 0 else ""
+
+    if current_branch != DEFAULT_BRANCH:
+        print(f"[*] Switching branch from '{current_branch}' to '{DEFAULT_BRANCH}'...")
+        try:
+            run_git(["checkout", "-B", DEFAULT_BRANCH, f"origin/{DEFAULT_BRANCH}"], base_dir)
+        except subprocess.CalledProcessError as exc:
+            print("[!] Failed to switch to main branch.")
+            if exc.stderr:
+                print(exc.stderr.strip())
+            print_git_sync_fix(base_dir)
+            return False
+
+    print(f"[*] Syncing local '{DEFAULT_BRANCH}' with origin/{DEFAULT_BRANCH}...")
+    updated = False
     try:
-        result = subprocess.run(
-            ["git", "pull", "--ff-only"],
-            cwd=base_dir,
-            check=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True
-        )
-        if result.stdout:
-            print(result.stdout.strip())
-        if result.stderr:
-            print(result.stderr.strip())
+        merge = run_git(["merge", "--ff-only", f"origin/{DEFAULT_BRANCH}"], base_dir)
+        if merge.stdout:
+            print(merge.stdout.strip())
+        if merge.stderr:
+            print(merge.stderr.strip())
         print("[+] Repository update completed.")
-    except subprocess.CalledProcessError as exc:
-        print("[!] Failed to pull latest repository updates.")
-        if exc.stdout:
-            print(exc.stdout.strip())
-        if exc.stderr:
-            print(exc.stderr.strip())
-        combined = f"{exc.stdout or ''}\n{exc.stderr or ''}".lower()
-        if "insufficient permission" in combined or "failed to write object" in combined:
-            print_git_permission_fix(base_dir)
-        return False
+    except subprocess.CalledProcessError:
+        print("[!] Fast-forward merge failed. Resetting local main to origin/main...")
+        try:
+            reset = run_git(["reset", "--hard", f"origin/{DEFAULT_BRANCH}"], base_dir)
+            if reset.stdout:
+                print(reset.stdout.strip())
+            if reset.stderr:
+                print(reset.stderr.strip())
+            print("[+] Repository reset to latest origin/main.")
+        except subprocess.CalledProcessError as exc:
+            print("[!] Failed to sync repository with origin/main.")
+            if exc.stdout:
+                print(exc.stdout.strip())
+            if exc.stderr:
+                print(exc.stderr.strip())
+            print_git_sync_fix(base_dir)
+            return False
 
     head_after = current_head()
     updated = bool(head_before and head_after and head_before != head_after)
 
     if stash_created:
-        print("[*] Restoring your local changes...")
-        try:
-            pop = subprocess.run(
-                ["git", "stash", "apply"],
-                cwd=base_dir,
-                check=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                text=True
-            )
-            if pop.stdout:
-                print(pop.stdout.strip())
-            if pop.stderr:
-                print(pop.stderr.strip())
-            drop = subprocess.run(
-                ["git", "stash", "drop"],
-                cwd=base_dir,
-                check=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                text=True
-            )
-            if drop.stdout:
-                print(drop.stdout.strip())
-            if drop.stderr:
-                print(drop.stderr.strip())
-            print("[+] Local changes restored.")
-        except subprocess.CalledProcessError as exc:
-            print("[!] Failed to restore stashed changes automatically.")
-            if exc.stdout:
-                print(exc.stdout.strip())
-            if exc.stderr:
-                print(exc.stderr.strip())
-            print("[!] Your stash has been preserved for manual resolution.")
+        print("[*] Local stashed changes were kept aside to avoid overwriting updates.")
+        print("[*] If needed, review them later with: git stash list")
 
     if updated:
         print("[*] New code downloaded. Restarting with the latest version...")
