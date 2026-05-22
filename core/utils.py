@@ -143,6 +143,11 @@ def run_cmd(command, capture=False, log_file=None):
     """
     try:
         print(f"\n[>] Executing: {' '.join(command) if isinstance(command, list) else command}")
+        try:
+            from core.scan_transcript import command as transcript_command, output as transcript_output
+            transcript_command(command)
+        except Exception:
+            pass
 
         if capture or log_file:
             result = subprocess.run(command, capture_output=True, text=True)
@@ -158,6 +163,12 @@ def run_cmd(command, capture=False, log_file=None):
                 except PermissionError:
                     print(f"[-] Permission denied writing log file: {log_file}")
 
+            try:
+                from core.scan_transcript import output as transcript_output
+                transcript_output(output)
+            except Exception:
+                pass
+
             if capture:
                 return ok, output
 
@@ -169,4 +180,9 @@ def run_cmd(command, capture=False, log_file=None):
         return result.returncode == 0, ""
     except Exception as e:
         print(f"[-] Failed to execute command: {e}")
+        try:
+            from core.scan_transcript import event as transcript_event
+            transcript_event(f"[-] Failed to execute command: {e}")
+        except Exception:
+            pass
         return False, str(e)

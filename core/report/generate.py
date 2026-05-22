@@ -16,6 +16,7 @@ from core.report.parsers import (
     significant_nuclei_findings,
     strip_ansi,
 )
+from core.scan_transcript import TRANSCRIPT_FILENAME, read_transcript, transcript_path
 
 REPORT_FILENAME = "RESULTS_SUMMARY.txt"
 REPORT_JSON = "results_summary.json"
@@ -245,9 +246,11 @@ def build_report_text(ip, target_dir, selection, exploited, payload):
         f"Exploit Found  : {'YES' if payload.get('confirmed_exploited') else 'NO'}",
         f"Exploit Detail : {payload.get('exploit_label', 'NONE')}",
         f"Report Folder  : {target_dir}",
+        f"Full Timeline  : {transcript_path(target_dir)}",
         "",
         "Context File   : scan_context.json (shared data for all tools)",
         "Recon File     : recon_summary.json (from Nmap)",
+        "Timeline File  : SCAN_TRANSCRIPT.txt (chronological scan log for AI/support)",
         "",
         "------------------------------------------------------------",
         " QUICK OVERVIEW",
@@ -370,6 +373,19 @@ def build_report_text(ip, target_dir, selection, exploited, payload):
             lines.append(f"  - {rec}")
         lines.append("")
 
+    transcript = payload.get("scan_transcript") or ""
+    if transcript:
+        lines.extend([
+            "------------------------------------------------------------",
+            " SCAN TIMELINE (excerpt — full file: SCAN_TRANSCRIPT.txt)",
+            "------------------------------------------------------------",
+        ])
+        excerpt = transcript.strip().splitlines()
+        if len(excerpt) > 120:
+            excerpt = excerpt[:40] + ["...", f"({len(excerpt) - 80} lines omitted)", "..."] + excerpt[-40:]
+        lines.extend(excerpt)
+        lines.append("")
+
     lines.extend([
         "------------------------------------------------------------",
         " TOOL STATUS",
@@ -460,6 +476,9 @@ def build_report_text(ip, target_dir, selection, exploited, payload):
         "------------------------------------------------------------",
         "Send this file to review scan health:",
         f"  {os.path.join(target_dir, REPORT_FILENAME)}",
+        "",
+        "For full chronological detail (best for AI analysis / debugging):",
+        f"  {os.path.join(target_dir, TRANSCRIPT_FILENAME)}",
         "",
         "If issues exist, also attach the *_stdout.txt files marked ERROR above.",
         "============================================================",
@@ -594,6 +613,7 @@ def generate_scan_report(ip, target_dir, selection, exploited, current_phase="Fi
         "enrichment": enrichment,
         "target_profile": target_profile,
         "msf_commands_preview": msf_preview,
+        "scan_transcript": read_transcript(target_dir),
         "all_files": all_files,
         "file_sizes": file_sizes,
     }

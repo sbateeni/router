@@ -142,6 +142,14 @@ def notify_scan_complete(ip, target_dir, report_path, exploited, profile="normal
     if os.path.exists(profile_path):
         send_telegram_document(profile_path, caption=f"Target profile for {ip}", chat_id=chat_id)
 
+    transcript_file = os.path.join(target_dir, "SCAN_TRANSCRIPT.txt")
+    if os.path.exists(transcript_file):
+        send_telegram_document(
+            transcript_file,
+            caption=f"Scan timeline for {ip} (chronological log)",
+            chat_id=chat_id,
+        )
+
     for extra_name in (
         "AI_SCAN_PLAN.json",
         "AI_HYDRA_COMMANDS.txt",

@@ -41,22 +41,42 @@ def _phase_delay():
 
 def _sync_profile(ip, target_dir, context, phase_label):
     """Rebuild profile from all artifacts so far and persist routing plan."""
+    from core.scan_transcript import event as transcript_event
+
     profile = build_target_profile(ip, target_dir, context=context)
     save_target_profile(target_dir, profile)
-    print(f"\n[*] Target profile updated ({phase_label}) → {os.path.join(target_dir, 'target_profile.json')}")
+    msg = f"[*] Target profile updated ({phase_label}) → {os.path.join(target_dir, 'target_profile.json')}"
+    print(f"\n{msg}")
+    transcript_event(msg)
+    lines = [
+        f"  Type: {profile.get('target_type')} ({profile.get('confidence')}) — {profile.get('summary')}",
+    ]
+    if profile.get("login_paths"):
+        lines.append(f"  Login paths: {', '.join(profile['login_paths'][:5])}")
+    for name, cfg in (profile.get("tool_plan") or {}).items():
+        flag = "RUN" if cfg.get("run") else "SKIP"
+        lines.append(f"  [{flag}] {name}")
+    transcript_event("\n".join(lines))
     print_target_profile(profile)
     return profile
 
 
 def run_all_classic_tools(ip, target_dir, selection=1):
     """Full classic scan — tools chosen from live target profile after each phase."""
+    from core.scan_transcript import begin as transcript_begin, end as transcript_end, event as transcript_event, phase as transcript_phase
+
     context = ScanContext()
     profile = {}
     hints = load_target_hints(target_dir)
+    hint_line = hints.get("raw") or hints.get("seed_url") or ip
+    transcript_begin(target_dir, header=f"Target: {hint_line} | profile: {get_profile_name()}")
+
     if hints:
         apply_target_hints(context, hints)
         print(f"[*] Target hints: {hints.get('raw') or hints.get('seed_url')}")
+        transcript_event(f"[*] Target hints: {hints.get('raw') or hints.get('seed_url')}")
 
+    transcript_phase(f"PHASE 1: Scanning & Reconnaissance [{get_profile_name()}]")
     print(f"\n>>> PHASE 1: Scanning & Reconnaissance [{get_profile_name()}]")
     try:
         context.open_ports = run_nmap(ip, target_dir)
@@ -112,6 +132,7 @@ def run_all_classic_tools(ip, target_dir, selection=1):
         print("\n======================================================")
         print(">>> PHASE 2: Web Enumeration (profile-driven)")
         print("======================================================")
+        transcript_phase("PHASE 2: Web Enumeration (profile-driven)")
         try:
             if should_run_tool(profile, "dirsearch"):
                 for port in web_ports:
@@ -178,6 +199,7 @@ def run_all_classic_tools(ip, target_dir, selection=1):
     print("\n======================================================")
     print(">>> PHASE 3: Exploitation (profile-driven)")
     print("======================================================")
+    transcript_phase("PHASE 3: Exploitation (profile-driven)")
     try:
         if should_run_tool(profile, "routersploit"):
             if run_routersploit(ip, target_dir):
@@ -201,6 +223,7 @@ def run_all_classic_tools(ip, target_dir, selection=1):
         print("\n======================================================")
         print(">>> PHASE 4: Credential Brute-Force (profile-driven)")
         print("======================================================")
+        transcript_phase("PHASE 4: Credential Brute-Force (profile-driven)")
         try:
             if context.login_ports and run_hydra(ip, context.login_ports, target_dir):
                 pass
@@ -221,4 +244,5 @@ def run_all_classic_tools(ip, target_dir, selection=1):
 
     _, confirmed = refresh_report(ip, target_dir, selection, context.exploited, context, "Phase 4 - Brute Force")
     _sync_profile(ip, target_dir, context, "final")
+    transcript_end(note=f"Confirmed exploit: {'YES' if confirmed else 'NO'}")
     return confirmed
