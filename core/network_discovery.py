@@ -157,12 +157,16 @@ def prompt_subnet(default_subnet):
         return prompt_subnet(default_subnet)
 
 
+from core.report.parsers import parse_target_input, save_target_hints, target_scan_host, target_workspace_name
+
+
 def resolve_target_list(args, base_dir):
     if getattr(args, "target", None):
-        if not is_valid_ip(args.target):
-            print(f"[-] Invalid target IP: {args.target}")
-            return []
-        return [args.target.strip()]
+        parsed = parse_target_input(args.target)
+        if parsed:
+            return [target_scan_host(parsed)]
+        print(f"[-] Invalid target (use IP, domain, or URL): {args.target}")
+        return []
 
     discovery_dir = os.path.join(base_dir, "targets", "_network_discovery")
     os.makedirs(discovery_dir, exist_ok=True)

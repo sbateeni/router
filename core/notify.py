@@ -62,10 +62,14 @@ def _split_message(text):
     return chunks or [text[:MAX_MESSAGE_LEN]]
 
 
-def send_telegram_message(text):
+def _resolve_chat_id(chat_id=None):
+    return chat_id or os.environ.get("TELEGRAM_CHAT_ID")
+
+
+def send_telegram_message(text, chat_id=None):
     token = os.environ.get("TELEGRAM_BOT_TOKEN")
-    chat_id = os.environ.get("TELEGRAM_CHAT_ID")
-    if not token or not chat_id:
+    resolved_chat = _resolve_chat_id(chat_id)
+    if not token or not resolved_chat:
         print("[!] Telegram is not configured. Create a .env file with TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID.")
         return False
 
@@ -74,7 +78,7 @@ def send_telegram_message(text):
             _telegram_request(
                 "sendMessage",
                 token,
-                {"chat_id": chat_id, "text": chunk},
+                {"chat_id": resolved_chat, "text": chunk},
             )
         return True
     except Exception as exc:
@@ -82,10 +86,10 @@ def send_telegram_message(text):
         return False
 
 
-def send_telegram_document(file_path, caption=""):
+def send_telegram_document(file_path, caption="", chat_id=None):
     token = os.environ.get("TELEGRAM_BOT_TOKEN")
-    chat_id = os.environ.get("TELEGRAM_CHAT_ID")
-    if not token or not chat_id:
+    resolved_chat = _resolve_chat_id(chat_id)
+    if not token or not resolved_chat:
         print("[!] Telegram is not configured. Create a .env file with TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID.")
         return False
     if not os.path.exists(file_path):
@@ -97,7 +101,7 @@ def send_telegram_document(file_path, caption=""):
             _telegram_request(
                 "sendDocument",
                 token,
-                {"chat_id": chat_id, "caption": caption[:1024]},
+                {"chat_id": resolved_chat, "caption": caption[:1024]},
                 files={"document": (os.path.basename(file_path), fh)},
             )
         return True
@@ -106,7 +110,7 @@ def send_telegram_document(file_path, caption=""):
         return False
 
 
-def notify_scan_complete(ip, target_dir, report_path, exploited, profile="normal", ai_analysis=None):
+def notify_scan_complete(ip, target_dir, report_path, exploited, profile="normal", ai_analysis=None, chat_id=None):
     if telegram_placeholder_keys_present():
         print("[!] Telegram skipped: .env still has placeholder bot token or chat id.")
         return False
@@ -124,23 +128,29 @@ def notify_scan_complete(ip, target_dir, report_path, exploited, profile="normal
         summary += "\n\n=== AI Analysis ===\n"
         summary += ai_analysis[:3500]
 
-    sent_message = send_telegram_message(summary)
+    sent_message = send_telegram_message(summary, chat_id=chat_id)
     sent_file = send_telegram_document(
         report_path,
         caption=f"Scan report for {ip} ({profile})",
+        chat_id=chat_id,
     )
     ai_path = os.path.join(target_dir, "AI_ANALYSIS.txt")
     if os.path.exists(ai_path):
-        send_telegram_document(ai_path, caption=f"AI analysis for {ip}")
+        send_telegram_document(ai_path, caption=f"AI analysis for {ip}", chat_id=chat_id)
+
+    profile_path = os.path.join(target_dir, "target_profile.json")
+    if os.path.exists(profile_path):
+        send_telegram_document(profile_path, caption=f"Target profile for {ip}", chat_id=chat_id)
 
     for extra_name in (
         "AI_SCAN_PLAN.json",
         "AI_HYDRA_COMMANDS.txt",
         "AI_ROUTERSPLOIT_PLAN.txt",
+        "MSF_EXPLOIT_COMMANDS.txt",
     ):
         extra_path = os.path.join(target_dir, extra_name)
         if os.path.exists(extra_path):
-            send_telegram_document(extra_path, caption=f"{extra_name} for {ip}")
+            send_telegram_document(extra_path, caption=f"{extra_name} for {ip}", chat_id=chat_id)
 
     if sent_message or sent_file:
         print("[+] Telegram notification sent.")

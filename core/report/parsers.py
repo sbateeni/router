@@ -148,6 +148,150 @@ def parse_nmap_summary(target_dir):
     }
 
 
+IP_ONLY_RE = re.compile(
+    r"^(?:(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}"
+    r"(?:25[0-5]|2[0-4]\d|[01]?\d\d?)$"
+)
+HOSTNAME_RE = re.compile(
+    r"^(?=.{1,253}$)(?!-)[a-zA-Z0-9-]{1,63}(?<!-)(\.(?!-)[a-zA-Z0-9-]{1,63}(?<!-))*\.?$"
+)
+
+
+def is_valid_ip(value):
+    return bool(value and IP_ONLY_RE.match(value))
+
+
+def is_valid_hostname(value):
+    if not value or len(value) > 253:
+        return False
+    if value.endswith("."):
+        value = value[:-1]
+    if not HOSTNAME_RE.match(value):
+        return False
+    return all(len(label) <= 63 for label in value.split("."))
+
+
+def resolve_host_ip(host):
+    """Resolve domain to IP (best effort). Returns None if already IP or resolution fails."""
+    if is_valid_ip(host):
+        return host
+    try:
+        import socket
+        return socket.gethostbyname(host)
+    except OSError:
+        return None
+
+
+def sanitize_target_dir_name(host):
+    name = (host or "unknown").strip().lower()
+    name = name.replace(":", "_")
+    return name[:120] or "unknown"
+
+
+def _build_target_record(host, port, scheme, path, query, raw):
+    login_path = path if path not in ("", "/") else None
+    netloc = host if port in (80, 443) and (
+        (scheme == "http" and port == 80) or (scheme == "https" and port == 443)
+    ) else f"{host}:{port}"
+    seed = urlunparse((scheme, netloc, path or "/", "", query or "", ""))
+    seed = normalize_target_url(seed) if not query else seed.rstrip("/") if path == "/" and not query else seed
+
+    resolved = resolve_host_ip(host)
+    return {
+        "host": host,
+        "ip": host,
+        "resolved_ip": resolved if resolved and resolved != host else (host if is_valid_ip(host) else None),
+        "is_domain": is_valid_hostname(host) and not is_valid_ip(host),
+        "port": port,
+        "scheme": scheme,
+        "login_path": login_path,
+        "query_string": query or None,
+        "seed_url": seed,
+        "raw": raw,
+        "target_dir_name": sanitize_target_dir_name(host),
+    }
+
+
+def parse_target_input(text):
+    """
+    Accept IP, domain, path, full URL — query strings preserved for SQLMap.
+    """
+    raw = (text or "").strip()
+    if not raw or raw.startswith("/"):
+        return None
+
+    if raw.startswith("http://") or raw.startswith("https://"):
+        parsed = urlparse(raw)
+        host = parsed.hostname
+        if not host or not (is_valid_ip(host) or is_valid_hostname(host)):
+            return None
+        port = parsed.port or (443 if parsed.scheme == "https" else 80)
+        path = parsed.path or "/"
+        return _build_target_record(host, port, parsed.scheme, path, parsed.query, raw)
+
+    if "/" in raw or "?" in raw:
+        host_part = raw.split("/", 1)[0].split("?", 1)[0]
+        if not (is_valid_ip(host_part) or is_valid_hostname(host_part)):
+            return None
+        if "?" in raw and "/" not in raw.split("?", 1)[0]:
+            path = "/"
+            query = raw.split("?", 1)[1]
+        elif "/" in raw:
+            rest = raw.split("/", 1)[1]
+            if "?" in rest:
+                path_part, query = rest.split("?", 1)
+                path = "/" + path_part
+            else:
+                path = "/" + rest
+                query = ""
+        else:
+            path = "/"
+            query = raw.split("?", 1)[1]
+        return _build_target_record(host_part, 80, "http", path, query, raw)
+
+    if is_valid_ip(raw) or is_valid_hostname(raw):
+        return _build_target_record(raw, 80, "http", "/", "", raw)
+    return None
+
+
+def target_scan_host(parsed):
+    """Host string for nmap/tools (IP or domain)."""
+    if not parsed:
+        return None
+    return parsed.get("host") or parsed.get("ip")
+
+
+def target_workspace_name(parsed, fallback=None):
+    if parsed and parsed.get("target_dir_name"):
+        return parsed["target_dir_name"]
+    return sanitize_target_dir_name(fallback or "unknown")
+
+
+def save_target_hints(target_dir, hints):
+    if not hints:
+        return None
+    path = os.path.join(target_dir, "target_hints.json")
+    with open(path, "w", encoding="utf-8") as fh:
+        json.dump(hints, fh, indent=2, ensure_ascii=False)
+    return path
+
+
+def load_target_hints(target_dir):
+    path = os.path.join(target_dir, "target_hints.json")
+    if not os.path.exists(path):
+        return {}
+    try:
+        with open(path, "r", encoding="utf-8") as fh:
+            return json.load(fh)
+    except (OSError, json.JSONDecodeError):
+        return {}
+
+
+def hydra_form_for_path(login_path):
+    path = login_path if login_path.startswith("/") else f"/{login_path}"
+    return f"{path}:user=^USER^&pass=^PASS^:F=invalid:F=failed:F=error:F=incorrect"
+
+
 def detect_connectivity_issues(target_dir):
     issues = []
     patterns = (
@@ -185,7 +329,10 @@ def pick_priority_web_targets(ip, web_ports, discovered_paths=None, limit=12):
     priority = []
     for url in dict.fromkeys(candidates):
         lower = url.lower()
-        if "?" in lower or any(x in lower for x in (".php", "api", "login", "admin", "cgi")):
+        if "?" in lower:
+            priority.insert(0, url)
+            continue
+        if any(x in lower for x in (".php", "api", "login", "admin", "cgi")):
             priority.append(url)
         elif lower.endswith(".txt") and "txt.txt" in lower:
             priority.append(url)

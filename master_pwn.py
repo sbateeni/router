@@ -301,26 +301,51 @@ def auto_install_tools():
 def run_scan_for_target(ip, args, selection, scan_profile, base_dir):
     from core.menu import AI_CHOICES
 
+    from core.report.parsers import parse_target_input, save_target_hints, target_scan_host, target_workspace_name
+
+    raw_target = getattr(args, "target", None) or ip
+    parsed = parse_target_input(raw_target)
+    scan_host = target_scan_host(parsed) if parsed else ip
+    workspace_name = target_workspace_name(parsed, fallback=ip)
+
     print("======================================================")
-    print(f"      TARGET ACQUIRED: {ip}                           ")
+    display = parsed.get("raw") if parsed else ip
+    print(f"      TARGET ACQUIRED: {display}                           ")
     print("======================================================\n")
 
-    target_dir = os.path.join(base_dir, "targets", ip)
+    target_dir = os.path.join(base_dir, "targets", workspace_name)
     os.makedirs(target_dir, exist_ok=True)
     try:
         os.chmod(target_dir, 0o755)
     except PermissionError:
         pass
     reset_target_workspace(target_dir)
+
+    if parsed and (parsed.get("login_path") or parsed.get("seed_url") or parsed.get("query_string")):
+        save_target_hints(target_dir, {
+            "host": parsed.get("host"),
+            "login_path": parsed.get("login_path"),
+            "seed_url": parsed.get("seed_url"),
+            "query_string": parsed.get("query_string"),
+            "port": parsed.get("port"),
+            "scheme": parsed.get("scheme"),
+            "resolved_ip": parsed.get("resolved_ip"),
+            "is_domain": parsed.get("is_domain"),
+            "raw": parsed.get("raw"),
+        })
+        print(f"[*] Target hint: {parsed.get('raw')}")
+        if parsed.get("is_domain") and parsed.get("resolved_ip"):
+            print(f"[*] DNS: {parsed['host']} → {parsed['resolved_ip']}")
+
     print(f"[*] Workspace ready for target: {target_dir}\n")
 
     exploited = run_selected_tool(
-        selection, ip, target_dir,
+        selection, scan_host, target_dir,
         profile=scan_profile, subnet=getattr(args, "subnet", None),
     )
 
     report_path, confirmed = generate_scan_report(
-        ip, target_dir, selection, exploited,
+        scan_host, target_dir, selection, exploited,
         current_phase="Completed", profile=scan_profile,
     )
 
@@ -343,10 +368,10 @@ def run_scan_for_target(ip, args, selection, scan_profile, base_dir):
     else:
         print("[-] Tool execution completed without finding a confirmed exploit.")
 
-    print(f"[*] All output logs for {ip} have been saved in: {target_dir}")
+    print(f"[*] All output logs for {workspace_name} have been saved in: {target_dir}")
     print(f"[*] Results summary report: {report_path}")
     notify_scan_complete(
-        ip, target_dir, report_path, confirmed,
+        scan_host, target_dir, report_path, confirmed,
         profile=scan_profile, ai_analysis=ai_analysis,
     )
     print("======================================================\n")
@@ -386,9 +411,31 @@ def main():
         action="store_true",
         help="Use deep/full-power scan profile (slower, more thorough)",
     )
+    parser.add_argument(
+        "--telegram",
+        action="store_true",
+        help="Run Telegram bot only (same as: python3 master_pwn.py with no -t when .env is set)",
+    )
+    parser.add_argument(
+        "--no-telegram",
+        action="store_true",
+        help="Force local menu instead of Telegram bot (when .env has Telegram configured)",
+    )
     args = parser.parse_args()
-    scan_profile = "deep" if args.deep else "normal"
     base_dir = repo_base_dir()
+
+    from core.telegram_bot import run_telegram_bot, should_default_to_telegram
+
+    if args.telegram or should_default_to_telegram(args):
+        if args.telegram:
+            print("[*] Telegram control mode (--telegram)\n")
+        else:
+            print("[*] Telegram configured — starting remote control bot.")
+            print("[*] Send IP in Telegram, pick attack type, scan runs automatically.")
+            print("[*] Local menu: python3 master_pwn.py --no-telegram\n")
+        raise SystemExit(run_telegram_bot(base_dir))
+
+    scan_profile = "deep" if args.deep else "normal"
 
     auto_install_tools()
     try:

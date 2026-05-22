@@ -5,6 +5,7 @@ import time
 from core.bruteforce import run_hydra, run_web_hydra
 from core.classic.context import (
     ScanContext,
+    apply_target_hints,
     build_url,
     extract_query_urls,
     get_login_ports,
@@ -27,6 +28,7 @@ from core.recon.target_profile import (
     should_run_tool,
 )
 from core.recon_tools import run_nikto, run_whatweb
+from core.report.parsers import hydra_form_for_path, load_target_hints
 from core.scan_config import get_profile_name, get_scan_profile
 from core.scanner import run_nmap
 from core.web import run_dirsearch, run_nuclei, run_searchsploit
@@ -50,6 +52,10 @@ def run_all_classic_tools(ip, target_dir, selection=1):
     """Full classic scan — tools chosen from live target profile after each phase."""
     context = ScanContext()
     profile = {}
+    hints = load_target_hints(target_dir)
+    if hints:
+        apply_target_hints(context, hints)
+        print(f"[*] Target hints: {hints.get('raw') or hints.get('seed_url')}")
 
     print(f"\n>>> PHASE 1: Scanning & Reconnaissance [{get_profile_name()}]")
     try:
@@ -65,6 +71,9 @@ def run_all_classic_tools(ip, target_dir, selection=1):
     else:
         context.web_ports = get_web_ports(context.open_ports)
         context.login_ports = get_login_ports(context.open_ports)
+        if hints.get("port") and hints["port"] not in context.web_ports:
+            context.web_ports.insert(0, hints["port"])
+        apply_target_hints(context, hints)
 
     profile = _sync_profile(ip, target_dir, context, "after Nmap")
 
@@ -191,7 +200,15 @@ def run_all_classic_tools(ip, target_dir, selection=1):
                 pass
             hydra_cfg = get_tool_config(profile, "hydra")
             forms = hydra_cfg.get("http_forms")
+            if context.login_paths:
+                custom_forms = [hydra_form_for_path(p) for p in context.login_paths]
+                forms = custom_forms + (forms or [])
             hydra_plan = {"http_forms": forms, "source": "target_profile"} if forms else None
+            if context.login_paths:
+                hydra_plan = {
+                    "http_forms": [hydra_form_for_path(p) for p in context.login_paths],
+                    "source": "target_hints",
+                }
             if context.web_ports and run_web_hydra(ip, context.web_ports, target_dir, hydra_plan=hydra_plan):
                 pass
         except KeyboardInterrupt:

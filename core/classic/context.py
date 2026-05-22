@@ -10,6 +10,31 @@ class ScanContext:
         self.ffuf_candidates = []
         self.gau_urls = []
         self.exploited = False
+        self.target_hints = {}
+        self.seed_urls = []
+        self.login_paths = []
+
+
+def apply_target_hints(context, hints):
+    """Apply user-provided URL/path hints from Telegram or CLI."""
+    if not hints:
+        return
+    context.target_hints = hints
+    port = hints.get("port")
+    if port and port not in context.web_ports:
+        context.web_ports = [port] + [p for p in context.web_ports if p != port]
+    seed = hints.get("seed_url")
+    if seed:
+        context.seed_urls.append(seed)
+        context.discovered_urls.append(seed)
+        context.discovered_paths.append(seed)
+    if hints.get("query_string") and seed and "?" not in seed:
+        qurl = f"{seed}?{hints['query_string']}"
+        context.discovered_urls.append(qurl)
+        context.seed_urls.append(qurl)
+    login_path = hints.get("login_path")
+    if login_path:
+        context.login_paths.append(login_path)
 
 
 def build_url(ip, port):
