@@ -97,6 +97,12 @@ TOOL_CHECKS = [
         "ran_if": lambda text: "sqlmap" in text.lower() or "target url" in text.lower(),
     },
     {
+        "name": "Device Exploit Engine",
+        "outputs": ["ENGINE_LOOT.json"],
+        "findings_if": lambda text: "credentials" in text.lower() and '"exploited": true' in text.lower(),
+        "ran_if": lambda text: "device_type" in text.lower() and "summary" in text.lower(),
+    },
+    {
         "name": "RouterSploit",
         "outputs": ["routersploit_scan.txt"],
         "findings_if": lambda text: "device is vulnerable" in text.lower() or "exploit successful" in text.lower(),

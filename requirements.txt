@@ -41,3 +41,8 @@ colorama
 loguru
 tzlocal
 setuptools
+
+# Device engine (nuclei-dev merge)
+selenium
+webdriver-manager
+urllib3

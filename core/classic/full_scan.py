@@ -201,6 +201,21 @@ def run_all_classic_tools(ip, target_dir, selection=1):
     print("======================================================")
     transcript_phase("PHASE 3: Exploitation (profile-driven)")
     try:
+        print("\n[+] Device Exploit Engine (Hikvision / Netis / CVE / creds)...")
+        try:
+            from engines.integration import run_device_exploit_engine
+
+            engine_result = run_device_exploit_engine(
+                ip, target_dir, web_ports=profile.get("web_ports") or context.web_ports, profile=profile,
+            )
+            if engine_result.get("exploited"):
+                context.exploited = True
+            creds = engine_result.get("credentials") or []
+            if creds:
+                print(f"[+] Engine credentials: {', '.join(creds)}")
+        except Exception as exc:
+            print(f"[!] Device engine error: {exc}")
+
         if should_run_tool(profile, "routersploit"):
             if run_routersploit(ip, target_dir):
                 context.exploited = True
