@@ -11,12 +11,12 @@ DEFAULT_USER = "admin"
 COMMON_USERS = ["admin", "root", "user", "support", "telecomadmin"]
 
 ROUTER_HTTP_FORMS = [
-    "/login.html:user=^USER^&pass=^PASS^:F=invalid:F=failed:F=error:F=incorrect",
-    "/login.cgi:username=^USER^&password=^PASS^:F=invalid:F=failed:F=error",
-    "/goform/login:username=^USER^&password=^PASS^:F=invalid:F=failed:F=error",
-    "/cgi-bin/login.cgi:username=^USER^&password=^PASS^:F=invalid:F=failed:F=error",
-    "/login:username=^USER^&password=^PASS^:F=invalid:F=failed:F=error",
-    "/:username=^USER^&password=^PASS^:F=invalid:F=failed:F=error",
+    "/login.html:user=^USER^&pass=^PASS^:F=invalid",
+    "/login.cgi:user=^USER^&pass=^PASS^:F=invalid",
+    "/goform/login:user=^USER^&pass=^PASS^:F=invalid",
+    "/cgi-bin/login.cgi:user=^USER^&pass=^PASS^:F=invalid",
+    "/cgi-bin/login:user=^USER^&pass=^PASS^:F=invalid",
+    "/login:user=^USER^&pass=^PASS^:F=invalid",
 ]
 
 

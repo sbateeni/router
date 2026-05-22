@@ -110,7 +110,7 @@ def path_from_login_reference(login_ref):
 
 def hydra_form_for_path(login_path):
     path = path_from_login_reference(login_path)
-    return f"{path}:user=^USER^&pass=^PASS^:F=invalid:F=failed:F=error:F=incorrect"
+    return f"{path}:user=^USER^&pass=^PASS^:F=invalid"
 
 
 def parse_dirsearch_entries(target_dir):
