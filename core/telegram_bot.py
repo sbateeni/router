@@ -7,6 +7,8 @@ import threading
 import time
 from types import SimpleNamespace
 
+import requests
+
 from core.notify import (
     _telegram_request,
     load_dotenv,
@@ -464,15 +466,34 @@ def _handle_message(message, base_dir):
     )
 
 
-def _poll_updates_loop(base_dir, poll_timeout=30, stop_event=None):
+_poll_error_lock = threading.Lock()
+_last_poll_error_log = 0.0
+POLL_ERROR_LOG_INTERVAL = 120
+
+
+def _log_poll_error(exc):
+    """Avoid spamming the terminal during long scans — one warning every 2 minutes."""
+    global _last_poll_error_log
+    now = time.time()
+    with _poll_error_lock:
+        if now - _last_poll_error_log < POLL_ERROR_LOG_INTERVAL:
+            return
+        _last_poll_error_log = now
+    print(f"[!] Telegram poll warning: {exc} (retrying in background)")
+
+
+def _poll_updates_loop(base_dir, poll_timeout=25, stop_event=None):
     token = _bot_token()
     offset = 0
+    # HTTP timeout must exceed Telegram long-poll timeout (otherwise every empty poll looks like an error).
+    http_timeout = poll_timeout + 20
     while not (stop_event and stop_event.is_set()):
         try:
             result = _telegram_request(
                 "getUpdates",
                 token,
                 {"timeout": poll_timeout, "offset": offset},
+                timeout=http_timeout,
             )
             for update in result.get("result", []):
                 offset = update["update_id"] + 1
@@ -482,12 +503,14 @@ def _poll_updates_loop(base_dir, poll_timeout=30, stop_event=None):
                     _handle_message(update["message"], base_dir)
         except KeyboardInterrupt:
             raise
+        except requests.exceptions.ReadTimeout:
+            continue
         except Exception as exc:
-            print(f"[!] Telegram poll error: {exc}")
+            _log_poll_error(exc)
             time.sleep(5)
 
 
-def run_telegram_bot(base_dir, poll_timeout=30):
+def run_telegram_bot(base_dir, poll_timeout=25):
     load_dotenv(base_dir)
     if not telegram_configured() or telegram_placeholder_keys_present():
         print("[!] أعد TELEGRAM_BOT_TOKEN و TELEGRAM_CHAT_ID في .env")
@@ -504,7 +527,7 @@ def run_telegram_bot(base_dir, poll_timeout=30):
     return 0
 
 
-def start_telegram_bot_background(base_dir, poll_timeout=30):
+def start_telegram_bot_background(base_dir, poll_timeout=25):
     """Start Telegram polling in a daemon thread; local CLI menu keeps running."""
     load_dotenv(base_dir)
     if not telegram_configured() or telegram_placeholder_keys_present():

@@ -39,9 +39,9 @@ def telegram_placeholder_keys_present():
     return (token and looks_like_placeholder(token)) or (chat_id and looks_like_placeholder(chat_id))
 
 
-def _telegram_request(method, token, payload=None, files=None):
+def _telegram_request(method, token, payload=None, files=None, timeout=30):
     url = TELEGRAM_API.format(token=token, method=method)
-    response = requests.post(url, data=payload or {}, files=files, timeout=30)
+    response = requests.post(url, data=payload or {}, files=files, timeout=timeout)
     response.raise_for_status()
     return response.json()
 
