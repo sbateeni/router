@@ -9,7 +9,10 @@ from core.report.parsers import (
     strip_ansi,
 )
 
-HYDRA_FALSE_POSITIVE_PASSWORDS = {"root:calvin", "calvin", "password", "123456"}
+HYDRA_FALSE_POSITIVE_PASSWORDS = {
+    "root:calvin", "calvin", "password", "123456",
+    "administrator:password", "amx:amx1234!", "amx:Amx1234!",
+}
 NUCLEI_NOISE_TEMPLATES = {"waf-detect", "snmpv3-detect", "tls-version", "ssl-issuer", "ssl-dns-names"}
 
 
