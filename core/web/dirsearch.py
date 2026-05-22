@@ -1,5 +1,6 @@
 import os
 
+from core.report.parsers import is_plausible_target_url
 from core.scan_config import get_scan_profile
 from core.utils import TOOLS_DIR, PYTHON, missing_python_modules, install_python_packages, run_cmd
 
@@ -57,20 +58,23 @@ def run_dirsearch(target_url, target_dir):
                 if not line or line.startswith("#") or line.startswith("Usage:"):
                     continue
                 if line.startswith("http://") or line.startswith("https://"):
-                    discovered.append(line)
+                    if is_plausible_target_url(line):
+                        discovered.append(line)
                     continue
                 if line.startswith("/"):
                     discovered.append(target_url.rstrip("/") + line)
                     continue
                 parts = line.split()
                 if len(parts) >= 2 and parts[1].startswith(("http://", "https://")):
-                    discovered.append(parts[1])
+                    if is_plausible_target_url(parts[1]):
+                        discovered.append(parts[1])
                     continue
                 if len(parts) >= 2 and parts[1].startswith("/"):
                     discovered.append(target_url.rstrip("/") + parts[1])
                     continue
-                if "://" not in line and line and line[0].isalnum() and "error" not in line.lower():
-                    discovered.append(f"{target_url.rstrip('/')}/{line}")
+                if len(parts) >= 3 and parts[0].isdigit() and parts[1].startswith(("http://", "https://")):
+                    if is_plausible_target_url(parts[1]):
+                        discovered.append(parts[1])
 
     discovered = list(dict.fromkeys(discovered))
     print(f"[+] Dirsearch results saved to: {log_file}")

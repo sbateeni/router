@@ -123,6 +123,12 @@ def run_all_classic_tools(ip, target_dir, selection=1):
 
             profile = _sync_profile(ip, target_dir, context, "after Dirsearch")
 
+            if should_run_tool(profile, "metasploit"):
+                msf_cmds = os.path.join(target_dir, "MSF_EXPLOIT_COMMANDS.txt")
+                if not os.path.exists(msf_cmds) or os.path.getsize(msf_cmds) < 80:
+                    print("\n[+] Metasploit (profile now router/CPE — running deferred MSF search)...")
+                    run_metasploit_recon(ip, target_dir, context.open_ports, vendor=profile.get("vendor"))
+
             if should_run_tool(profile, "gau") and is_tool_available("gau"):
                 for port in web_ports:
                     context.gau_urls.extend(run_gau(build_url(ip, port), target_dir))
@@ -199,16 +205,13 @@ def run_all_classic_tools(ip, target_dir, selection=1):
             if context.login_ports and run_hydra(ip, context.login_ports, target_dir):
                 pass
             hydra_cfg = get_tool_config(profile, "hydra")
-            forms = hydra_cfg.get("http_forms")
-            if context.login_paths:
-                custom_forms = [hydra_form_for_path(p) for p in context.login_paths]
-                forms = custom_forms + (forms or [])
+            login_paths = profile.get("login_paths") or context.login_paths
+            forms = None
+            if login_paths:
+                forms = [hydra_form_for_path(p) for p in login_paths]
+            elif hydra_cfg.get("http_forms"):
+                forms = [hydra_form_for_path(p) for p in hydra_cfg["http_forms"]]
             hydra_plan = {"http_forms": forms, "source": "target_profile"} if forms else None
-            if context.login_paths:
-                hydra_plan = {
-                    "http_forms": [hydra_form_for_path(p) for p in context.login_paths],
-                    "source": "target_hints",
-                }
             if context.web_ports and run_web_hydra(ip, context.web_ports, target_dir, hydra_plan=hydra_plan):
                 pass
         except KeyboardInterrupt:

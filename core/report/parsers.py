@@ -71,6 +71,48 @@ def extract_urls_from_text(text):
     return list(dict.fromkeys(URL_IN_TEXT_RE.findall(text or "")))
 
 
+def is_plausible_target_url(url):
+    """Reject dirsearch metadata lines mistaken for paths."""
+    if not url or not isinstance(url, str):
+        return False
+    lower = url.lower().strip()
+    if not (lower.startswith("http://") or lower.startswith("https://")):
+        return False
+    junk_markers = (
+        "extensions:", "http method:", "threads:", "wordlist size:",
+        "started:", "finished:", "task completed",
+    )
+    if any(marker in lower for marker in junk_markers):
+        return False
+    if "|" in url and ".php" not in lower and "?" not in url:
+        return False
+    try:
+        parsed = urlparse(url)
+    except ValueError:
+        return False
+    if not parsed.hostname:
+        return False
+    if " " in (parsed.path or ""):
+        return False
+    return True
+
+
+def path_from_login_reference(login_ref):
+    """Accept /login.cgi or http://host/login.cgi → path only."""
+    ref = (login_ref or "").strip()
+    if not ref:
+        return "/"
+    if ref.startswith("http://") or ref.startswith("https://"):
+        parsed = urlparse(ref)
+        return parsed.path or "/"
+    return ref if ref.startswith("/") else f"/{ref}"
+
+
+def hydra_form_for_path(login_path):
+    path = path_from_login_reference(login_path)
+    return f"{path}:user=^USER^&pass=^PASS^:F=invalid:F=failed:F=error:F=incorrect"
+
+
 def parse_dirsearch_entries(target_dir):
     """Parse dirsearch log lines: '200  12KB http://host/path'."""
     entries = []
@@ -81,6 +123,8 @@ def parse_dirsearch_entries(target_dir):
         text = read_file(path, 50000)
         for match in DIRSEARCH_LINE_RE.finditer(text):
             url = match.group("url").rstrip(")")
+            if not is_plausible_target_url(url):
+                continue
             key = url
             if key in seen:
                 continue
@@ -91,7 +135,7 @@ def parse_dirsearch_entries(target_dir):
                 "size": match.group("size"),
             })
         for url in extract_urls_from_text(text):
-            if url not in seen:
+            if url not in seen and is_plausible_target_url(url):
                 seen.add(url)
                 entries.append({"url": url, "status": None, "size": None})
     return entries
@@ -287,11 +331,6 @@ def load_target_hints(target_dir):
         return {}
 
 
-def hydra_form_for_path(login_path):
-    path = login_path if login_path.startswith("/") else f"/{login_path}"
-    return f"{path}:user=^USER^&pass=^PASS^:F=invalid:F=failed:F=error:F=incorrect"
-
-
 def detect_connectivity_issues(target_dir):
     issues = []
     patterns = (
@@ -311,7 +350,10 @@ def detect_connectivity_issues(target_dir):
     for path in find_files(target_dir, "nuclei_port_*.jsonl"):
         try:
             if os.path.getsize(path) == 0:
-                issues.append(f"{os.path.basename(path)} is empty — Nuclei may have failed or found nothing.")
+                base = os.path.basename(path).replace(".jsonl", "")
+                alt = os.path.join(target_dir, f"{base}_notags.jsonl")
+                if not os.path.exists(alt) or os.path.getsize(alt) == 0:
+                    issues.append(f"{os.path.basename(path)} is empty — Nuclei may have failed or found nothing.")
         except OSError:
             pass
     return list(dict.fromkeys(issues))
@@ -325,7 +367,9 @@ def pick_priority_web_targets(ip, web_ports, discovered_paths=None, limit=12):
         candidates.append(normalize_target_url(f"http://{ip}" if port == 80 else f"https://{ip}" if port == 443 else f"http://{ip}:{port}"))
     for raw in discovered_paths:
         url = raw if str(raw).startswith("http") else f"http://{ip}/{str(raw).lstrip('/')}"
-        candidates.append(normalize_target_url(url))
+        url = normalize_target_url(url)
+        if is_plausible_target_url(url):
+            candidates.append(url)
     priority = []
     for url in dict.fromkeys(candidates):
         lower = url.lower()
