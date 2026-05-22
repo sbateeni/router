@@ -464,18 +464,10 @@ def _handle_message(message, base_dir):
     )
 
 
-def run_telegram_bot(base_dir, poll_timeout=30):
-    load_dotenv(base_dir)
-    if not telegram_configured() or telegram_placeholder_keys_present():
-        print("[!] أعد TELEGRAM_BOT_TOKEN و TELEGRAM_CHAT_ID في .env")
-        return 1
-
-    print("[+] Telegram bot running (Ctrl+C to stop)")
-    print("[*] Send IP → pick mode. Busy scans queue the next IP automatically.")
-
+def _poll_updates_loop(base_dir, poll_timeout=30, stop_event=None):
     token = _bot_token()
     offset = 0
-    while True:
+    while not (stop_event and stop_event.is_set()):
         try:
             result = _telegram_request(
                 "getUpdates",
@@ -489,21 +481,60 @@ def run_telegram_bot(base_dir, poll_timeout=30):
                 elif "message" in update:
                     _handle_message(update["message"], base_dir)
         except KeyboardInterrupt:
-            print("\n[-] Bot stopped.")
-            return 0
+            raise
         except Exception as exc:
-            print(f"[!] Poll error: {exc}")
+            print(f"[!] Telegram poll error: {exc}")
             time.sleep(5)
 
 
-def should_default_to_telegram(args):
+def run_telegram_bot(base_dir, poll_timeout=30):
+    load_dotenv(base_dir)
+    if not telegram_configured() or telegram_placeholder_keys_present():
+        print("[!] أعد TELEGRAM_BOT_TOKEN و TELEGRAM_CHAT_ID في .env")
+        return 1
+
+    print("[+] Telegram bot running (Ctrl+C to stop)")
+    print("[*] Send IP → pick mode. Busy scans queue the next IP automatically.")
+
+    try:
+        _poll_updates_loop(base_dir, poll_timeout)
+    except KeyboardInterrupt:
+        print("\n[-] Bot stopped.")
+        return 0
+    return 0
+
+
+def start_telegram_bot_background(base_dir, poll_timeout=30):
+    """Start Telegram polling in a daemon thread; local CLI menu keeps running."""
+    load_dotenv(base_dir)
+    if not telegram_configured() or telegram_placeholder_keys_present():
+        return None
+
+    def worker():
+        try:
+            _poll_updates_loop(base_dir, poll_timeout)
+        except KeyboardInterrupt:
+            pass
+        except Exception as exc:
+            print(f"[!] Telegram background bot stopped: {exc}")
+
+    thread = threading.Thread(target=worker, daemon=True, name="telegram-bot")
+    thread.start()
+    print("[+] Telegram bot listening in background")
+    print("[*] Send IP in Telegram → pick mode → scan runs automatically.")
+    print("[*] Local menu below — you can scan from this terminal too.\n")
+    return thread
+
+
+def should_run_telegram_background(args):
     import os
-    if getattr(args, "no_telegram", False):
-        return False
-    if getattr(args, "telegram", False):
-        return True
-    if getattr(args, "target", None) or getattr(args, "auto", False) or getattr(args, "subnet", None):
+    if getattr(args, "no_telegram", False) or getattr(args, "telegram", False):
         return False
     if os.environ.get("TELEGRAM_AUTO", "1").strip().lower() in ("0", "false", "no", "off"):
         return False
     return telegram_configured() and not telegram_placeholder_keys_present()
+
+
+def should_default_to_telegram(args):
+    """Backward-compatible alias — bot-only mode is now opt-in via --telegram."""
+    return getattr(args, "telegram", False)

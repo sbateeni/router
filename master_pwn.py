@@ -414,26 +414,24 @@ def main():
     parser.add_argument(
         "--telegram",
         action="store_true",
-        help="Run Telegram bot only (same as: python3 master_pwn.py with no -t when .env is set)",
+        help="Telegram bot only (no local menu). Default: bot in background + local menu together",
     )
     parser.add_argument(
         "--no-telegram",
         action="store_true",
-        help="Force local menu instead of Telegram bot (when .env has Telegram configured)",
+        help="Disable background Telegram bot; local menu / CLI only",
     )
     args = parser.parse_args()
     base_dir = repo_base_dir()
 
-    from core.telegram_bot import run_telegram_bot, should_default_to_telegram
+    from core.telegram_bot import run_telegram_bot, should_run_telegram_background, start_telegram_bot_background
 
-    if args.telegram or should_default_to_telegram(args):
-        if args.telegram:
-            print("[*] Telegram control mode (--telegram)\n")
-        else:
-            print("[*] Telegram configured — starting remote control bot.")
-            print("[*] Send IP in Telegram, pick attack type, scan runs automatically.")
-            print("[*] Local menu: python3 master_pwn.py --no-telegram\n")
+    if args.telegram:
+        print("[*] Telegram-only mode (--telegram)\n")
         raise SystemExit(run_telegram_bot(base_dir))
+
+    if should_run_telegram_background(args):
+        start_telegram_bot_background(base_dir)
 
     scan_profile = "deep" if args.deep else "normal"
 
