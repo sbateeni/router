@@ -76,8 +76,15 @@ if not exist "sqlmap" (
 
 cd ..
 echo.
-echo [*] Installing Python dependencies for external tools...
-"%PY%" -m pip install -q setuptools
+echo [*] Setting up project virtualenv...
+if not exist "%ROOT%\.venv\Scripts\python.exe" (
+    python -m venv "%ROOT%\.venv"
+)
+set "PY=%ROOT%\.venv\Scripts\python.exe"
+
+echo [*] Installing Python dependencies into .venv...
+"%PY%" -m pip install -q -U pip setuptools wheel
+if exist "requirements.txt" "%PY%" -m pip install -q -r requirements.txt
 if exist "tools\routersploit\requirements.txt" "%PY%" -m pip install -q -r tools\routersploit\requirements.txt
 if exist "tools\ingram\requirements.txt" "%PY%" -m pip install -q -r tools\ingram\requirements.txt
 

@@ -4,6 +4,46 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
+ensure_project_venv() {
+  if [[ ! -x "$ROOT/.venv/bin/python" ]]; then
+    echo "[*] Creating project virtualenv at .venv (Kali blocks system pip — PEP 668)..."
+    if ! python3 -m venv "$ROOT/.venv"; then
+      echo "[!] Failed to create venv. Install: sudo apt install python3-venv"
+      exit 1
+    fi
+  fi
+  PY="$ROOT/.venv/bin/python"
+  echo "[*] Using Python: $PY"
+}
+
+install_python_deps() {
+  ensure_project_venv
+  echo
+  echo "[*] Installing Python dependencies into .venv..."
+  "$PY" -m pip install -q -U pip setuptools wheel
+
+  local req failed=0
+  for req in \
+    "$ROOT/requirements.txt" \
+    tools/routersploit/requirements.txt \
+    tools/ingram/requirements.txt \
+    tools/netexec/requirements.txt \
+    tools/spiderfoot/requirements.txt \
+    tools/theHarvester/requirements/base.txt; do
+    if [[ -f "$req" ]]; then
+      echo "  [*] $req"
+      if ! "$PY" -m pip install -q -r "$req"; then
+        echo "  [!] Warning: pip install failed for $req (continuing)"
+        failed=1
+      fi
+    fi
+  done
+
+  if [[ "$failed" -eq 1 ]]; then
+    echo "[!] Some optional tool dependencies failed — clones are still usable."
+  fi
+}
+
 echo "======================================================"
 echo "       DOWNLOADING EXTERNAL SECURITY TOOLS"
 echo "======================================================"
@@ -62,23 +102,15 @@ echo "[10/10] Amass..."
 sync_tool amass https://github.com/owasp-amass/amass.git 1
 
 cd "$ROOT"
-if [[ -x "$ROOT/.venv/bin/python" ]]; then
-  PY="$ROOT/.venv/bin/python"
-else
-  PY="python3"
-fi
-
-echo
-echo "[*] Installing Python dependencies for external tools..."
-"$PY" -m pip install -q setuptools
-for req in tools/routersploit/requirements.txt tools/ingram/requirements.txt tools/netexec/requirements.txt tools/spiderfoot/requirements.txt tools/theHarvester/requirements/base.txt; do
-  if [[ -f "$req" ]]; then
-    "$PY" -m pip install -q -r "$req"
-  fi
-done
+install_python_deps
 
 echo
 echo "======================================================"
 echo "       ALL TOOLS DOWNLOADED SUCCESSFULLY!"
 echo "======================================================"
 echo "Tools installed in: $ROOT/tools/"
+echo "Python venv:        $ROOT/.venv/"
+echo
+echo "Activate before running:"
+echo "  source .venv/bin/activate"
+echo "  ./run.sh"

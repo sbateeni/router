@@ -10,8 +10,8 @@ One repo for Kali — full scan, camera pwn, router creds, CVE intelligence.
 git clone https://github.com/YOUR_USER/router.git
 cd router
 chmod +x run.sh scripts/install_tools.sh
-bash scripts/install_tools.sh
-pip install -r requirements.txt
+bash scripts/install_tools.sh    # creates .venv + clones tools
+source .venv/bin/activate
 ./run.sh
 ```
 
