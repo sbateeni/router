@@ -3,6 +3,10 @@
 
 import runpy
 
+import _bootstrap
+
+_bootstrap.install()
+
 from core.paths import setup_project_env
 
 if __name__ == "__main__":

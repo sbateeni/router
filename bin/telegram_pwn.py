@@ -4,6 +4,10 @@
 import os
 import sys
 
+import _bootstrap
+
+_bootstrap.install()
+
 from core.paths import setup_project_env, project_root
 
 setup_project_env()

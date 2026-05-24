@@ -19,7 +19,7 @@ source .venv/bin/activate
 
 | Command | Purpose |
 |---------|---------|
-| `./run.sh` | Unified menu |
+| `./run.sh` | Unified menu (options 1–9) |
 | `python3 bin/master_pwn.py -t IP --auto` | Full 4-phase scan (Nmap → Web → **Engine** → Hydra) |
 | `python3 bin/auto_pwn.py` | Device engine only (cameras + routers) |
 | `python3 tests/test_router_target.py -H IP` | Netis/router credential test |

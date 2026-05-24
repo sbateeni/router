@@ -17,6 +17,10 @@ import subprocess
 import sys
 from urllib.parse import quote
 
+import _bootstrap
+
+_bootstrap.install()
+
 from core.paths import setup_project_env
 
 setup_project_env()

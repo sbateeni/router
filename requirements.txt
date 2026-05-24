@@ -16,7 +16,6 @@ IPy
 paramiko
 pysnmp
 pwntools
-pwn
 telnetlib3
 
 # Cryptography
@@ -46,3 +45,8 @@ setuptools
 selenium
 webdriver-manager
 urllib3
+
+# OSINT & environment
+python-dotenv
+holehe
+sherlock-project
