@@ -16,8 +16,8 @@ from __future__ import annotations
 
 import argparse
 import base64
-import sys
 
+import bootstrap  # noqa: F401
 import requests
 import urllib3
 from requests.auth import HTTPDigestAuth

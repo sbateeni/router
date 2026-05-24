@@ -2,8 +2,8 @@
 """CVE intelligence test — camera or router (authorized use only)."""
 
 import argparse
-import sys
 
+import bootstrap  # noqa: F401
 import requests
 
 from engines.device_cve_checker import assess_device, print_cve_report, probe_hikvision_backdoor

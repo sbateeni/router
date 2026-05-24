@@ -1,9 +1,8 @@
 import sys
-import os
 
-ROOT = os.path.dirname(os.path.abspath(__file__))
-if ROOT not in sys.path:
-    sys.path.insert(0, ROOT)
+from core.paths import setup_project_env
+
+setup_project_env()
 
 from engines.external_tools import ExternalTools
 from engines.utils import log, extract_ip

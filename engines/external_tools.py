@@ -56,7 +56,7 @@ class ExternalTools:
         found_creds = []
 
         if not os.path.exists(creds_file):
-            log("DefaultCreds database not found. Run install_tools.sh or install_tools.bat first.", "ERROR")
+            log("DefaultCreds database not found. Run scripts/install_tools.sh or scripts/install_tools.bat first.", "ERROR")
             return found_creds
 
         log(f"Searching default credentials for: {product_name}...", "INFO")
@@ -77,12 +77,12 @@ class ExternalTools:
         """تشغيل ماسح Ingram للكاميرات"""
         ingram_path = os.path.join(self.tools_dir, "ingram")
         if not os.path.isdir(ingram_path):
-            log("Ingram not found. Run install_tools.sh or install_tools.bat first.", "ERROR")
+            log("Ingram not found. Run scripts/install_tools.sh or scripts/install_tools.bat first.", "ERROR")
             return
 
         entry_script = os.path.join(ingram_path, "run_ingram.py")
         if not os.path.isfile(entry_script):
-            log("Ingram entry script run_ingram.py not found. Re-run install_tools.sh", "ERROR")
+            log("Ingram entry script run_ingram.py not found. Re-run scripts/install_tools.sh", "ERROR")
             return
 
         _ensure_tool_requirements(os.path.join(ingram_path, "requirements.txt"))
@@ -135,7 +135,7 @@ class ExternalTools:
         rs_path = os.path.join(self.tools_dir, "routersploit")
         rsf_script = os.path.join(rs_path, "rsf.py")
         if not os.path.isfile(rsf_script):
-            log("RouterSploit not found. Run install_tools.sh or install_tools.bat first.", "ERROR")
+            log("RouterSploit not found. Run scripts/install_tools.sh or scripts/install_tools.bat first.", "ERROR")
             return []
 
         if not _ensure_routersploit_ready():
@@ -184,7 +184,7 @@ class ExternalTools:
             return []
 
     def run_routersploit_exploit(self, module_path):
-        """محاولة استغلال الثغرة المكتشفة تلقائياً"""
+        """محاولة استغلال الثغرة المكتشفة تلقائياً — returns True if exploit likely succeeded."""
         rs_path = os.path.join(self.tools_dir, "routersploit")
         module_path = module_path.replace("\\", "/")
 
@@ -216,13 +216,25 @@ class ExternalTools:
             print(result.stdout)
             print("=" * 40)
 
-            if "Welcome to cmd" in result.stdout or "Success" in result.stdout:
+            out_lower = (result.stdout or "").lower()
+            success_markers = (
+                "welcome to cmd",
+                "success",
+                "shell opened",
+                "command shell",
+                "meterpreter",
+                "exploit completed",
+            )
+            if any(m in out_lower for m in success_markers):
                 log(f"EXPLOIT SUCCESSFUL ON {self.target_ip}!", "SUCCESS")
-            else:
-                log("Exploit launched, check output for details.", "INFO")
+                return True
+
+            log("Exploit launched, check output for details.", "INFO")
+            return False
 
         except Exception as e:
             log(f"Auto-exploit failed: {e}", "ERROR")
+            return False
 
     def get_all_default_passwords(self):
         """جمع كلمات المرور الافتراضية لأشهر الأجهزة"""

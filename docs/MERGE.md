@@ -17,7 +17,7 @@ Local copy kept at: `C:\Users\HP\Documents\GitHub\nuclei-dev-main` (experiments 
 ```bash
 git clone https://github.com/sbateeni/router.git
 cd router
-chmod +x run.sh install_tools.sh
-bash install_tools.sh && pip install -r requirements.txt
+chmod +x run.sh scripts/install_tools.sh
+bash scripts/install_tools.sh && pip install -r requirements.txt
 ./run.sh
 ```

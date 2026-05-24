@@ -91,16 +91,105 @@ class SocialOSINT:
     # ──────────────────────────────────────────────
     #  PHONE OSINT
     # ──────────────────────────────────────────────
-    def check_phone(self, phone_number):
-        """Check a phone number across social media and messaging platforms."""
-        log(f"Starting Phone OSINT for: {phone_number}", "INFO")
-
-        # Normalize phone number
+    def _normalize_phone(self, phone_number: str) -> str:
         phone = phone_number.strip().replace(" ", "").replace("-", "")
         if not phone.startswith("+"):
             log("Tip: For best results, use international format like +966XXXXXXXXX", "WARNING")
+        return phone
 
-        results = []
+    def _lookup_truecaller(self, phone: str) -> dict:
+        """
+        Truecaller lookup: optional NUMLOOKUP_API_KEY, else scrape public search page.
+        """
+        digits = phone.replace("+", "")
+        result = {
+            "platform": "Truecaller",
+            "status": "NOT FOUND",
+            "name": None,
+            "carrier": None,
+            "url": f"https://www.truecaller.com/search/{digits[:2]}/{digits}",
+        }
+
+        api_key = os.environ.get("NUMLOOKUP_API_KEY")
+        if api_key and api_key != "your_numlookup_api_key_here":
+            try:
+                resp = requests.get(
+                    f"https://api.numlookupapi.com/v1/validate/{digits}",
+                    headers={"apikey": api_key},
+                    timeout=12,
+                )
+                if resp.status_code == 200:
+                    data = resp.json()
+                    valid = data.get("valid", False)
+                    result["name"] = data.get("local_format") or data.get("international_format")
+                    result["carrier"] = data.get("carrier")
+                    result["status"] = "VALID" if valid else "INVALID"
+                    if data.get("country_name"):
+                        result["country"] = data.get("country_name")
+                    return result
+            except Exception as exc:
+                log(f"  NumLookup API error: {exc}", "WARNING")
+
+        # Scrape Truecaller public search (best-effort; may require login in some regions)
+        try:
+            headers = {
+                "User-Agent": (
+                    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
+                    "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+                ),
+                "Accept-Language": "en-US,en;q=0.9",
+            }
+            tc_url = result["url"]
+            resp = requests.get(tc_url, headers=headers, timeout=15, allow_redirects=True)
+            if resp.status_code == 200:
+                html = resp.text
+                # JSON-LD or embedded profile data
+                name_match = re.search(
+                    r'"name"\s*:\s*"([^"]{2,80})"', html, re.I
+                ) or re.search(r'<title>([^<|]+)', html, re.I)
+                if name_match:
+                    name = name_match.group(1).strip()
+                    if name.lower() not in ("truecaller", "login", "sign in"):
+                        result["name"] = name
+                        result["status"] = "FOUND"
+                if "spam" in html.lower():
+                    result["spam_score"] = "possible_spam"
+        except Exception as exc:
+            log(f"  Truecaller scrape error: {exc}", "WARNING")
+            result["status"] = "CHECK MANUALLY"
+
+        return result
+
+    def _lookup_syncme(self, phone: str) -> dict:
+        """Scrape Sync.me search page for caller name."""
+        digits = phone.replace("+", "")
+        result = {
+            "platform": "Sync.me",
+            "status": "NOT FOUND",
+            "name": None,
+            "url": f"https://sync.me/search/?number={digits}",
+        }
+        try:
+            headers = {"User-Agent": "Mozilla/5.0 (compatible; AutoPwnOSINT/1.0)"}
+            resp = requests.get(result["url"], headers=headers, timeout=15)
+            if resp.status_code == 200:
+                # Common patterns: caller name in h1/h2 or meta
+                for pat in (
+                    r'class="[^"]*name[^"]*"[^>]*>([^<]{2,80})<',
+                    r'"displayName"\s*:\s*"([^"]{2,80})"',
+                    r'<h1[^>]*>([^<]{2,80})</h1>',
+                ):
+                    m = re.search(pat, resp.text, re.I)
+                    if m:
+                        name = m.group(1).strip()
+                        if name.lower() not in ("sync.me", "search"):
+                            result["name"] = name
+                            result["status"] = "FOUND"
+                            break
+        except Exception as exc:
+            log(f"  Sync.me scrape error: {exc}", "WARNING")
+            result["status"] = "CHECK MANUALLY"
+        return result
 
         # 1. WhatsApp check (via wa.me link — public availability check)
         log("  Checking WhatsApp...", "INFO")
@@ -128,23 +217,86 @@ class SocialOSINT:
         except:
             pass
 
-        # 3. Truecaller (basic — needs API for full results)
-        log("  Checking Truecaller...", "INFO")
+    def check_phone(self, phone_number):
+        """Check a phone number across social media and messaging platforms."""
+        log(f"Starting Phone OSINT for: {phone_number}", "INFO")
+
+        phone = self._normalize_phone(phone_number)
+        results = []
+
+        # Truecaller + Sync.me automated lookup
+        tc = self._lookup_truecaller(phone)
+        results.append(tc)
+        if tc.get("name"):
+            log(f"  [+] Truecaller: {tc['name']} ({tc['status']})", "SUCCESS")
+        else:
+            log(f"  [~] Truecaller: {tc['status']} → {tc['url']}", "INFO")
+
+        sync = self._lookup_syncme(phone)
+        results.append(sync)
+        if sync.get("name"):
+            log(f"  [+] Sync.me: {sync['name']}", "SUCCESS")
+        else:
+            log(f"  [~] Sync.me: {sync['status']} → {sync['url']}", "INFO")
+        log("  Checking Facebook...", "INFO")
         try:
-            tc_url = f"https://www.truecaller.com/search/{phone.replace('+', '')}"
-            results.append({"platform": "Truecaller", "status": "CHECK MANUALLY", "url": tc_url})
-            log(f"  [~] Truecaller: Check manually → {tc_url}", "INFO")
+            fb_url = f"https://www.facebook.com/login/identify/?ctx=recover&ars=facebook_login&from_login_screen=0"
+            results.append({"platform": "Facebook", "status": "MANUAL CHECK", "url": fb_url})
+            log(f"  [~] Facebook: Use recovery page → {fb_url}", "INFO")
         except:
             pass
 
-        # 4. Sync.me (reverse phone lookup)
-        log("  Checking Sync.me...", "INFO")
+        # 6. Instagram
+        log("  Checking Instagram...", "INFO")
         try:
-            country_code = phone[1:4] if phone.startswith("+") else "1"
-            number_part = phone[4:] if phone.startswith("+") else phone
-            sync_url = f"https://sync.me/search/?number={phone.replace('+', '')}"
-            results.append({"platform": "Sync.me", "status": "CHECK MANUALLY", "url": sync_url})
-            log(f"  [~] Sync.me: Check manually → {sync_url}", "INFO")
+            ig_url = f"https://www.instagram.com/accounts/password/reset/"
+            results.append({"platform": "Instagram", "status": "MANUAL CHECK", "url": ig_url})
+            log(f"  [~] Instagram: Use password reset → {ig_url}", "INFO")
+        except:
+            pass
+
+        # 7. Twitter / X
+        log("  Checking Twitter/X...", "INFO")
+        try:
+            tw_url = f"https://twitter.com/account/begin_password_reset"
+            results.append({"platform": "Twitter / X", "status": "MANUAL CHECK", "url": tw_url})
+            log(f"  [~] Twitter/X: Use password reset → {tw_url}", "INFO")
+        except:
+            pass
+
+        # 8. Snapchat
+        log("  Checking Snapchat...", "INFO")
+        try:
+            snap_url = f"https://accounts.snapchat.com/accounts/password_reset_options"
+            results.append({"platform": "Snapchat", "status": "MANUAL CHECK", "url": snap_url})
+            log(f"  [~] Snapchat: Use password reset → {snap_url}", "INFO")
+        except:
+            pass
+
+        # 9. LinkedIn
+        log("  Checking LinkedIn...", "INFO")
+        try:
+            li_url = f"https://www.linkedin.com/checkpoint/rp/request-password-reset"
+            results.append({"platform": "LinkedIn", "status": "MANUAL CHECK", "url": li_url})
+            log(f"  [~] LinkedIn: Use password reset → {li_url}", "INFO")
+        except:
+            pass
+
+        # 10. Viber
+        log("  Checking Viber...", "INFO")
+        try:
+            viber_url = f"viber://contact?number={phone.replace('+', '')}"
+            results.append({"platform": "Viber", "status": "POSSIBLE", "url": viber_url})
+            log("  [+] Viber: Check link via mobile app", "SUCCESS")
+        except:
+            pass
+
+        # 11. Signal
+        log("  Checking Signal...", "INFO")
+        try:
+            signal_url = f"sgnl://message/{phone}"
+            results.append({"platform": "Signal", "status": "POSSIBLE", "url": signal_url})
+            log("  [+] Signal: Check link via mobile app", "SUCCESS")
         except:
             pass
 

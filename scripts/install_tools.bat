@@ -1,8 +1,8 @@
 @echo off
 title INSTALLING EXTERNAL TOOLS
 setlocal
-cd /d "%~dp0"
-set "ROOT=%~dp0"
+cd /d "%~dp0\.."
+set "ROOT=%CD%"
 set "PY=%ROOT%\.venv\Scripts\python.exe"
 if not exist "%PY%" set "PY=python"
 cls

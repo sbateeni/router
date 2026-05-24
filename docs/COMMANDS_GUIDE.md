@@ -8,11 +8,11 @@
 
 ```bash
 # تقرير CVE حسب الموديل والـ firmware (كاميرا أو راوتر)
-python test_device_cve.py -H TARGET_IP
-python test_device_cve.py -H 188.225.141.236 --user admin --password YOUR_PASS
+python tests/test_device_cve.py -H TARGET_IP
+python tests/test_device_cve.py -H 188.225.141.236 --user admin --password YOUR_PASS
 
-# FULL AUTO-PWN يشغّل CVE report + Nuclei المستهدف تلقائياً
-bash run.sh   # خيار 2
+# FULL AUTO-PWN
+bash run.sh   # خيار 2 → bin/auto_pwn.py
 ```
 
 ---

@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
-"""Quick Hikvision snapshot capture — wrapper around modules.hikvision_snapshots."""
+"""Quick Hikvision snapshot capture."""
+
+import bootstrap  # noqa: F401
 
 from engines.hikvision_snapshots import main
 

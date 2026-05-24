@@ -6,6 +6,11 @@ import os
 import subprocess
 import hashlib
 import importlib.util
+
+from core.paths import setup_project_env, project_root
+
+setup_project_env()
+
 from core.runner import select_tool_menu, run_selected_tool
 from core.network_discovery import resolve_target_list
 from core.web_enum import update_nuclei_templates, ensure_dirsearch_deps
@@ -16,7 +21,7 @@ from core.ai.analyst import ai_placeholder_keys_present
 
 
 def repo_base_dir():
-    return os.path.dirname(os.path.abspath(__file__))
+    return project_root()
 
 
 def current_user_name():
@@ -67,8 +72,8 @@ def print_git_sync_fix(base_dir):
     print(f"    cd {base_dir}")
     print("    git fetch origin")
     print(f"    git checkout -B {DEFAULT_BRANCH} origin/{DEFAULT_BRANCH}")
-    print("    python3 master_pwn.py -t 192.168.1.1 --auto\n")
-    print("[!] Do NOT use sudo when running master_pwn.py.")
+    print("    python3 bin/master_pwn.py -t 192.168.1.1 --auto\n")
+    print("[!] Do NOT use sudo when running bin/master_pwn.py.")
 
 
 def print_git_permission_fix(base_dir):
@@ -80,8 +85,8 @@ def print_git_permission_fix(base_dir):
     print(f"    cd {base_dir}")
     print("    git fetch origin")
     print(f"    git checkout -B {DEFAULT_BRANCH} origin/{DEFAULT_BRANCH}")
-    print("    python3 master_pwn.py -t 192.168.1.1 --auto\n")
-    print("[!] Do NOT use sudo when running master_pwn.py after fixing permissions.")
+    print("    python3 bin/master_pwn.py -t 192.168.1.1 --auto\n")
+    print("[!] Do NOT use sudo when running bin/master_pwn.py after fixing permissions.")
 
 
 def warn_if_running_as_root():
@@ -212,7 +217,7 @@ def update_self_repo():
 
 def auto_install_tools():
     print("[*] Checking dependencies and tools...")
-    base_dir = os.path.dirname(os.path.abspath(__file__))
+    base_dir = project_root()
     tools_dir = os.path.join(base_dir, "tools")
     os.makedirs(tools_dir, exist_ok=True)
     

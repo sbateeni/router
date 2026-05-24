@@ -3,4 +3,7 @@ __pycache__/
 *.pyc
 tools/
 targets/
+logs/*.log
 *.log
+desktop.ini
+Thumbs.db

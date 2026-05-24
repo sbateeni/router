@@ -5,6 +5,8 @@ import json
 import shutil
 from urllib3.exceptions import InsecureRequestWarning
 
+from core.paths import logs_dir
+
 requests.packages.urllib3.disable_warnings(category=InsecureRequestWarning)
 
 def extract_ip(url):
@@ -35,13 +37,17 @@ def get_target_dir(ip):
         os.makedirs(path)
     return path
 
+def _global_log_path() -> str:
+    return os.path.join(logs_dir(), "pwn.log")
+
+
 def log(message, type="INFO", ip=None):
     icons = {"INFO": "[*]", "SUCCESS": "[+]", "ERROR": "[!]", "PWN": "[$$$]"}
     formatted_msg = f"{icons.get(type, '[*]')} {message}"
     print(formatted_msg)
     
     # حفظ في السجل العام
-    with open("pwn.log", "a", encoding="utf-8") as f:
+    with open(_global_log_path(), "a", encoding="utf-8") as f:
         f.write(formatted_msg + "\n")
         f.flush()
 
@@ -53,7 +59,7 @@ def log(message, type="INFO", ip=None):
 
 def clear_logs(ip=None):
     if not ip:
-        with open("pwn.log", "w", encoding="utf-8") as f:
+        with open(_global_log_path(), "w", encoding="utf-8") as f:
             f.write("--- NEW GLOBAL SESSION ---\n")
     else:
         t_dir = get_target_dir(ip)

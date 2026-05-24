@@ -9,8 +9,8 @@ One repo for Kali — full scan, camera pwn, router creds, CVE intelligence.
 ```bash
 git clone https://github.com/YOUR_USER/router.git
 cd router
-chmod +x run.sh install_tools.sh
-bash install_tools.sh
+chmod +x run.sh scripts/install_tools.sh
+bash scripts/install_tools.sh
 pip install -r requirements.txt
 ./run.sh
 ```
@@ -20,26 +20,33 @@ pip install -r requirements.txt
 | Command | Purpose |
 |---------|---------|
 | `./run.sh` | Unified menu |
-| `python3 master_pwn.py -t IP --auto` | Full 4-phase scan (Nmap → Web → **Engine** → Hydra) |
-| `python3 engines/auto_pwn_main.py` | Device engine only (cameras + routers) |
-| `python3 test_router_target.py -H IP` | Netis/router credential test |
-| `python3 test_hikvision_target.py -H IP` | Hikvision backdoor + Digest test |
-| `python3 test_device_cve.py -H IP` | CVE intelligence report |
+| `python3 bin/master_pwn.py -t IP --auto` | Full 4-phase scan (Nmap → Web → **Engine** → Hydra) |
+| `python3 bin/auto_pwn.py` | Device engine only (cameras + routers) |
+| `python3 tests/test_router_target.py -H IP` | Netis/router credential test |
+| `python3 tests/test_hikvision_target.py -H IP` | Hikvision backdoor + Digest test |
+| `python3 tests/test_device_cve.py -H IP` | CVE intelligence report |
 
-## Architecture
+## Project layout
 
 ```
-router/                    ← push THIS folder to GitHub
-├── master_pwn.py          ← main orchestrator (Nmap, Hydra, Telegram, AI)
-├── core/                  ← scan phases, reports, profile routing
-├── engines/               ← from nuclei-dev (Hikvision, Netis, CVE, loot)
-│   ├── integration.py     ← called from Phase 3 of full scan
-│   ├── credential_hunter.py
-│   ├── device_cve_checker.py
-│   └── auto_pwn_main.py
-├── tools/                 ← RouterSploit, Ingram, Nuclei, Dirsearch...
-├── targets/               ← per-target scan workspaces
-└── run.sh
+router/
+├── run.sh / run.bat       ← launch menu (stay at root)
+├── bin/                   ← Python entry points
+│   ├── master_pwn.py      ← main orchestrator
+│   ├── auto_pwn.py        ← device engine menu
+│   ├── lan_pwn.py
+│   └── telegram_pwn.py
+├── scripts/               ← install & maintenance
+│   ├── install_tools.sh
+│   └── update_tools.py
+├── tests/                 ← target tests & unit tests
+├── docs/                  ← guides & notes
+├── config/                ← editor / deploy config (e.g. sftp.json)
+├── logs/                  ← pwn.log (runtime)
+├── core/                  ← scan phases, reports, AI, Telegram
+├── engines/               ← Hikvision, Netis, CVE, OSINT, loot
+├── tools/                 ← RouterSploit, Ingram, Nuclei (gitignored)
+└── targets/               ← per-target workspaces (gitignored)
 ```
 
 ## What the merge adds
@@ -58,7 +65,7 @@ router/                    ← push THIS folder to GitHub
 
 ## Environment
 
-Copy `.env.example` to `.env` for Telegram / AI keys.
+Copy `.env.example` to `.env` for Telegram / AI / Shodan keys.
 
 ## Legacy repos
 
