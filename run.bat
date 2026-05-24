@@ -1,6 +1,7 @@
 @echo off
 setlocal
 cd /d "%~dp0"
+set "PYTHONPATH=%~dp0"
 
 where python >nul 2>&1 && set PY=python || set PY=py -3
 if exist ".venv\Scripts\python.exe" set PY=.venv\Scripts\python.exe
