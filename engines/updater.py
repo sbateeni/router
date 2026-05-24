@@ -178,6 +178,11 @@ def update_nuclei_templates():
                 log(output.splitlines()[-1], "SUCCESS")
             else:
                 log("Nuclei templates updated.", "SUCCESS")
+                
+            # Extract CVEs from newly updated templates
+            from engines.cve_updater import update_cve_database
+            update_cve_database()
+            
             return True
 
         log(f"Nuclei template update failed: {output or 'unknown error'}", "ERROR")

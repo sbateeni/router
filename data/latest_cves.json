@@ -1,0 +1,3723 @@
+{
+    "CISCO": [
+        {
+            "cve": "configure-aaa-service",
+            "title": "Cisco AAA Service Configuration - Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "file/audit/cisco/configure-aaa-service.yaml"
+            ],
+            "nuclei_tags": "file,audit,cisco,config-audit,cisco-switch,router"
+        },
+        {
+            "cve": "configure-service-timestamps-debug",
+            "title": "Cisco Configure Service Timestamps for Debug - Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "file/audit/cisco/configure-service-timestamps-debug.yaml"
+            ],
+            "nuclei_tags": "file,audit,cisco,config-audit,cisco-switch,router"
+        },
+        {
+            "cve": "configure-service-timestamps-logmessages",
+            "title": "Cisco Configure Service Timestamps Log Messages - Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "file/audit/cisco/configure-service-timestamps-logmessages.yaml"
+            ],
+            "nuclei_tags": "file,audit,cisco,config-audit,cisco-switch,router"
+        },
+        {
+            "cve": "disable-ip-source-route",
+            "title": "Cisco Disable IP Source-Route - Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "file/audit/cisco/disable-ip-source-route.yaml"
+            ],
+            "nuclei_tags": "audit,file,cisco,config-audit,cisco-switch,router"
+        },
+        {
+            "cve": "disable-pad-service",
+            "title": "Cisco Disable PAD - Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "file/audit/cisco/disable-pad-service.yaml"
+            ],
+            "nuclei_tags": "audit,file,cisco,config-audit,cisco-switch,router"
+        },
+        {
+            "cve": "enable-secret-for-user-and-password",
+            "title": "Enable and User Password with Secret",
+            "severity": "info",
+            "nuclei_templates": [
+                "file/audit/cisco/enable-secret-for-user-and-password.yaml"
+            ],
+            "nuclei_tags": "file,audit,cisco,config-audit,cisco-switch,router"
+        },
+        {
+            "cve": "logging-enable",
+            "title": "Cisco Logging Enable - Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "file/audit/cisco/logging-enable.yaml"
+            ],
+            "nuclei_tags": "audit,file,cisco,config-audit,cisco-switch"
+        },
+        {
+            "cve": "set-and-secure-passwords",
+            "title": "Cisco Set and Secure Password - Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "file/audit/cisco/set-and-secure-passwords.yaml"
+            ],
+            "nuclei_tags": "audit,file,cisco,config-audit,cisco-switch"
+        },
+        {
+            "cve": "CVE-2001-0537",
+            "title": "Cisco IOS HTTP Configuration - Authentication Bypass",
+            "severity": "critical",
+            "nuclei_templates": [
+                "http/cves/2001/CVE-2001-0537.yaml"
+            ],
+            "nuclei_tags": "cve,cve2001,cisco,ios,auth-bypass,vkev,vuln"
+        },
+        {
+            "cve": "CVE-2009-1558",
+            "title": "Cisco Linksys WVC54GCA 1.00R22/1.00R24 - Local File Inclusion",
+            "severity": "high",
+            "nuclei_templates": [
+                "http/cves/2009/CVE-2009-1558.yaml"
+            ],
+            "nuclei_tags": "cve2009,cve,iot,linksys,camera,traversal,lfi,cisco,firmware,edb,vkev,vuln"
+        },
+        {
+            "cve": "CVE-2011-3315",
+            "title": "Cisco CUCM, UCCX, and Unified IP-IVR- Directory Traversal",
+            "severity": "high",
+            "nuclei_templates": [
+                "http/cves/2011/CVE-2011-3315.yaml"
+            ],
+            "nuclei_tags": "cve,cve2011,lfi,cisco,edb,vkev,vuln"
+        },
+        {
+            "cve": "CVE-2013-5528",
+            "title": "Cisco Unified Communications Manager 7/8/9 - Directory Traversal",
+            "severity": "medium",
+            "nuclei_templates": [
+                "http/cves/2013/CVE-2013-5528.yaml"
+            ],
+            "nuclei_tags": "cve2013,cve,lfi,cisco,edb,vuln"
+        },
+        {
+            "cve": "CVE-2018-0127",
+            "title": "Cisco RV132W/RV134W Router - Information Disclosure",
+            "severity": "critical",
+            "nuclei_templates": [
+                "http/cves/2018/CVE-2018-0127.yaml"
+            ],
+            "nuclei_tags": "cve,cve2018,cisco,router,vkev,vuln"
+        },
+        {
+            "cve": "CVE-2018-0296",
+            "title": "Cisco ASA - Local File Inclusion",
+            "severity": "high",
+            "nuclei_templates": [
+                "http/cves/2018/CVE-2018-0296.yaml"
+            ],
+            "nuclei_tags": "cve2018,cve,edb,cisco,lfi,traversal,asa,kev,vkev,vuln"
+        },
+        {
+            "cve": "CVE-2019-1653",
+            "title": "Cisco Small Business WAN VPN Routers - Sensitive Information Disclosure",
+            "severity": "high",
+            "nuclei_templates": [
+                "http/cves/2019/CVE-2019-1653.yaml"
+            ],
+            "nuclei_tags": "cve,cve2019,packetstorm,kev,edb,cisco,router,exposure,vkev,vuln"
+        },
+        {
+            "cve": "CVE-2019-1821",
+            "title": "Cisco Prime Infrastructure and Cisco Evolved Programmable Network Manager - Remote Code Execution",
+            "severity": "critical",
+            "nuclei_templates": [
+                "http/cves/2019/CVE-2019-1821.yaml"
+            ],
+            "nuclei_tags": "cve,cve2019,packetstorm,rce,fileupload,unauth,intrusive,cisco,vkev,vuln"
+        },
+        {
+            "cve": "CVE-2019-1898",
+            "title": "Cisco RV110W RV130W RV215W Router - Information leakage",
+            "severity": "medium",
+            "nuclei_templates": [
+                "http/cves/2019/CVE-2019-1898.yaml"
+            ],
+            "nuclei_tags": "cve,cve2019,cisco,router,iot,vuln"
+        },
+        {
+            "cve": "CVE-2019-1943",
+            "title": "Cisco Small Business 200,300 and 500 Series Switches - Open Redirect",
+            "severity": "medium",
+            "nuclei_templates": [
+                "http/cves/2019/CVE-2019-1943.yaml"
+            ],
+            "nuclei_tags": "cve,cve2019,redirect,cisco,vuln"
+        },
+        {
+            "cve": "CVE-2020-16139",
+            "title": "Cisco Unified IP Conference Station 7937G - Denial-of-Service",
+            "severity": "high",
+            "nuclei_templates": [
+                "http/cves/2020/CVE-2020-16139.yaml"
+            ],
+            "nuclei_tags": "cve,cve2020,dos,cisco,packetstorm,vkev,vuln"
+        },
+        {
+            "cve": "CVE-2020-26073",
+            "title": "Cisco SD-WAN vManage Software - Local File Inclusion",
+            "severity": "high",
+            "nuclei_templates": [
+                "http/cves/2020/CVE-2020-26073.yaml"
+            ],
+            "nuclei_tags": "cve,cve2020,cisco,lfi,vkev,vuln"
+        },
+        {
+            "cve": "CVE-2020-3187",
+            "title": "Cisco Adaptive Security Appliance Software/Cisco Firepower Threat Defense - Directory Traversal",
+            "severity": "critical",
+            "nuclei_templates": [
+                "http/cves/2020/CVE-2020-3187.yaml"
+            ],
+            "nuclei_tags": "cve,cve2020,cisco,packetstorm,vkev,vuln"
+        },
+        {
+            "cve": "CVE-2020-3452",
+            "title": "Cisco Adaptive Security Appliance (ASA)/Firepower Threat Defense (FTD) - Local File Inclusion",
+            "severity": "high",
+            "nuclei_templates": [
+                "http/cves/2020/CVE-2020-3452.yaml"
+            ],
+            "nuclei_tags": "cve,cve2020,lfi,kev,packetstorm,cisco,vkev,vuln"
+        },
+        {
+            "cve": "CVE-2020-3580",
+            "title": "Cisco ASA/FTD Software - Cross-Site Scripting",
+            "severity": "medium",
+            "nuclei_templates": [
+                "http/cves/2020/CVE-2020-3580.yaml"
+            ],
+            "nuclei_tags": "cve,cve2020,xss,cisco,kev,vkev,vuln"
+        },
+        {
+            "cve": "CVE-2021-1472",
+            "title": "Cisco Small Business RV Series - OS Command Injection",
+            "severity": "critical",
+            "nuclei_templates": [
+                "http/cves/2021/CVE-2021-1472.yaml"
+            ],
+            "nuclei_tags": "cve2021,cve,packetstorm,seclists,auth-bypass,injection,cisco,rce,intrusive,vkev,vuln"
+        },
+        {
+            "cve": "CVE-2021-1497",
+            "title": "Cisco HyperFlex HX Data Platform - Remote Command Execution",
+            "severity": "critical",
+            "nuclei_templates": [
+                "http/cves/2021/CVE-2021-1497.yaml"
+            ],
+            "nuclei_tags": "cve,cve2021,cisco,rce,oast,kev,packetstorm,vkev,vuln"
+        },
+        {
+            "cve": "CVE-2021-1498",
+            "title": "Cisco HyperFlex HX Data Platform - Remote Command Execution",
+            "severity": "critical",
+            "nuclei_templates": [
+                "http/cves/2021/CVE-2021-1498.yaml"
+            ],
+            "nuclei_tags": "cve,cve2021,kev,packetstorm,cisco,rce,oast,mirai,vkev,vuln"
+        },
+        {
+            "cve": "CVE-2021-1499",
+            "title": "Cisco HyperFlex HX Data Platform - Arbitrary File Upload",
+            "severity": "medium",
+            "nuclei_templates": [
+                "http/cves/2021/CVE-2021-1499.yaml"
+            ],
+            "nuclei_tags": "cve2021,cve,fileupload,intrusive,packetstorm,cisco,vuln"
+        },
+        {
+            "cve": "CVE-2023-20073",
+            "title": "Cisco VPN Routers - Unauthenticated Arbitrary File Upload",
+            "severity": "critical",
+            "nuclei_templates": [
+                "http/cves/2023/CVE-2023-20073.yaml"
+            ],
+            "nuclei_tags": "cve2023,cve,xss,fileupload,cisco,unauth,routers,vpn,intrusive,vkev,vuln"
+        },
+        {
+            "cve": "CVE-2023-20198",
+            "title": "Cisco IOS XE Web UI - Command Injection",
+            "severity": "critical",
+            "nuclei_templates": [
+                "http/cves/2023/CVE-2023-20198.yaml"
+            ],
+            "nuclei_tags": "cve,cve2023,cisco,rce,router,iot,network,kev,vkev,vuln"
+        },
+        {
+            "cve": "CVE-2024-20404",
+            "title": "Cisco Finesse - Server-Side Request Forgery (SSRF)",
+            "severity": "medium",
+            "nuclei_templates": [
+                "http/cves/2024/CVE-2024-20404.yaml"
+            ],
+            "nuclei_tags": "cve,cve2024,cisco,finesse,ssrf,unauth,oob,vkev"
+        },
+        {
+            "cve": "CVE-2024-20419",
+            "title": "Cisco SSM On-Prem <= 8-202206 - Password Reset Account Takeover",
+            "severity": "critical",
+            "nuclei_templates": [
+                "http/cves/2024/CVE-2024-20419.yaml"
+            ],
+            "nuclei_tags": "cve,cve2024,cisco,on-prem,ssm,intrusive,account-takeover,vkev,vuln"
+        },
+        {
+            "cve": "CVE-2024-20439",
+            "title": "Hardcoded Admin Credentials For Cisco Smart Licensing Utility API",
+            "severity": "critical",
+            "nuclei_templates": [
+                "http/cves/2024/CVE-2024-20439.yaml"
+            ],
+            "nuclei_tags": "cve,cve2024,cisco,smart,licensing,auth-bypass,kev,vkev,vuln"
+        },
+        {
+            "cve": "CVE-2024-20440",
+            "title": "Cisco Smart Licensing Utility UnAuthenticated Logs Exposure Leaking Plaintext Credentials",
+            "severity": "high",
+            "nuclei_templates": [
+                "http/cves/2024/CVE-2024-20440.yaml"
+            ],
+            "nuclei_tags": "cve,cve2024,cisco,smart,licensing,info-leak,vkev,vuln"
+        },
+        {
+            "cve": "CVE-2025-20188",
+            "title": "Cisco IOS XE WLC - Arbitrary File Upload",
+            "severity": "critical",
+            "nuclei_templates": [
+                "http/cves/2025/CVE-2025-20188.yaml"
+            ],
+            "nuclei_tags": "cve,cve2025,cisco,file-upload,intrusive,rce,vkev,vuln"
+        },
+        {
+            "cve": "CVE-2025-20281",
+            "title": "Cisco ISE - Remote Code Execution",
+            "severity": "critical",
+            "nuclei_templates": [
+                "http/cves/2025/CVE-2025-20281.yaml"
+            ],
+            "nuclei_tags": "cve,cve2025,cisco,cisco-ise,rce,kev,vkev,oast,oob,vuln"
+        },
+        {
+            "cve": "CVE-2025-20362",
+            "title": "Cisco Secure Firewall ASA & FTD - Authentication Bypass",
+            "severity": "medium",
+            "nuclei_templates": [
+                "http/cves/2025/CVE-2025-20362.yaml"
+            ],
+            "nuclei_tags": "cve,cve2025,cisco,asa,auth-bypass,kev,vkev,vuln"
+        },
+        {
+            "cve": "CVE-2026-20079",
+            "title": "Cisco Secure Firewall Management Center - Authentication Bypass",
+            "severity": "critical",
+            "nuclei_templates": [
+                "http/cves/2026/CVE-2026-20079.yaml"
+            ],
+            "nuclei_tags": "cve,cve2026,cisco,fmc,auth-bypass,rce,unauth"
+        },
+        {
+            "cve": "cisco-cm-panel",
+            "title": "Cisco Unified CM Console - Panel",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/exposed-panels/cisco-cm-panel.yaml"
+            ],
+            "nuclei_tags": "cisco,ciscocm,panel,login,discovery"
+        },
+        {
+            "cve": "cisco-esa-panel",
+            "title": "Cisco Email Security Appliance - Panel",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/exposed-panels/cisco-esa-panel.yaml"
+            ],
+            "nuclei_tags": "login,cisco,panel,email,discovery"
+        },
+        {
+            "cve": "cisco-firepower-panel",
+            "title": "Cisco Secure Firewall Management Center - Panel",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/exposed-panels/cisco-firepower-panel.yaml"
+            ],
+            "nuclei_tags": "login,cisco,panel,console,discovery"
+        },
+        {
+            "cve": "cisco-prime-license-manager-panel",
+            "title": "Cisco Prime License Manager - Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/exposed-panels/cisco-prime-license-manager-panel.yaml"
+            ],
+            "nuclei_tags": "cisco,cisco-prime-license-manager,panel,discovery"
+        },
+        {
+            "cve": "cisco-ucm-selfcare-portal",
+            "title": "Cisco Unified Communications Self-Service User Portal - Detection",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/exposed-panels/cisco-ucm-selfcare-portal.yaml"
+            ],
+            "nuclei_tags": "detect,cisco,ucm,panel"
+        },
+        {
+            "cve": "cisco-unity-panel",
+            "title": "Cisco Unity Connection Panel - Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/exposed-panels/cisco-unity-panel.yaml"
+            ],
+            "nuclei_tags": "panel,cisco,unity,login,detect,discovery"
+        },
+        {
+            "cve": "cisco-webui-login",
+            "title": "Cisco Web UI Login - Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/exposed-panels/cisco-webui-login.yaml"
+            ],
+            "nuclei_tags": "webui,cisco,login,panel,detect,discovery"
+        },
+        {
+            "cve": "identity-services-engine",
+            "title": "Cisco Identity Services Engine Admin Login Panel - Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/exposed-panels/identity-services-engine.yaml"
+            ],
+            "nuclei_tags": "panel,cisco,discovery"
+        },
+        {
+            "cve": "cisco-ace-device-manager",
+            "title": "Cisco ACE 4710 Device Manager Login Panel - Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/exposed-panels/cisco/cisco-ace-device-manager.yaml"
+            ],
+            "nuclei_tags": "panel,cisco,discovery"
+        },
+        {
+            "cve": "cisco-anyconnect-vpn",
+            "title": "Cisco AnyConnect VPN Panel - Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/exposed-panels/cisco/cisco-anyconnect-vpn.yaml"
+            ],
+            "nuclei_tags": "cisco,panel,vpn,discovery"
+        },
+        {
+            "cve": "cisco-asa-panel",
+            "title": "Cisco ASA VPN Panel - Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/exposed-panels/cisco/cisco-asa-panel.yaml"
+            ],
+            "nuclei_tags": "cisco,panel,discovery"
+        },
+        {
+            "cve": "cisco-edge-340",
+            "title": "Cisco Edge 340 Panel - Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/exposed-panels/cisco/cisco-edge-340.yaml"
+            ],
+            "nuclei_tags": "panel,cisco,discovery"
+        },
+        {
+            "cve": "cisco-expressway-panel",
+            "title": "CISCO Expressway Login Panel - Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/exposed-panels/cisco/cisco-expressway-panel.yaml"
+            ],
+            "nuclei_tags": "panel,cisco,login,detect,discovery"
+        },
+        {
+            "cve": "cisco-finesse-login",
+            "title": "Cisco Finesse Login Panel - Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/exposed-panels/cisco/cisco-finesse-login.yaml"
+            ],
+            "nuclei_tags": "panel,cisco,edb,discovery"
+        },
+        {
+            "cve": "cisco-integrated-login",
+            "title": "Cisco Integrated Management Controller Login Panel - Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/exposed-panels/cisco/cisco-integrated-login.yaml"
+            ],
+            "nuclei_tags": "panel,cisco,edb,discovery"
+        },
+        {
+            "cve": "cisco-ios-xe-panel",
+            "title": "Cisco IOS XE - Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/exposed-panels/cisco/cisco-ios-xe-panel.yaml"
+            ],
+            "nuclei_tags": "panel,cisco,ssl,discovery"
+        },
+        {
+            "cve": "cisco-ise-admin-panel",
+            "title": "Cisco ISE Admin Login Panel - Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/exposed-panels/cisco/cisco-ise-admin-panel.yaml"
+            ],
+            "nuclei_tags": "cisco,ise,admin,login,panel,detect,discovery"
+        },
+        {
+            "cve": "cisco-meraki-exposure",
+            "title": "Cisco Meraki Cloud Security Appliance Panel - Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/exposed-panels/cisco/cisco-meraki-exposure.yaml"
+            ],
+            "nuclei_tags": "panel,cisco,meraki,disclosure,edb,discovery"
+        },
+        {
+            "cve": "cisco-onprem-panel",
+            "title": "Cisco Smart Software Manager On-Prem Panel - Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/exposed-panels/cisco/cisco-onprem-panel.yaml"
+            ],
+            "nuclei_tags": "cisco,manager,login,panel,discovery"
+        },
+        {
+            "cve": "cisco-prime-infrastructure",
+            "title": "Cisco Prime Infrastructure Panel - Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/exposed-panels/cisco/cisco-prime-infrastructure.yaml"
+            ],
+            "nuclei_tags": "panel,cisco,discovery"
+        },
+        {
+            "cve": "cisco-sd-wan",
+            "title": "Cisco SD-WAN Login Panel - Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/exposed-panels/cisco/cisco-sd-wan.yaml"
+            ],
+            "nuclei_tags": "panel,cisco,discovery"
+        },
+        {
+            "cve": "cisco-secure-cn",
+            "title": "Cisco Secure CN Login Panel - Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/exposed-panels/cisco/cisco-secure-cn.yaml"
+            ],
+            "nuclei_tags": "panel,cisco,discovery"
+        },
+        {
+            "cve": "cisco-secure-desktop",
+            "title": "Cisco Secure Desktop Installation Panel - Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/exposed-panels/cisco/cisco-secure-desktop.yaml"
+            ],
+            "nuclei_tags": "cisco,panel,discovery"
+        },
+        {
+            "cve": "cisco-sendgrid",
+            "title": "Cisco ServiceGrid Login Panel - Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/exposed-panels/cisco/cisco-sendgrid.yaml"
+            ],
+            "nuclei_tags": "panel,cisco,discovery"
+        },
+        {
+            "cve": "cisco-systems-login",
+            "title": "Cisco Systems Login Panel - Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/exposed-panels/cisco/cisco-systems-login.yaml"
+            ],
+            "nuclei_tags": "panel,cisco,discovery"
+        },
+        {
+            "cve": "cisco-telepresence",
+            "title": "Cisco TelePresence Login Panel - Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/exposed-panels/cisco/cisco-telepresence.yaml"
+            ],
+            "nuclei_tags": "panel,cisco,discovery"
+        },
+        {
+            "cve": "cisco-ucs-kvm-login",
+            "title": "Cisco UCS Manager KVM Login Panel - Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/exposed-panels/cisco/cisco-ucs-kvm-login.yaml"
+            ],
+            "nuclei_tags": "panel,cisco,ucs,kvm,discovery"
+        },
+        {
+            "cve": "cisco-vmanage-login",
+            "title": "Cisco vManage Login Panel - Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/exposed-panels/cisco/cisco-vmanage-login.yaml"
+            ],
+            "nuclei_tags": "panel,cisco,discovery"
+        },
+        {
+            "cve": "cisco-webex-meetings-panel",
+            "title": "Cisco Webex Meetings - Panel",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/exposed-panels/cisco/cisco-webex-meetings-detect.yaml"
+            ],
+            "nuclei_tags": "panel,cisco,webex,detect,discovery,login"
+        },
+        {
+            "cve": "cisco-webvpn-detect",
+            "title": "Cisco WebVPN Panel - Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/exposed-panels/cisco/cisco-webvpn-detect.yaml"
+            ],
+            "nuclei_tags": "panel,cisco,vpn,discovery"
+        },
+        {
+            "cve": "cisco-network-config",
+            "title": "Cisco System Network Configuration Page - Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/exposures/configs/cisco-network-config.yaml"
+            ],
+            "nuclei_tags": "exposure,cisco,edb,config,vuln"
+        },
+        {
+            "cve": "cloudcenter-installer",
+            "title": "CloudCenter Installer Exposure",
+            "severity": "high",
+            "nuclei_templates": [
+                "http/misconfiguration/installer/cloudcenter-installer.yaml"
+            ],
+            "nuclei_tags": "misconfig,cisco,cloudcenter,install,exposure,vuln"
+        },
+        {
+            "cve": "webex-phish",
+            "title": "Webex phishing Detection",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/osint/phishing/webex-phish.yaml"
+            ],
+            "nuclei_tags": "phishing,webex,cisco,video,osint,discovery"
+        },
+        {
+            "cve": "cisco-asa-detect",
+            "title": "Cisco ASA - Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/technologies/cisco-asa-detect.yaml"
+            ],
+            "nuclei_tags": "tech,cisco,detect,discovery"
+        },
+        {
+            "cve": "cisco-finesse-detect",
+            "title": "Cisco Finesse - Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/technologies/cisco-finesse-detect.yaml"
+            ],
+            "nuclei_tags": "tech,cisco,finesse,detect,discovery"
+        },
+        {
+            "cve": "cisco-ucm-detect",
+            "title": "Cisco Unified Communications Manager - Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/technologies/cisco-ucm-version.yaml"
+            ],
+            "nuclei_tags": "tech,detect,cisco,ucm"
+        },
+        {
+            "cve": "api-webex",
+            "title": "Cisco Webex API Test",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/token-spray/api-webex.yaml"
+            ],
+            "nuclei_tags": "token-spray,cisco,webex"
+        },
+        {
+            "cve": "cisco-implant-detect",
+            "title": "Cisco IOS XE - Impant Detection",
+            "severity": "critical",
+            "nuclei_templates": [
+                "http/vulnerabilities/backdoor/cisco-implant-detect.yaml"
+            ],
+            "nuclei_tags": "backdoor,cisco,ios,kev,vuln"
+        },
+        {
+            "cve": "cisco-broadworks-log4j-rce",
+            "title": "Cisco BroadWorks - Remote Code Execution (Apache Log4j)",
+            "severity": "critical",
+            "nuclei_templates": [
+                "http/vulnerabilities/cisco/cisco-broadworks-log4j-rce.yaml"
+            ],
+            "nuclei_tags": "cve,cve2021,rce,jndi,log4j,cisco,oast,kev,vuln"
+        },
+        {
+            "cve": "cisco-cloudcenter-suite-log4j-rce",
+            "title": "Cisco CloudCenter Suite (Log4j) - Remote Code Execution",
+            "severity": "critical",
+            "nuclei_templates": [
+                "http/vulnerabilities/cisco/cisco-cloudcenter-suite-log4j-rce.yaml"
+            ],
+            "nuclei_tags": "cve,cve2021,jndi,log4j,rce,oast,cloudcenter,cisco,kev,vuln"
+        },
+        {
+            "cve": "cisco-ucm-cluster-enum",
+            "title": "Cisco Unified Communications Manager - Cluster Enumeration",
+            "severity": "low",
+            "nuclei_templates": [
+                "http/vulnerabilities/cisco/cisco-ucm-cluster-enum.yaml"
+            ],
+            "nuclei_tags": "cisco,ucm,misconfig"
+        },
+        {
+            "cve": "cisco-unified-communications-log4j-rce",
+            "title": "Cisco Unified Communications - Remote Code Execution (Apache Log4j)",
+            "severity": "critical",
+            "nuclei_templates": [
+                "http/vulnerabilities/cisco/cisco-unified-communications-log4j-rce.yaml"
+            ],
+            "nuclei_tags": "cve,cve2021,rce,jndi,log4j,cisco,kev,oast,vuln"
+        },
+        {
+            "cve": "cisco-vmanage-log4j-rce",
+            "title": "Cisco vManage (Log4j) - Remote Code Execution",
+            "severity": "critical",
+            "nuclei_templates": [
+                "http/vulnerabilities/cisco/cisco-vmanage-log4j-rce.yaml"
+            ],
+            "nuclei_tags": "log4j,cisco,tenable,cve,cve2021,rce,jndi,kev,oast,vuln"
+        },
+        {
+            "cve": "cisco-webex-log4j-rce",
+            "title": "Cisco WebEx - Remote Code Execution (Apache Log4j)",
+            "severity": "critical",
+            "nuclei_templates": [
+                "http/vulnerabilities/cisco/cisco-webex-log4j-rce.yaml"
+            ],
+            "nuclei_tags": "cve,cve2021,rce,jndi,log4j,cisco,webex,oast,kev,vuln"
+        },
+        {
+            "cve": "cucm-username-enumeration",
+            "title": "Cisco Unified Communications Manager - User Enumeration",
+            "severity": "medium",
+            "nuclei_templates": [
+                "http/vulnerabilities/cisco/cucm-username-enumeration.yaml"
+            ],
+            "nuclei_tags": "cisco,ucm,enum,users,xml,cucm,unauth,vuln"
+        },
+        {
+            "cve": "CVE-2018-0171",
+            "title": "Cisco Smart Install - Configuration Download",
+            "severity": "critical",
+            "nuclei_templates": [
+                "javascript/cves/2018/CVE-2018-0171.yaml"
+            ],
+            "nuclei_tags": "cve,cve2018,cisco,smart-install,tftp,network,js,kev,udp,vkev,vuln"
+        },
+        {
+            "cve": "CVE-2017-3881",
+            "title": "Cisco IOS 12.2(55)SE11 - Remote Code Execution",
+            "severity": "critical",
+            "nuclei_templates": [
+                "network/cves/2017/CVE-2017-3881.yaml"
+            ],
+            "nuclei_tags": "cve2017,network,cve,cisco,rce,kev,msf,tcp,vkev,vuln"
+        },
+        {
+            "cve": "cisco-finger-detect",
+            "title": "Cisco Finger Daemon Detection",
+            "severity": "low",
+            "nuclei_templates": [
+                "network/detection/cisco-finger-detect.yaml"
+            ],
+            "nuclei_tags": "network,finger,detect,cisco,detection,tcp,discovery"
+        },
+        {
+            "cve": "cisco-smi-exposure",
+            "title": "Cisco Smart Install Endpoints Exposure",
+            "severity": "medium",
+            "nuclei_templates": [
+                "network/exposures/cisco-smi-exposure.yaml"
+            ],
+            "nuclei_tags": "network,cisco,smi,exposure,tcp,discovery"
+        }
+    ],
+    "DAHUA": [
+        {
+            "cve": "CNVD-2017-06001",
+            "title": "Dahua DSS - SQL Injection",
+            "severity": "high",
+            "nuclei_templates": [
+                "http/cnvd/2017/CNVD-2017-06001.yaml"
+            ],
+            "nuclei_tags": "cnvd,cnvd2017,sqli,dahua,vuln"
+        },
+        {
+            "cve": "CNVD-2024-38747",
+            "title": "Zhejiang Dahua Smart Cloud Gateway Registration Platform - SQL Injection",
+            "severity": "high",
+            "nuclei_templates": [
+                "http/cnvd/2024/CNVD-2024-38747.yaml"
+            ],
+            "nuclei_tags": "cnvd,cnvd2024,sqli,dahua,vuln"
+        },
+        {
+            "cve": "CVE-2017-7925",
+            "title": "Dahua Security - Configuration File Disclosure",
+            "severity": "critical",
+            "nuclei_templates": [
+                "http/cves/2017/CVE-2017-7925.yaml"
+            ],
+            "nuclei_tags": "cve,cve2017,dahua,camera,dahuasecurity,vuln"
+        },
+        {
+            "cve": "CVE-2021-33044",
+            "title": "Dahua IPC/VTH/VTO - Authentication Bypass",
+            "severity": "critical",
+            "nuclei_templates": [
+                "http/cves/2021/CVE-2021-33044.yaml"
+            ],
+            "nuclei_tags": "cve2021,cve,dahua,auth-bypass,seclists,dahuasecurity,kev,vkev,vuln"
+        },
+        {
+            "cve": "CVE-2021-33045",
+            "title": "Dahua IPC/VTH/VTO - Authentication Bypass",
+            "severity": "critical",
+            "nuclei_templates": [
+                "http/cves/2021/CVE-2021-33045.yaml"
+            ],
+            "nuclei_tags": "cve,cve2021,dahua,auth-bypass,seclists,kev,vkev,vuln"
+        },
+        {
+            "cve": "CVE-2023-3836",
+            "title": "Dahua Smart Park Management - Arbitrary File Upload",
+            "severity": "critical",
+            "nuclei_templates": [
+                "http/cves/2023/CVE-2023-3836.yaml"
+            ],
+            "nuclei_tags": "cve2023,cve,dahua,fileupload,intrusive,rce,dahuasecurity,vkev,vuln"
+        },
+        {
+            "cve": "dahua-web-panel",
+            "title": "Dahua Web Service Panel - Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/exposed-panels/dahua-web-panel.yaml"
+            ],
+            "nuclei_tags": "edb,panel,dahua,detect,discovery"
+        },
+        {
+            "cve": "dahua-bitmap-fileupload",
+            "title": "Dahua Bitmap - File Upload Remote Code Execution",
+            "severity": "critical",
+            "nuclei_templates": [
+                "http/vulnerabilities/dahua/dahua-bitmap-fileupload.yaml"
+            ],
+            "nuclei_tags": "dahua,file-upload,rce,intrusive,vuln"
+        },
+        {
+            "cve": "dahua-eims-rce",
+            "title": "Dahua EIMS - Remote Command Execution",
+            "severity": "critical",
+            "nuclei_templates": [
+                "http/vulnerabilities/dahua/dahua-eims-rce.yaml"
+            ],
+            "nuclei_tags": "dahua,rce,eims,vuln"
+        },
+        {
+            "cve": "dahua-icc-backdoor-user",
+            "title": "Dahua Intelligent IoT - Information Disclosure",
+            "severity": "high",
+            "nuclei_templates": [
+                "http/vulnerabilities/dahua/dahua-icc-backdoor-user.yaml"
+            ],
+            "nuclei_tags": "dahua,exposure,backdoor,bypass,vuln"
+        },
+        {
+            "cve": "dahua-icc-getclassvalue-rce",
+            "title": "Dahua 'GetClassValue' - Remote Code Execution",
+            "severity": "critical",
+            "nuclei_templates": [
+                "http/vulnerabilities/dahua/dahua-icc-getclassvalue-rce.yaml"
+            ],
+            "nuclei_tags": "rce,java,dahua,iot,unauth,vuln"
+        },
+        {
+            "cve": "dahua-wpms-lfi",
+            "title": "Dahua Smart Park Management Platform - Arbitary File Read",
+            "severity": "high",
+            "nuclei_templates": [
+                "http/vulnerabilities/dahua/dahua-wpms-lfi.yaml"
+            ],
+            "nuclei_tags": "lfi,dahua,wpms,vuln"
+        },
+        {
+            "cve": "dahua-wpms-rce",
+            "title": "Dahua Smart Park Integrated Management Platform - Remote Command Execution",
+            "severity": "critical",
+            "nuclei_templates": [
+                "http/vulnerabilities/dahua/dahua-wpms-rce.yaml"
+            ],
+            "nuclei_tags": "rce,dahua,wpms,vuln"
+        },
+        {
+            "cve": "dahua-workflow",
+            "title": "Dahua Security Checks",
+            "severity": "unknown",
+            "nuclei_templates": [
+                "workflows/dahua-workflow.yaml"
+            ],
+            "nuclei_tags": "dahua"
+        }
+    ],
+    "GENERIC": [
+        {
+            "cve": "CVE-2010-4231",
+            "title": "Camtron CMNC-200 IP Camera - Directory Traversal",
+            "severity": "high",
+            "nuclei_templates": [
+                "http/cves/2010/CVE-2010-4231.yaml"
+            ],
+            "nuclei_tags": "cve,cve2010,iot,lfi,camera,edb,camtron,vuln"
+        },
+        {
+            "cve": "CVE-2013-4982",
+            "title": "AVTECH DVR - Login Verification Code Bypass",
+            "severity": "low",
+            "nuclei_templates": [
+                "http/cves/2013/CVE-2013-4982.yaml"
+            ],
+            "nuclei_tags": "cve,cve2013,avtech,verify,bypass,iot,vuln"
+        },
+        {
+            "cve": "CVE-2014-2962",
+            "title": "Belkin N150 Router 1.00.08/1.00.09 - Path Traversal",
+            "severity": "high",
+            "nuclei_templates": [
+                "http/cves/2014/CVE-2014-2962.yaml"
+            ],
+            "nuclei_tags": "cve2014,cve,lfi,router,firmware,traversal,belkin,vuln"
+        },
+        {
+            "cve": "CVE-2015-0554",
+            "title": "ADB/Pirelli ADSL2/2+ Wireless Router P.DGA4001N - Information Disclosure",
+            "severity": "critical",
+            "nuclei_templates": [
+                "http/cves/2015/CVE-2015-0554.yaml"
+            ],
+            "nuclei_tags": "cve2015,cve,pirelli,router,disclosure,edb,packetstorm,adb,vuln"
+        },
+        {
+            "cve": "CVE-2016-5649",
+            "title": "NETGEAR DGN2200 / DGND3700 - Admin Password Disclosure",
+            "severity": "critical",
+            "nuclei_templates": [
+                "http/cves/2016/CVE-2016-5649.yaml"
+            ],
+            "nuclei_tags": "cve2016,cve,iot,netgear,router,packetstorm,vuln"
+        },
+        {
+            "cve": "CVE-2016-6277",
+            "title": "NETGEAR Routers - Remote Code Execution",
+            "severity": "high",
+            "nuclei_templates": [
+                "http/cves/2016/CVE-2016-6277.yaml"
+            ],
+            "nuclei_tags": "cve2016,cve,netgear,rce,iot,kev,vkev,vuln"
+        },
+        {
+            "cve": "CVE-2016-7834",
+            "title": "Sony IPELA Engine IP Camera - Hardcoded Account",
+            "severity": "high",
+            "nuclei_templates": [
+                "http/cves/2016/CVE-2016-7834.yaml"
+            ],
+            "nuclei_tags": "cve2016,cve,sony,backdoor,unauth,telnet,iot,camera,vuln"
+        },
+        {
+            "cve": "CVE-2017-14942",
+            "title": "Intelbras WRN 150 - Authentication Bypass",
+            "severity": "critical",
+            "nuclei_templates": [
+                "http/cves/2017/CVE-2017-14942.yaml"
+            ],
+            "nuclei_tags": "cve,cve2017,intelbras,auth-bypass,router,vuln"
+        },
+        {
+            "cve": "CVE-2017-15647",
+            "title": "FiberHome Routers - Local File Inclusion",
+            "severity": "high",
+            "nuclei_templates": [
+                "http/cves/2017/CVE-2017-15647.yaml"
+            ],
+            "nuclei_tags": "cve,cve2017,lfi,router,edb,fiberhome,vuln"
+        },
+        {
+            "cve": "CVE-2017-5521",
+            "title": "NETGEAR Routers - Authentication Bypass",
+            "severity": "high",
+            "nuclei_templates": [
+                "http/cves/2017/CVE-2017-5521.yaml"
+            ],
+            "nuclei_tags": "cve,cve2017,auth-bypass,netgear,router,kev,vkev,vuln"
+        },
+        {
+            "cve": "CVE-2017-8229",
+            "title": "Amcrest IP Camera Web Management - Data Exposure",
+            "severity": "critical",
+            "nuclei_templates": [
+                "http/cves/2017/CVE-2017-8229.yaml"
+            ],
+            "nuclei_tags": "cve2017,cve,packetstorm,seclists,amcrest,iot,vuln"
+        },
+        {
+            "cve": "CVE-2018-12455",
+            "title": "Intelbras NPLUG 1.0.0.14 - Authentication Bypass",
+            "severity": "critical",
+            "nuclei_templates": [
+                "http/cves/2018/CVE-2018-12455.yaml"
+            ],
+            "nuclei_tags": "cve,cve2018,intelbras,auth-bypass,iot,vuln"
+        },
+        {
+            "cve": "CVE-2018-12675",
+            "title": "SV3C HD Camera L Series - Open Redirect",
+            "severity": "medium",
+            "nuclei_templates": [
+                "http/cves/2018/CVE-2018-12675.yaml"
+            ],
+            "nuclei_tags": "cve,cve2018,redirect,sv3c,camera,iot,vuln"
+        },
+        {
+            "cve": "CVE-2018-14064",
+            "title": "VelotiSmart Wifi - Directory Traversal",
+            "severity": "critical",
+            "nuclei_templates": [
+                "http/cves/2018/CVE-2018-14064.yaml"
+            ],
+            "nuclei_tags": "cve2018,cve,edb,lfi,camera,iot,velotismart_project,vuln"
+        },
+        {
+            "cve": "CVE-2018-15745",
+            "title": "Argus Surveillance DVR 4.0.0.0 - Local File Inclusion",
+            "severity": "high",
+            "nuclei_templates": [
+                "http/cves/2018/CVE-2018-15745.yaml"
+            ],
+            "nuclei_tags": "cve,cve2018,packetstorm,edb,argussurveillance,lfi,dvr,vuln"
+        },
+        {
+            "cve": "CVE-2019-16313",
+            "title": "ifw8 Router ROM v4.31 - Credential Discovery",
+            "severity": "high",
+            "nuclei_templates": [
+                "http/cves/2019/CVE-2019-16313.yaml"
+            ],
+            "nuclei_tags": "cve,cve2019,exposure,router,iot,ifw8,vuln"
+        },
+        {
+            "cve": "CVE-2019-18371",
+            "title": "Xiaomi Mi WiFi R3G Routers - Local file Inclusion",
+            "severity": "high",
+            "nuclei_templates": [
+                "http/cves/2019/CVE-2019-18371.yaml"
+            ],
+            "nuclei_tags": "cve2019,cve,lfi,router,mi,xiaomi,vkev,vuln"
+        },
+        {
+            "cve": "CVE-2019-19824",
+            "title": "TOTOLINK Realtek SD Routers - Remote Command Injection",
+            "severity": "high",
+            "nuclei_templates": [
+                "http/cves/2019/CVE-2019-19824.yaml"
+            ],
+            "nuclei_tags": "cve,cve2019,totolink,rce,router,vkev,vuln"
+        },
+        {
+            "cve": "CVE-2019-7315",
+            "title": "Genie Access WIP3BVAF IP Camera - Local File Inclusion",
+            "severity": "high",
+            "nuclei_templates": [
+                "http/cves/2019/CVE-2019-7315.yaml"
+            ],
+            "nuclei_tags": "cve,cve2019,camera,genie,lfi,iot,genieaccess,vuln"
+        },
+        {
+            "cve": "CVE-2020-17456",
+            "title": "SEOWON INTECH SLC-130 & SLR-120S - Unauthenticated Remote Code Execution",
+            "severity": "critical",
+            "nuclei_templates": [
+                "http/cves/2020/CVE-2020-17456.yaml"
+            ],
+            "nuclei_tags": "cve,cve2020,seowon,oast,packetstorm,rce,router,unauth,iot,seowonintech,vkev,vuln"
+        },
+        {
+            "cve": "CVE-2020-26879",
+            "title": "Ruckus vRioT IoT Controller - Authentication Bypass",
+            "severity": "critical",
+            "nuclei_templates": [
+                "http/cves/2020/CVE-2020-26879.yaml"
+            ],
+            "nuclei_tags": "cve,cve2020,ruckus,vriot,iot,api,backdoor,auth-bypass,vkev,vuln"
+        },
+        {
+            "cve": "CVE-2020-29390",
+            "title": "Zeroshell 3.9.3 - Command Injection",
+            "severity": "critical",
+            "nuclei_templates": [
+                "http/cves/2020/CVE-2020-29390.yaml"
+            ],
+            "nuclei_tags": "cve,cve2020,zeroshell,rce,router,vkev,vuln"
+        },
+        {
+            "cve": "CVE-2021-20090",
+            "title": "Buffalo WSR-2533DHPL2 - Path Traversal",
+            "severity": "critical",
+            "nuclei_templates": [
+                "http/cves/2021/CVE-2021-20090.yaml"
+            ],
+            "nuclei_tags": "cve,cve2021,lfi,buffalo,firmware,iot,kev,tenable,vkev,vuln"
+        },
+        {
+            "cve": "CVE-2021-20091",
+            "title": "Buffalo WSR-2533DHPL2 - Configuration File Injection",
+            "severity": "high",
+            "nuclei_templates": [
+                "http/cves/2021/CVE-2021-20091.yaml"
+            ],
+            "nuclei_tags": "cve2021,cve,buffalo,firmware,iot,tenable,vkev,vuln"
+        },
+        {
+            "cve": "CVE-2021-20092",
+            "title": "Buffalo WSR-2533DHPL2 - Improper Access Control",
+            "severity": "high",
+            "nuclei_templates": [
+                "http/cves/2021/CVE-2021-20092.yaml"
+            ],
+            "nuclei_tags": "cve2021,cve,buffalo,firmware,iot,tenable,vkev,vuln"
+        },
+        {
+            "cve": "CVE-2021-20150",
+            "title": "Trendnet AC2600 TEW-827DRU - Credentials Disclosure",
+            "severity": "medium",
+            "nuclei_templates": [
+                "http/cves/2021/CVE-2021-20150.yaml"
+            ],
+            "nuclei_tags": "cve2021,cve,disclosure,router,tenable,trendnet,vuln"
+        },
+        {
+            "cve": "CVE-2021-20167",
+            "title": "Netgear RAX43 1.0.3.96 - Command Injection/Authentication Bypass Buffer Overrun",
+            "severity": "high",
+            "nuclei_templates": [
+                "http/cves/2021/CVE-2021-20167.yaml"
+            ],
+            "nuclei_tags": "cve2021,cve,tenable,netgear,rce,router,vkev,vuln"
+        },
+        {
+            "cve": "CVE-2021-23241",
+            "title": "MERCUSYS Mercury X18G 1.0.5 Router - Local File Inclusion",
+            "severity": "medium",
+            "nuclei_templates": [
+                "http/cves/2021/CVE-2021-23241.yaml"
+            ],
+            "nuclei_tags": "cve2021,cve,iot,lfi,router,mercusys,vuln"
+        },
+        {
+            "cve": "CVE-2021-3017",
+            "title": "Intelbras WIN 300/WRN 342 - Credentials Disclosure",
+            "severity": "high",
+            "nuclei_templates": [
+                "http/cves/2021/CVE-2021-3017.yaml"
+            ],
+            "nuclei_tags": "cve2021,cve,exposure,router,intelbras,vuln"
+        },
+        {
+            "cve": "CVE-2021-31249",
+            "title": "CHIYU TCP/IP Converter - Carriage Return Line Feed Injection",
+            "severity": "medium",
+            "nuclei_templates": [
+                "http/cves/2021/CVE-2021-31249.yaml"
+            ],
+            "nuclei_tags": "cve2021,cve,chiyu,crlf,iot,chiyu-tech,vuln"
+        },
+        {
+            "cve": "CVE-2021-31250",
+            "title": "CHIYU TCP/IP Converter - Cross-Site Scripting",
+            "severity": "medium",
+            "nuclei_templates": [
+                "http/cves/2021/CVE-2021-31250.yaml"
+            ],
+            "nuclei_tags": "cve2021,cve,chiyu,xss,iot,intrusive,chiyu-tech,vkev,vuln"
+        },
+        {
+            "cve": "CVE-2021-31755",
+            "title": "Tenda Router AC11 - Remote Command Injection",
+            "severity": "critical",
+            "nuclei_templates": [
+                "http/cves/2021/CVE-2021-31755.yaml"
+            ],
+            "nuclei_tags": "cve2021,cve,tenda,rce,oast,router,mirai,kev,vkev,vuln"
+        },
+        {
+            "cve": "CVE-2021-32030",
+            "title": "ASUS GT-AC2900 - Authentication Bypass",
+            "severity": "critical",
+            "nuclei_templates": [
+                "http/cves/2021/CVE-2021-32030.yaml"
+            ],
+            "nuclei_tags": "cve2021,cve,asus,auth-bypass,router,kev,vkev,vuln"
+        },
+        {
+            "cve": "CVE-2021-40149",
+            "title": "Reolink E1 Zoom Camera <=3.0.0.716 - Private Key Disclosure",
+            "severity": "medium",
+            "nuclei_templates": [
+                "http/cves/2021/CVE-2021-40149.yaml"
+            ],
+            "nuclei_tags": "cve2021,cve,exposure,unauth,packetstorm,reolink,camera,iot,vuln"
+        },
+        {
+            "cve": "CVE-2021-40150",
+            "title": "Reolink E1 Zoom Camera <=3.0.0.716 - Information Disclosure",
+            "severity": "high",
+            "nuclei_templates": [
+                "http/cves/2021/CVE-2021-40150.yaml"
+            ],
+            "nuclei_tags": "cve2021,cve,reolink,camera,exposure,iot,vuln"
+        },
+        {
+            "cve": "CVE-2021-41419",
+            "title": "QVIS NVR/DVR - Remote Code Execution",
+            "severity": "critical",
+            "nuclei_templates": [
+                "http/cves/2021/CVE-2021-41419.yaml"
+            ],
+            "nuclei_tags": "cve,cve2021,qvisdvr,rce,deserialization,jsf,iot,oast,vkev"
+        },
+        {
+            "cve": "CVE-2022-2486",
+            "title": "Wavlink WN535K2/WN535K3 - OS Command Injection",
+            "severity": "critical",
+            "nuclei_templates": [
+                "http/cves/2022/CVE-2022-2486.yaml"
+            ],
+            "nuclei_tags": "cve2022,cve,iot,wavlink,router,rce,oast,vkev,vuln"
+        },
+        {
+            "cve": "CVE-2022-2487",
+            "title": "Wavlink WN535K2/WN535K3 - OS Command Injection",
+            "severity": "critical",
+            "nuclei_templates": [
+                "http/cves/2022/CVE-2022-2487.yaml"
+            ],
+            "nuclei_tags": "cve,cve2022,iot,wavlink,router,rce,oast,vkev,vuln"
+        },
+        {
+            "cve": "CVE-2022-2488",
+            "title": "Wavlink WN535K2/WN535K3 - OS Command Injection",
+            "severity": "critical",
+            "nuclei_templates": [
+                "http/cves/2022/CVE-2022-2488.yaml"
+            ],
+            "nuclei_tags": "cve,cve2022,iot,wavlink,router,rce,oast,vkev,vuln"
+        },
+        {
+            "cve": "CVE-2022-25082",
+            "title": "TOTOLink - Unauthenticated Command Injection",
+            "severity": "critical",
+            "nuclei_templates": [
+                "http/cves/2022/CVE-2022-25082.yaml"
+            ],
+            "nuclei_tags": "cve,cve2022,totolink,router,unauth,rce,iot,intrusive,vkev,vuln"
+        },
+        {
+            "cve": "CVE-2022-29013",
+            "title": "Razer Sila Gaming Router - Remote Code Execution",
+            "severity": "critical",
+            "nuclei_templates": [
+                "http/cves/2022/CVE-2022-29013.yaml"
+            ],
+            "nuclei_tags": "packetstorm,cve,cve2022,razer,sila,router,vkev,vuln"
+        },
+        {
+            "cve": "CVE-2022-29014",
+            "title": "Razer Sila Gaming Router 2.0.441_api-2.0.418 - Local File Inclusion",
+            "severity": "high",
+            "nuclei_templates": [
+                "http/cves/2022/CVE-2022-29014.yaml"
+            ],
+            "nuclei_tags": "cve,cve2022,edb,packetstorm,razer,lfi,router,vkev,vuln"
+        },
+        {
+            "cve": "CVE-2022-34046",
+            "title": "WAVLINK WN533A8 - Improper Access Control",
+            "severity": "high",
+            "nuclei_templates": [
+                "http/cves/2022/CVE-2022-34046.yaml"
+            ],
+            "nuclei_tags": "cve,cve2022,packetstorm,wavlink,router,exposure,vuln"
+        },
+        {
+            "cve": "CVE-2022-34047",
+            "title": "WAVLINK WN530HG4 - Improper Access Control",
+            "severity": "high",
+            "nuclei_templates": [
+                "http/cves/2022/CVE-2022-34047.yaml"
+            ],
+            "nuclei_tags": "cve,cve2022,wavlink,router,exposure,packetstorm,vuln"
+        },
+        {
+            "cve": "CVE-2022-34049",
+            "title": "WAVLINK WN530HG4 - Improper Access Control",
+            "severity": "medium",
+            "nuclei_templates": [
+                "http/cves/2022/CVE-2022-34049.yaml"
+            ],
+            "nuclei_tags": "cve,cve2022,wavlink,router,exposure,vuln"
+        },
+        {
+            "cve": "CVE-2022-40843",
+            "title": "Tenda AC1200 V-W15Ev2 - Authentication Bypass",
+            "severity": "medium",
+            "nuclei_templates": [
+                "http/cves/2022/CVE-2022-40843.yaml"
+            ],
+            "nuclei_tags": "cve2022,cve,tenda,auth-bypass,router,iot,vkev,vuln"
+        },
+        {
+            "cve": "CVE-2022-42233",
+            "title": "Tenda 11N - Authentication Bypass",
+            "severity": "critical",
+            "nuclei_templates": [
+                "http/cves/2022/CVE-2022-42233.yaml"
+            ],
+            "nuclei_tags": "cve,cve2022,tenda,auth-bypass,router,iot,vuln"
+        },
+        {
+            "cve": "CVE-2023-1389",
+            "title": "TP-Link Archer AX21 (AX1800) - Unauthenticated Command Injection",
+            "severity": "critical",
+            "nuclei_templates": [
+                "http/cves/2023/CVE-2023-1389.yaml"
+            ],
+            "nuclei_tags": "cve,cve2023,tp-link,archer,ax21,rce,router,kev,vkev,vuln"
+        },
+        {
+            "cve": "CVE-2023-33629",
+            "title": "H3C Magic R300-2100M - Remote Code Execution",
+            "severity": "high",
+            "nuclei_templates": [
+                "http/cves/2023/CVE-2023-33629.yaml"
+            ],
+            "nuclei_tags": "cve2023,cve,router,rce,h3c,vkev,vuln"
+        },
+        {
+            "cve": "CVE-2023-4169",
+            "title": "Ruijie RG-EW1200G Router - Password Reset",
+            "severity": "high",
+            "nuclei_templates": [
+                "http/cves/2023/CVE-2023-4169.yaml"
+            ],
+            "nuclei_tags": "cve,cve2023,ruijie,router,intrusive,vkev,vuln"
+        },
+        {
+            "cve": "CVE-2023-43261",
+            "title": "Milesight Routers - Information Disclosure",
+            "severity": "high",
+            "nuclei_templates": [
+                "http/cves/2023/CVE-2023-43261.yaml"
+            ],
+            "nuclei_tags": "cve2023,cve,router,milesight,disclosure,unauth,iot,vkev,vuln"
+        },
+        {
+            "cve": "CVE-2023-4415",
+            "title": "Ruijie RG-EW1200G Router Background - Login Bypass",
+            "severity": "high",
+            "nuclei_templates": [
+                "http/cves/2023/CVE-2023-4415.yaml"
+            ],
+            "nuclei_tags": "cve2023,cve,ruijie,router,ruijienetworks,vuln"
+        },
+        {
+            "cve": "CVE-2023-46574",
+            "title": "TOTOLINK A3700R - Command Injection",
+            "severity": "critical",
+            "nuclei_templates": [
+                "http/cves/2023/CVE-2023-46574.yaml"
+            ],
+            "nuclei_tags": "cve,cve2023,totolink,router,iot,rce,vkev,vuln"
+        },
+        {
+            "cve": "CVE-2024-12987",
+            "title": "DrayTek Vigor - Command Injection",
+            "severity": "critical",
+            "nuclei_templates": [
+                "http/cves/2024/CVE-2024-12987.yaml"
+            ],
+            "nuclei_tags": "cve,cve2024,draytek,rce,router,kev,vkev,vuln"
+        },
+        {
+            "cve": "CVE-2024-24329",
+            "title": "TotoLink Router setPortForwardRules - Command Injection",
+            "severity": "critical",
+            "nuclei_templates": [
+                "http/cves/2024/CVE-2024-24329.yaml"
+            ],
+            "nuclei_tags": "cve,cve2024,totolink,router,toto_link,unauth,intrusive,vkev,vuln"
+        },
+        {
+            "cve": "CVE-2024-30568",
+            "title": "Netgear R6850 V1.1.0.88 - Command Injection",
+            "severity": "critical",
+            "nuclei_templates": [
+                "http/cves/2024/CVE-2024-30568.yaml"
+            ],
+            "nuclei_tags": "cve,cve2024,cve2024-30568,netgear,router,rce,oast,iot,rce,command-injection,vuln"
+        },
+        {
+            "cve": "CVE-2024-30569",
+            "title": "Netgear R6850 - Information Disclosure",
+            "severity": "high",
+            "nuclei_templates": [
+                "http/cves/2024/CVE-2024-30569.yaml"
+            ],
+            "nuclei_tags": "cve,cve2024,netgear,router,exposure,vuln"
+        },
+        {
+            "cve": "CVE-2024-30570",
+            "title": "Netgear R6850 - Information Disclosure",
+            "severity": "medium",
+            "nuclei_templates": [
+                "http/cves/2024/CVE-2024-30570.yaml"
+            ],
+            "nuclei_tags": "cve,cve2024,netgear,router,exposure,unauth,vuln"
+        },
+        {
+            "cve": "CVE-2024-3080",
+            "title": "ASUS DSL-AC88U - Authentication Bypass",
+            "severity": "critical",
+            "nuclei_templates": [
+                "http/cves/2024/CVE-2024-3080.yaml"
+            ],
+            "nuclei_tags": "cve,cve2024,asus,router,auth-bypass,lfi,vkev,vuln"
+        },
+        {
+            "cve": "CVE-2024-32238",
+            "title": "H3C ER8300G2-X - Password Disclosure",
+            "severity": "critical",
+            "nuclei_templates": [
+                "http/cves/2024/CVE-2024-32238.yaml"
+            ],
+            "nuclei_tags": "cve,cve2024,h3c,router,info-leak,vkev,vuln"
+        },
+        {
+            "cve": "CVE-2024-54763",
+            "title": "ipTIME A2004 - Unauthorized Access",
+            "severity": "medium",
+            "nuclei_templates": [
+                "http/cves/2024/CVE-2024-54763.yaml"
+            ],
+            "nuclei_tags": "cve,cve2024,iptime,router,unauth,exposure,vkev,vuln"
+        },
+        {
+            "cve": "CVE-2024-54764",
+            "title": "ipTIME A2004 - Unauthorized Access",
+            "severity": "medium",
+            "nuclei_templates": [
+                "http/cves/2024/CVE-2024-54764.yaml"
+            ],
+            "nuclei_tags": "cve,cve2024,iptime,router,unauth,exposure,vkev,vuln"
+        },
+        {
+            "cve": "CVE-2024-57046",
+            "title": "Netgear DGN2200 - Improper Authentication",
+            "severity": "high",
+            "nuclei_templates": [
+                "http/cves/2024/CVE-2024-57046.yaml"
+            ],
+            "nuclei_tags": "cve,cve2024,netgear,router,auth-bypass,dgn2200,vuln,vkev"
+        },
+        {
+            "cve": "CVE-2024-7339",
+            "title": "TVT DVR Sensitive Device - Information Disclosure",
+            "severity": "medium",
+            "nuclei_templates": [
+                "http/cves/2024/CVE-2024-7339.yaml"
+            ],
+            "nuclei_tags": "cve,cve2024,dvr,tvt,info-leak,vkev,vuln"
+        },
+        {
+            "cve": "CVE-2024-9643",
+            "title": "Four-Faith F3x36 - Authentication Bypass",
+            "severity": "critical",
+            "nuclei_templates": [
+                "http/cves/2024/CVE-2024-9643.yaml"
+            ],
+            "nuclei_tags": "cve,cve2024,four-faith,default-login,router,iot,auth-bypass,vkev"
+        },
+        {
+            "cve": "CVE-2025-1338",
+            "title": "NUUO Camera <=20250203 - OS Command Injection",
+            "severity": "critical",
+            "nuclei_templates": [
+                "http/cves/2025/CVE-2025-1338.yaml"
+            ],
+            "nuclei_tags": "cve,cve2025,nuuo,camera,rce,cmdi,intrusive,vkev"
+        },
+        {
+            "cve": "CVE-2025-45985",
+            "title": "Blink Router - Command Injection",
+            "severity": "critical",
+            "nuclei_templates": [
+                "http/cves/2025/CVE-2025-45985.yaml"
+            ],
+            "nuclei_tags": "cve,cve2025,b-link,rce,router,vkev,vuln"
+        },
+        {
+            "cve": "CVE-2025-52694",
+            "title": "Advantech WISE-IoTSuite/SaaS - SQL Injection",
+            "severity": "critical",
+            "nuclei_templates": [
+                "http/cves/2025/CVE-2025-52694.yaml"
+            ],
+            "nuclei_tags": "cve,cve2025,sqli,advantech,iot,saas-composer,vuln"
+        },
+        {
+            "cve": "brickcom-camera-default-login",
+            "title": "Brickcom Camera - Default Login",
+            "severity": "high",
+            "nuclei_templates": [
+                "http/default-logins/brickcom-camera-default-login.yaml"
+            ],
+            "nuclei_tags": "iot,camera,default-login"
+        },
+        {
+            "cve": "homebridge-default-login",
+            "title": "Homebridge - Default Admin Credentials",
+            "severity": "high",
+            "nuclei_templates": [
+                "http/default-logins/homebridge-default-login.yaml"
+            ],
+            "nuclei_tags": "default-login,homebridge,iot,vuln"
+        },
+        {
+            "cve": "cs141-default-login",
+            "title": "UPS Adapter CS141 SNMP Module Default Login",
+            "severity": "medium",
+            "nuclei_templates": [
+                "http/default-logins/abb/cs141-default-login.yaml"
+            ],
+            "nuclei_tags": "hiawatha,iot,default-login,vuln"
+        },
+        {
+            "cve": "apc-nmc-default-login",
+            "title": "Schneider Electric APC NMC - Default Login",
+            "severity": "high",
+            "nuclei_templates": [
+                "http/default-logins/apc-nmc/apc-nmc-default-login.yaml"
+            ],
+            "nuclei_tags": "apc,default-login,iot,ups,vuln"
+        },
+        {
+            "cve": "audiocodes-default-login",
+            "title": "AudioCodes 310HD, 320HD, 420HD, 430HD & 440HD - Default Login",
+            "severity": "high",
+            "nuclei_templates": [
+                "http/default-logins/audiocodes/audiocodes-default-login.yaml"
+            ],
+            "nuclei_tags": "iot,audiocodes,default-login,vuln"
+        },
+        {
+            "cve": "circutor-default-login",
+            "title": "Circutor Line-TCPRS1 - Default Login",
+            "severity": "high",
+            "nuclei_templates": [
+                "http/default-logins/circutor/circutor-default-login.yaml"
+            ],
+            "nuclei_tags": "circutor,iot,tcprs1,default-login,vuln"
+        },
+        {
+            "cve": "crestron-airmedia-default-login",
+            "title": "Crestron Airmedia 2.0 - Default Login",
+            "severity": "high",
+            "nuclei_templates": [
+                "http/default-logins/crestron/crestron-airmedia-default-login.yaml"
+            ],
+            "nuclei_tags": "crestron,default-login,iot,misconfig,vuln"
+        },
+        {
+            "cve": "feiyuxing-default-login",
+            "title": "Feiyuxing Enterprise-Level Management System - Default Login",
+            "severity": "high",
+            "nuclei_templates": [
+                "http/default-logins/feiyuxing/feiyuxing-default-login.yaml"
+            ],
+            "nuclei_tags": "feiyuxing,default-login,iot,vuln"
+        },
+        {
+            "cve": "flir-default-login",
+            "title": "Flir Default Login",
+            "severity": "medium",
+            "nuclei_templates": [
+                "http/default-logins/flir/flir-default-login.yaml"
+            ],
+            "nuclei_tags": "default-login,flir,camera,iot,vuln"
+        },
+        {
+            "cve": "lutron-default-login",
+            "title": "Lutron - Default Account",
+            "severity": "critical",
+            "nuclei_templates": [
+                "http/default-logins/lutron/lutron-default-login.yaml"
+            ],
+            "nuclei_tags": "default-login,lutron,iot,vuln"
+        },
+        {
+            "cve": "mobotix-default-credentials",
+            "title": "Mobotix - Default Login",
+            "severity": "high",
+            "nuclei_templates": [
+                "http/default-logins/mobotix/mobotix-default-login.yaml"
+            ],
+            "nuclei_tags": "mobotix,default-login,webcam,iot,vuln"
+        },
+        {
+            "cve": "openplc-default-login",
+            "title": "OpenPLC Webserver v3 - Default Login",
+            "severity": "high",
+            "nuclei_templates": [
+                "http/default-logins/openplc/openplc-default-login.yaml"
+            ],
+            "nuclei_tags": "openplc,default-login,iot,vuln"
+        },
+        {
+            "cve": "ruckus-wireless-default-login",
+            "title": "Ruckus Wireless - Default Login",
+            "severity": "critical",
+            "nuclei_templates": [
+                "http/default-logins/ruckus/ruckus-wireless-default-login.yaml"
+            ],
+            "nuclei_tags": "default-login,router,ruckus,vuln"
+        },
+        {
+            "cve": "samsung-printer-default-login",
+            "title": "Samsung Printer - Default Login",
+            "severity": "high",
+            "nuclei_templates": [
+                "http/default-logins/samsung/samsung-printer-default-login.yaml"
+            ],
+            "nuclei_tags": "default-login,iot,samsung,printer,vuln"
+        },
+        {
+            "cve": "3g-wireless-gateway",
+            "title": "3G Wireless Gateway Detection",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/exposed-panels/3g-wireless-gateway.yaml"
+            ],
+            "nuclei_tags": "panel,router,edb,discovery"
+        },
+        {
+            "cve": "amcrest-login",
+            "title": "Amcrest Login",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/exposed-panels/amcrest-login.yaml"
+            ],
+            "nuclei_tags": "panel,camera,amcrest,edb,discovery"
+        },
+        {
+            "cve": "asus-router-panel",
+            "title": "Asus Router Login Panel - Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/exposed-panels/asus-router-panel.yaml"
+            ],
+            "nuclei_tags": "panel,asus,router,iot,discovery"
+        },
+        {
+            "cve": "avtech-avn801-camera-panel",
+            "title": "Avtech AVN801 Network Camera Admin Panel - Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/exposed-panels/avtech-avn801-camera-panel.yaml"
+            ],
+            "nuclei_tags": "panel,avtech,iot,camera,discovery"
+        },
+        {
+            "cve": "avtech-dvr-exposure",
+            "title": "AVTECH AVC798HA DVR - Information Exposure",
+            "severity": "low",
+            "nuclei_templates": [
+                "http/exposed-panels/avtech-dvr-exposure.yaml"
+            ],
+            "nuclei_tags": "dvr,exposure,avtech,panel,discovery"
+        },
+        {
+            "cve": "brother-printer-panel",
+            "title": "Brother Printer Panel - Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/exposed-panels/brother-printer-panel.yaml"
+            ],
+            "nuclei_tags": "panel,brother,printer,iot,discovery"
+        },
+        {
+            "cve": "connectbox-panel",
+            "title": "Connect Box Login Panel - Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/exposed-panels/connect-box-login.yaml"
+            ],
+            "nuclei_tags": "panel,connectbox,iot,upc,discovery"
+        },
+        {
+            "cve": "ecosys-command-center",
+            "title": "ECOSYS Command Center RX Panel - Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/exposed-panels/ecosys-command-center.yaml"
+            ],
+            "nuclei_tags": "panel,printer,ecosys,iot,discovery"
+        },
+        {
+            "cve": "epson-access-detect",
+            "title": "Epson Device Unauthorized Access Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/exposed-panels/epson-access-detect.yaml"
+            ],
+            "nuclei_tags": "iot,printer,panel,unauth,epson,edb,discovery"
+        },
+        {
+            "cve": "epson-projector-detect",
+            "title": "Epson Projector Login Panel - Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/exposed-panels/epson-projector-detect.yaml"
+            ],
+            "nuclei_tags": "iot,projector,panel,unauth,epson,discovery"
+        },
+        {
+            "cve": "epson-web-control-detect",
+            "title": "Epson Printer",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/exposed-panels/epson-web-control-detect.yaml"
+            ],
+            "nuclei_tags": "panel,unauth,epson,edb,iot,printer,discovery"
+        },
+        {
+            "cve": "esphome-panel",
+            "title": "ESPHome Login Panel - Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/exposed-panels/esphome-panel.yaml"
+            ],
+            "nuclei_tags": "panel,esphome,iot,discovery"
+        },
+        {
+            "cve": "fuji-xerox-printer-detect",
+            "title": "Fuji Xerox Printer Panel - Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/exposed-panels/fuji-xerox-printer-detect.yaml"
+            ],
+            "nuclei_tags": "iot,panel,fuji,printer,discovery"
+        },
+        {
+            "cve": "gargoyle-router",
+            "title": "Gargoyle Router Management Utility Admin Login Panel - Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/exposed-panels/gargoyle-router.yaml"
+            ],
+            "nuclei_tags": "panel,iot,gargoyle,router,edb,discovery"
+        },
+        {
+            "cve": "gryphon-login",
+            "title": "Gryphon Panel - Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/exposed-panels/gryphon-login.yaml"
+            ],
+            "nuclei_tags": "panel,gryphon,router,discovery"
+        },
+        {
+            "cve": "hitron-technologies-detect",
+            "title": "Hitron Technologies Router Login Panel - Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/exposed-panels/hitron-technologies.yaml"
+            ],
+            "nuclei_tags": "panel,edb,router,discovery"
+        },
+        {
+            "cve": "home-assistant-panel",
+            "title": "Home Assistant Panel",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/exposed-panels/home-assistant-panel.yaml"
+            ],
+            "nuclei_tags": "panel,iot,homeassistant,discovery"
+        },
+        {
+            "cve": "homematic-panel",
+            "title": "Homematic Panel - Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/exposed-panels/homematic-panel.yaml"
+            ],
+            "nuclei_tags": "panel,homematic,iot,eq-3,discovery"
+        },
+        {
+            "cve": "hoobs-panel",
+            "title": "HOOBS Panel - Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/exposed-panels/hoobs-panel.yaml"
+            ],
+            "nuclei_tags": "panel,iot,homekit,hoobs,discovery"
+        },
+        {
+            "cve": "huawei-holosense-panel",
+            "title": "Huawei HoloSens SDC - Panel",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/exposed-panels/huawei-holosense-panel.yaml"
+            ],
+            "nuclei_tags": "panel,detect,huawei,holosens,iot,discovery"
+        },
+        {
+            "cve": "iptime-router",
+            "title": "ipTIME Router Login Panel - Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/exposed-panels/iptime-router.yaml"
+            ],
+            "nuclei_tags": "panel,login,iptime,router,discovery"
+        },
+        {
+            "cve": "lancom-router-panel",
+            "title": "Lancom Router Login Panel - Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/exposed-panels/lancom-router-panel.yaml"
+            ],
+            "nuclei_tags": "panel,lancom,router,discovery"
+        },
+        {
+            "cve": "linksys-wifi-login",
+            "title": "Linksys Smart Wi-Fi Login Panel - Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/exposed-panels/linksys-wifi-login.yaml"
+            ],
+            "nuclei_tags": "tech,panel,linksys,iot,discovery"
+        },
+        {
+            "cve": "motive-eim-panel",
+            "title": "Motive eSIM Secure Connect Panel - Exposure Detection",
+            "severity": "high",
+            "nuclei_templates": [
+                "http/exposed-panels/motive-eim-panel.yaml"
+            ],
+            "nuclei_tags": "panel,motive,eim,esim,iot,discovery"
+        },
+        {
+            "cve": "mystrom-panel",
+            "title": "MyStrom Panel - Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/exposed-panels/mystrom-panel.yaml"
+            ],
+            "nuclei_tags": "panel,mystrom,iot,discovery"
+        },
+        {
+            "cve": "netgear-version-detect",
+            "title": "NETGEAR Router Panel - Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/exposed-panels/netgear-version-detect.yaml"
+            ],
+            "nuclei_tags": "panel,router,netgear,discovery"
+        },
+        {
+            "cve": "nordex-wind-farm-portal",
+            "title": "Nordex Control Wind Farm Portal Login Panel - Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/exposed-panels/nordex-wind-farm-portal.yaml"
+            ],
+            "nuclei_tags": "panel,nordex,iot,discovery"
+        },
+        {
+            "cve": "o2-easy-panel",
+            "title": "O2 Router Setup Panel - Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/exposed-panels/o2-easy-panel.yaml"
+            ],
+            "nuclei_tags": "panel,o2,easy,iot,router,discovery"
+        },
+        {
+            "cve": "openvpn-router-management",
+            "title": "OpenVPN Server Router Management Panel - Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/exposed-panels/openvpn-router-management.yaml"
+            ],
+            "nuclei_tags": "panel,openvpn,router,discovery"
+        },
+        {
+            "cve": "peplink-panel",
+            "title": "Peplink Login Panel - Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/exposed-panels/peplink-panel.yaml"
+            ],
+            "nuclei_tags": "panel,peplink,router,login,discovery"
+        },
+        {
+            "cve": "polycom-hdx-web-exposure",
+            "title": "Polycom HDX - Web Interface Exposure",
+            "severity": "low",
+            "nuclei_templates": [
+                "http/exposed-panels/polycom-hdx-web-exposure.yaml"
+            ],
+            "nuclei_tags": "polycom,hdx,iot,exposure,video-conferencing"
+        },
+        {
+            "cve": "qualcomm-voip-router",
+            "title": "Qualcomm 4G LTE WiFi VoIP Router Panel - Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/exposed-panels/qualcomm-voip-router.yaml"
+            ],
+            "nuclei_tags": "panel,qualcomm,iot,router,voip,discovery"
+        },
+        {
+            "cve": "raspberrymatic-panel",
+            "title": "RaspberryMatic Login Panel - Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/exposed-panels/raspberrymatic-panel.yaml"
+            ],
+            "nuclei_tags": "panel,raspberrymatic,iot,discovery"
+        },
+        {
+            "cve": "red-lion-panel",
+            "title": "Red Lion Control Panel - Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/exposed-panels/red-lion-panel.yaml"
+            ],
+            "nuclei_tags": "panel,redlion,detect,iot,discovery"
+        },
+        {
+            "cve": "samsung-printer-detect",
+            "title": "Samsung Printer Panel - Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/exposed-panels/samsung-printer-detect.yaml"
+            ],
+            "nuclei_tags": "iot,panel,samsung,printer,discovery"
+        },
+        {
+            "cve": "scs-landfill-control",
+            "title": "SCS Remote Monitoring and Control Login Panel - Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/exposed-panels/scs-landfill-control.yaml"
+            ],
+            "nuclei_tags": "panel,scs,rmc,iot,discovery"
+        },
+        {
+            "cve": "securityspy-detect",
+            "title": "SecuritySpy Camera Panel - Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/exposed-panels/securityspy-detect.yaml"
+            ],
+            "nuclei_tags": "unauth,iot,securityspy,panel,camera,discovery"
+        },
+        {
+            "cve": "solarview-compact-panel",
+            "title": "SolarView Compact Panel - Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/exposed-panels/solarview-compact-panel.yaml"
+            ],
+            "nuclei_tags": "panel,solarview,iot,contec,discovery"
+        },
+        {
+            "cve": "tenda-web-master",
+            "title": "Tenda Web Master Login Panel - Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/exposed-panels/tenda-web-master.yaml"
+            ],
+            "nuclei_tags": "panel,tenda,router,discovery"
+        },
+        {
+            "cve": "tracer-sc-login",
+            "title": "Tracer SC Login Panel - Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/exposed-panels/tracer-sc-login.yaml"
+            ],
+            "nuclei_tags": "tracer,trane,iot,panel,login,discovery"
+        },
+        {
+            "cve": "unifi-os-panel",
+            "title": "UniFi OS - Panel",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/exposed-panels/unifi-os-panel.yaml"
+            ],
+            "nuclei_tags": "panel,router,discovery"
+        },
+        {
+            "cve": "verizon-router-panel",
+            "title": "Verizon Router Panel - Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/exposed-panels/verizon-router-panel.yaml"
+            ],
+            "nuclei_tags": "panel,verizon,router,discovery"
+        },
+        {
+            "cve": "xspeeder-login",
+            "title": "XSpeeder Login - Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/exposed-panels/xspeeder-login.yaml"
+            ],
+            "nuclei_tags": "panel,xspeeder,router,login,detect"
+        },
+        {
+            "cve": "zyxel-router-panel",
+            "title": "ZyXel Router Login Panel - Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/exposed-panels/zyxel-router-panel.yaml"
+            ],
+            "nuclei_tags": "panel,zyxel,router,iot,discovery"
+        },
+        {
+            "cve": "rg-uac-panel",
+            "title": "Ruijie RG-UAC Login Panel - Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/exposed-panels/ruijie/rg-uac-panel.yaml"
+            ],
+            "nuclei_tags": "panel,ruijie,router,firewall,discovery"
+        },
+        {
+            "cve": "tlr-2005ksh-login",
+            "title": "Telesquare TLR-2005KSH Login Panel - Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/exposed-panels/telesquare/tlr-2005ksh-login.yaml"
+            ],
+            "nuclei_tags": "panel,router,telesquare,discovery"
+        },
+        {
+            "cve": "trendnet-tew827dru-login",
+            "title": "TRENDnet TEW-827DRU Login Panel - Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/exposed-panels/trendnet/trendnet-tew827dru-login.yaml"
+            ],
+            "nuclei_tags": "panel,router,trendnet,discovery"
+        },
+        {
+            "cve": "zyxel-vmg1312b10d-login",
+            "title": "Zyxel VMG1312-B10D - Login Detection",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/exposed-panels/zyxel/zyxel-vmg1312b10d-login.yaml"
+            ],
+            "nuclei_tags": "tech,zyxel,modem,router,panel,discovery"
+        },
+        {
+            "cve": "zyxel-vsg1432b101-login",
+            "title": "Zyxel VSG1432-B101 - Login Detection",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/exposed-panels/zyxel/zyxel-vsg1432b101-login.yaml"
+            ],
+            "nuclei_tags": "tech,zyxel,modem,router,panel,discovery"
+        },
+        {
+            "cve": "frigate-api-exposure",
+            "title": "Frigate NVR - API Exposure",
+            "severity": "medium",
+            "nuclei_templates": [
+                "http/exposures/apis/frigate-api-exposure.yaml"
+            ],
+            "nuclei_tags": "frigate,nvr,iot,exposure,camera,config"
+        },
+        {
+            "cve": "hp-laserjet-config",
+            "title": "HP LaserJet Configuration Exposure",
+            "severity": "medium",
+            "nuclei_templates": [
+                "http/exposures/configs/hp-laserjet-config.yaml"
+            ],
+            "nuclei_tags": "hp,laserjet,printer,iot,config,exposure,misconfig"
+        },
+        {
+            "cve": "ampguard-wifi-setup",
+            "title": "AmpGuard Wifi Setup",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/iot/ampguard-wifi-setup.yaml"
+            ],
+            "nuclei_tags": "ampguard,iot,setup,wifi,discovery"
+        },
+        {
+            "cve": "apc-ups-login",
+            "title": "APC UPS Login - Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/iot/apc-ups-login.yaml"
+            ],
+            "nuclei_tags": "iot,panel,discovery"
+        },
+        {
+            "cve": "automation-direct",
+            "title": "AutomationDirect Panel - Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/iot/automation-direct.yaml"
+            ],
+            "nuclei_tags": "panel,iot,edb,discovery"
+        },
+        {
+            "cve": "brother-printer-detect",
+            "title": "Brother Printer",
+            "severity": "low",
+            "nuclei_templates": [
+                "http/iot/brother-printer-detect.yaml"
+            ],
+            "nuclei_tags": "iot,printer,tech,discovery"
+        },
+        {
+            "cve": "brother-unauthorized-access",
+            "title": "Brother Printer",
+            "severity": "medium",
+            "nuclei_templates": [
+                "http/iot/brother-unauthorized-access.yaml"
+            ],
+            "nuclei_tags": "iot,printer,unauth,vuln,discovery"
+        },
+        {
+            "cve": "carel-plantvisor-panel",
+            "title": "CAREL Pl@ntVisor Panel",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/iot/carel-plantvisor-panel.yaml"
+            ],
+            "nuclei_tags": "panels,scada,iot,carel,discovery"
+        },
+        {
+            "cve": "codian-mcu-login",
+            "title": "Codian MCU Login Panel - Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/iot/codian-mcu-login.yaml"
+            ],
+            "nuclei_tags": "iot,edb,discovery"
+        },
+        {
+            "cve": "contacam",
+            "title": "ContaCam Snapshot Images - Detect",
+            "severity": "medium",
+            "nuclei_templates": [
+                "http/iot/contacam.yaml"
+            ],
+            "nuclei_tags": "edb,iot,discovery"
+        },
+        {
+            "cve": "dell-laser-printer-unauth",
+            "title": "Dell Laser Printer - Unauthenticated Detect",
+            "severity": "high",
+            "nuclei_templates": [
+                "http/iot/dell-laser-printer-unauth.yaml"
+            ],
+            "nuclei_tags": "dell,iot,unauth,misconfig,printer,vuln,discovery"
+        },
+        {
+            "cve": "emerson-intellislot-webcard",
+            "title": "Emerson Network Power IntelliSlot Web Card - Exposure",
+            "severity": "medium",
+            "nuclei_templates": [
+                "http/iot/emerson-intellislot-webcard.yaml"
+            ],
+            "nuclei_tags": "emerson,intellislot,iot,misconfig,exposure,discovery"
+        },
+        {
+            "cve": "envision-gateway",
+            "title": "EnvisionGateway Scheduler Panel - Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/iot/envision-gateway.yaml"
+            ],
+            "nuclei_tags": "iot,edb,discovery"
+        },
+        {
+            "cve": "epmp-login",
+            "title": "ePMP 2000 Login Panel - Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/iot/epmp-login.yaml"
+            ],
+            "nuclei_tags": "panel,edb,iot,discovery"
+        },
+        {
+            "cve": "epson-wf-series",
+            "title": "Epson WF Series Detection",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/iot/epson-wf-series.yaml"
+            ],
+            "nuclei_tags": "iot,printer,discovery"
+        },
+        {
+            "cve": "flock-safety-camera-panel",
+            "title": "Flock Safety Camera Admin Panel - Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/iot/flock-safety-camera-panel.yaml"
+            ],
+            "nuclei_tags": "panel,iot,camera,flock-safety,discovery"
+        },
+        {
+            "cve": "geovision-lfi",
+            "title": "GeoVision GV-SNVR0811 - Directory Traversal",
+            "severity": "high",
+            "nuclei_templates": [
+                "http/iot/geovision-lfi.yaml"
+            ],
+            "nuclei_tags": "geovision,lfi,cross-web,webclient,iot,vuln"
+        },
+        {
+            "cve": "grandstream-device-configuration",
+            "title": "Grandstream Device Configuration",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/iot/grandstream-device-configuration.yaml"
+            ],
+            "nuclei_tags": "iot,discovery"
+        },
+        {
+            "cve": "heatmiser-wifi-thermostat",
+            "title": "Heatmiser Wifi Thermostat Panel - Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/iot/heatmiser-wifi-thermostat.yaml"
+            ],
+            "nuclei_tags": "iot,edb,discovery"
+        },
+        {
+            "cve": "homeworks-illumination",
+            "title": "HomeWorks Illumination Web Keypad",
+            "severity": "low",
+            "nuclei_templates": [
+                "http/iot/homeworks-illumination.yaml"
+            ],
+            "nuclei_tags": "misconfig,iot,homeworks,discovery"
+        },
+        {
+            "cve": "honeywell-building-control",
+            "title": "Honeywell Building Control",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/iot/honeywell-building-control.yaml"
+            ],
+            "nuclei_tags": "panel,iot,discovery"
+        },
+        {
+            "cve": "hp-color-laserjet-detect",
+            "title": "HP Color LaserJet Detection",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/iot/hp-color-laserjet-detect.yaml"
+            ],
+            "nuclei_tags": "iot,hp,discovery"
+        },
+        {
+            "cve": "hp-device-info-detect",
+            "title": "HP Device Info Detection",
+            "severity": "low",
+            "nuclei_templates": [
+                "http/iot/hp-device-info-detect.yaml"
+            ],
+            "nuclei_tags": "iot,hp,discovery"
+        },
+        {
+            "cve": "hp-laserjet-detect",
+            "title": "HP LaserJet Professional Panel - Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/iot/hp-laserjet-detect.yaml"
+            ],
+            "nuclei_tags": "iot,edb,discovery"
+        },
+        {
+            "cve": "huawei-home-gateway",
+            "title": "HUAWEI Home Gateway HG658d",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/iot/huawei-home-gateway.yaml"
+            ],
+            "nuclei_tags": "iot,huawei,discovery"
+        },
+        {
+            "cve": "hue-personal-wireless-panel",
+            "title": "HUE Personal Wireless Lighting Panel",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/iot/hue-personal-wireless-panel.yaml"
+            ],
+            "nuclei_tags": "hue,iot,wireless,discovery"
+        },
+        {
+            "cve": "internet-service",
+            "title": "Fuji Xerox Internet Services Panel - Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/iot/internet-service.yaml"
+            ],
+            "nuclei_tags": "iot,edb,panel,discovery"
+        },
+        {
+            "cve": "iotawatt-app-exposure",
+            "title": "IoTaWatt Configuration App Exposure",
+            "severity": "high",
+            "nuclei_templates": [
+                "http/iot/iotawatt-app-exposure.yaml"
+            ],
+            "nuclei_tags": "iot,exposure,vuln,discovery"
+        },
+        {
+            "cve": "ip-webcam",
+            "title": "IP Webcam Viewer Page - Detect",
+            "severity": "low",
+            "nuclei_templates": [
+                "http/iot/ip-webcam.yaml"
+            ],
+            "nuclei_tags": "webcam,iot,detect,discovery"
+        },
+        {
+            "cve": "kevinlab-device-detect",
+            "title": "KevinLAB Devices Detection",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/iot/kevinlab-device-detect.yaml"
+            ],
+            "nuclei_tags": "iot,kevinlab,discovery"
+        },
+        {
+            "cve": "kyocera-printer-panel",
+            "title": "Kyocera Printer Panel - Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/iot/kyocera-printer-panel.yaml"
+            ],
+            "nuclei_tags": "iot,panel,kyocera,printer,discovery"
+        },
+        {
+            "cve": "liveview-axis-camera",
+            "title": "AXIS Network Camera Live View - Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/iot/liveview-axis-camera.yaml"
+            ],
+            "nuclei_tags": "axis,edb,iot,discovery"
+        },
+        {
+            "cve": "loytec-device",
+            "title": "Loytec Device Info Detection",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/iot/loytec-device.yaml"
+            ],
+            "nuclei_tags": "iot,loytec,discovery"
+        },
+        {
+            "cve": "mobotix-guest-camera",
+            "title": "MOBOTIX Guest Camera Live View - Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/iot/mobotix-guest-camera.yaml"
+            ],
+            "nuclei_tags": "iot,edb,discovery"
+        },
+        {
+            "cve": "netsurveillance-web",
+            "title": "NETSurveillance Web Panel - Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/iot/netsurveillance-web.yaml"
+            ],
+            "nuclei_tags": "tech,iot,edb,discovery"
+        },
+        {
+            "cve": "network-camera-detect",
+            "title": "Various Online Devices Detection (Network Camera)",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/iot/network-camera-detect.yaml"
+            ],
+            "nuclei_tags": "iot,discovery"
+        },
+        {
+            "cve": "novus-ip-camera",
+            "title": "NoVus IP Login Panel - Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/iot/novus-ip-camera.yaml"
+            ],
+            "nuclei_tags": "camera,novus,edb,iot,panel,discovery"
+        },
+        {
+            "cve": "nuuno-network-login",
+            "title": "NUUO Network Video Recorder Login Panel - Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/iot/nuuno-network-login.yaml"
+            ],
+            "nuclei_tags": "iot,panel,nuuo,edb,discovery"
+        },
+        {
+            "cve": "octoprint-3dprinter",
+            "title": "Octoprint 3D Printer Panel - Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/iot/octoprint-3dprinter-detect.yaml"
+            ],
+            "nuclei_tags": "iot,octoprint,panel,discovery"
+        },
+        {
+            "cve": "open-mjpg-streamer",
+            "title": "open-mjpg-streamer",
+            "severity": "medium",
+            "nuclei_templates": [
+                "http/iot/open-mjpg-streamer.yaml"
+            ],
+            "nuclei_tags": "iot,webcam,discovery"
+        },
+        {
+            "cve": "panabit-ixcache-rce",
+            "title": "Panabit iXCache date_config - Remote Code Execution",
+            "severity": "critical",
+            "nuclei_templates": [
+                "http/iot/panabit-ixcache-rce.yaml"
+            ],
+            "nuclei_tags": "panabit,rce,ixcache,intrusive,iot,vuln"
+        },
+        {
+            "cve": "panasonic-network-management",
+            "title": "Panasonic Network Camera Management System - Detect",
+            "severity": "medium",
+            "nuclei_templates": [
+                "http/iot/panasonic-network-management.yaml"
+            ],
+            "nuclei_tags": "iot,camera,panasonic,edb,discovery"
+        },
+        {
+            "cve": "pqube-power-analyzers",
+            "title": "PQube 3 Power Analyzers",
+            "severity": "low",
+            "nuclei_templates": [
+                "http/iot/pqube-power-analyzers.yaml"
+            ],
+            "nuclei_tags": "iot,exposure,discovery"
+        },
+        {
+            "cve": "raspberry-shake-config",
+            "title": "Raspberry Shake Config Detection",
+            "severity": "medium",
+            "nuclei_templates": [
+                "http/iot/raspberry-shake-config.yaml"
+            ],
+            "nuclei_tags": "misconfig,unauth,iot,raspberry,discovery"
+        },
+        {
+            "cve": "routeros-login",
+            "title": "RouterOS Router Login - Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/iot/routeros-login.yaml"
+            ],
+            "nuclei_tags": "panel,router,routeros,iot,discovery"
+        },
+        {
+            "cve": "selea-ip-camera",
+            "title": "Detect Selea Targa IP OCR-ANPR Camera",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/iot/selea-ip-camera.yaml"
+            ],
+            "nuclei_tags": "iot,selea,targa,discovery"
+        },
+        {
+            "cve": "snapdrop-detect",
+            "title": "Snapdrop Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/iot/snapdrop-detect.yaml"
+            ],
+            "nuclei_tags": "iot,snapdrop,discovery"
+        },
+        {
+            "cve": "stem-audio-table-private-keys",
+            "title": "Detect Private Key on STEM Audio Table",
+            "severity": "high",
+            "nuclei_templates": [
+                "http/iot/stem-audio-table-private-keys.yaml"
+            ],
+            "nuclei_tags": "stem,config,exposure,iot,vuln"
+        },
+        {
+            "cve": "targa-camera-lfi",
+            "title": "Selea Targa IP OCR-ANPR Camera - Local File Inclusion",
+            "severity": "high",
+            "nuclei_templates": [
+                "http/iot/targa-camera-lfi.yaml"
+            ],
+            "nuclei_tags": "targa,lfi,iot,camera,selea,vuln"
+        },
+        {
+            "cve": "targa-camera-ssrf",
+            "title": "Selea Targa IP OCR-ANPR Camera - Unauthenticated SSRF",
+            "severity": "high",
+            "nuclei_templates": [
+                "http/iot/targa-camera-ssrf.yaml"
+            ],
+            "nuclei_tags": "targa,ssrf,oast,iot,camera,selea,vuln"
+        },
+        {
+            "cve": "tenda-credential-disclosure",
+            "title": "Tenda Router - Credential Disclosure",
+            "severity": "high",
+            "nuclei_templates": [
+                "http/iot/tenda-credential-disclosure.yaml"
+            ],
+            "nuclei_tags": "tenda,exposure,config,iot,router,discovery"
+        },
+        {
+            "cve": "ulanzi-clock",
+            "title": "Ulanzi Clock Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/iot/ulanzi-clock.yaml"
+            ],
+            "nuclei_tags": "panel,ulanzi,iot,discovery"
+        },
+        {
+            "cve": "upnp-device-detect",
+            "title": "Detect Basic uPNP Device",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/iot/upnp-device.yaml"
+            ],
+            "nuclei_tags": "upnp,iot,discovery"
+        },
+        {
+            "cve": "wago-webbased-panel",
+            "title": "WAGO WebBased Management - Panel",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/iot/wago-webbased-panel.yaml"
+            ],
+            "nuclei_tags": "panel,login,wago,iot,discovery"
+        },
+        {
+            "cve": "webcamxp-5",
+            "title": "WebcamXP 5 Login Panel - Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/iot/webcamxp-5.yaml"
+            ],
+            "nuclei_tags": "iot,edb,discovery"
+        },
+        {
+            "cve": "webtools-home",
+            "title": "Webtools Home",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/iot/webtools-home.yaml"
+            ],
+            "nuclei_tags": "iot,discovery"
+        },
+        {
+            "cve": "xp-webcam",
+            "title": "XP Webcam Viewer Page",
+            "severity": "medium",
+            "nuclei_templates": [
+                "http/iot/xp-webcam.yaml"
+            ],
+            "nuclei_tags": "webcam,iot,discovery"
+        },
+        {
+            "cve": "zebra-printer-detect",
+            "title": "Zebra Printer Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/iot/zebra-printer-detect.yaml"
+            ],
+            "nuclei_tags": "iot,zebra,printer,discovery"
+        },
+        {
+            "cve": "amr-printer-management-unauth",
+            "title": "AMR Printer Management Dashboard - Exposure",
+            "severity": "medium",
+            "nuclei_templates": [
+                "http/misconfiguration/amr-printer-management-unauth.yaml"
+            ],
+            "nuclei_tags": "network,iot,printer,misconfig,unauth,vuln"
+        },
+        {
+            "cve": "brickcom-camera-unauth-snapshot",
+            "title": "Brickcom Camera - Unauthenticated Snapshot Access",
+            "severity": "high",
+            "nuclei_templates": [
+                "http/misconfiguration/brickcom-camera-unauth-snapshot.yaml"
+            ],
+            "nuclei_tags": "iot,camera,default-login,exposure,unauth"
+        },
+        {
+            "cve": "esphome-dashboard",
+            "title": "ESPHome Dashboard Exposure",
+            "severity": "medium",
+            "nuclei_templates": [
+                "http/misconfiguration/esphome-dashboard.yaml"
+            ],
+            "nuclei_tags": "misconfig,esphome,exposure,iot,discovery"
+        },
+        {
+            "cve": "feiyuxing-info-leak",
+            "title": "Feiyuxing Information - Exposure",
+            "severity": "high",
+            "nuclei_templates": [
+                "http/misconfiguration/feiyuxing-info-leak.yaml"
+            ],
+            "nuclei_tags": "misconfig,exposure,iot,wpa,wpa2,vuln"
+        },
+        {
+            "cve": "homebridge-unfinished-install",
+            "title": "Homebridge - Unfinished Installation",
+            "severity": "high",
+            "nuclei_templates": [
+                "http/misconfiguration/homebridge-unfinished-install.yaml"
+            ],
+            "nuclei_tags": "homebridge,misconfig,exposure,iot,smart-home,unauth"
+        },
+        {
+            "cve": "intelbras-dvr-unauth",
+            "title": "Intelbras DVR - Unrestricted Access",
+            "severity": "low",
+            "nuclei_templates": [
+                "http/misconfiguration/intelbras-dvr-unauth.yaml"
+            ],
+            "nuclei_tags": "unauth,intelbras,dvr,misconfig,vuln"
+        },
+        {
+            "cve": "linktap-gateway-exposure",
+            "title": "LinkTap Gateway Exposure",
+            "severity": "low",
+            "nuclei_templates": [
+                "http/misconfiguration/linktap-gateway-exposure.yaml"
+            ],
+            "nuclei_tags": "misconfig,linktap,iot,exposure,vuln"
+        },
+        {
+            "cve": "mfp-unauth-exposure",
+            "title": "Multi-function Printer - Unauthorized Access",
+            "severity": "medium",
+            "nuclei_templates": [
+                "http/misconfiguration/mfp-unauth-exposure.yaml"
+            ],
+            "nuclei_tags": "network,iot,printer,misconfig,escl,vuln"
+        },
+        {
+            "cve": "simatic-dashboard-exposed",
+            "title": "Siemens SIMATIC 300 Dashboard - Exposed",
+            "severity": "high",
+            "nuclei_templates": [
+                "http/misconfiguration/simatic-dashboard-exposed.yaml"
+            ],
+            "nuclei_tags": "siemens,simatic,plc,scada,iot,misconfig,unauth,vuln"
+        },
+        {
+            "cve": "unauth-esphome",
+            "title": "ESPHome Web Server access - Unauthenticated Access",
+            "severity": "high",
+            "nuclei_templates": [
+                "http/misconfiguration/unauth-esphome.yaml"
+            ],
+            "nuclei_tags": "esphome,iot,unauth,misconfig,vuln"
+        },
+        {
+            "cve": "unauth-wavink-panel",
+            "title": "Wavlink Panel - Unauthenticated Access",
+            "severity": "high",
+            "nuclei_templates": [
+                "http/misconfiguration/unauth-wavink-panel.yaml"
+            ],
+            "nuclei_tags": "exposure,wavlink,unauth,misconfig,router,vuln"
+        },
+        {
+            "cve": "unauthorized-hp-printer",
+            "title": "Unauthorized HP Printer",
+            "severity": "high",
+            "nuclei_templates": [
+                "http/misconfiguration/hp/unauthorized-hp-printer.yaml"
+            ],
+            "nuclei_tags": "hp,iot,unauth,misconfig,vuln"
+        },
+        {
+            "cve": "unauthorized-printer-hp",
+            "title": "Unauthorized HP office pro printer",
+            "severity": "high",
+            "nuclei_templates": [
+                "http/misconfiguration/hp/unauthorized-printer-hp.yaml"
+            ],
+            "nuclei_tags": "hp,iot,unauth,misconfig,vuln"
+        },
+        {
+            "cve": "klr300n-install",
+            "title": "KLR 300N Router - Exposed Installation",
+            "severity": "high",
+            "nuclei_templates": [
+                "http/misconfiguration/installer/klr300n-installer.yaml"
+            ],
+            "nuclei_tags": "keo,klr300n,misconfig,exposure,iot,install,vuln"
+        },
+        {
+            "cve": "totolink-installer",
+            "title": "TOTOLINK Installer - Exposure",
+            "severity": "high",
+            "nuclei_templates": [
+                "http/misconfiguration/installer/totolink-installer.yaml"
+            ],
+            "nuclei_tags": "totolink,router,setup,exposure,installer,vuln"
+        },
+        {
+            "cve": "sabnzbd-unauth-access",
+            "title": "SABnzbd - Unauthenticated Web Interface Access",
+            "severity": "high",
+            "nuclei_templates": [
+                "http/misconfiguration/sabnzbd/sabnzbd-unauth-access.yaml"
+            ],
+            "nuclei_tags": "sabnzbd,unauth,misconfig,exposure,iot"
+        },
+        {
+            "cve": "ring-phish",
+            "title": "Ring phishing Detection",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/osint/phishing/ring-phish.yaml"
+            ],
+            "nuclei_tags": "phishing,ring,security,iot,osint,discovery"
+        },
+        {
+            "cve": "airtame-device-detect",
+            "title": "Airtame Device Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/technologies/airtame-device-detect.yaml"
+            ],
+            "nuclei_tags": "tech,airtame,iot,discovery"
+        },
+        {
+            "cve": "hue-wireless-lighting",
+            "title": "Hue Personal Wireless Lighting - Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/technologies/hue-wireless-lighting.yaml"
+            ],
+            "nuclei_tags": "tech,hue,iot,discovery"
+        },
+        {
+            "cve": "opnhap-detect",
+            "title": "OpenHAP Detection",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/technologies/openhap-detect.yaml"
+            ],
+            "nuclei_tags": "tech,iot,openhab,discovery"
+        },
+        {
+            "cve": "samsung-smarttv-debug",
+            "title": "Samsung SmartTV Debug Config",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/technologies/samsung-smarttv-debug.yaml"
+            ],
+            "nuclei_tags": "samsung,tech,iot,discovery"
+        },
+        {
+            "cve": "totolink-boaform-rce",
+            "title": "TOTOLink Router - Remote Command Execution",
+            "severity": "critical",
+            "nuclei_templates": [
+                "http/vulnerabilities/totolink-boaform-rce.yaml"
+            ],
+            "nuclei_tags": "totolink,rce,router,boaform,vuln"
+        },
+        {
+            "cve": "totolink-n150rt-password-exposure",
+            "title": "TOTOLINK N150RT - Password Exposure",
+            "severity": "high",
+            "nuclei_templates": [
+                "http/vulnerabilities/totolink-n150rt-password-exposure.yaml"
+            ],
+            "nuclei_tags": "totolink,router,exposure,credentials,vuln"
+        },
+        {
+            "cve": "avaya-aura-xss",
+            "title": "Avaya Aura Utility Services Administration - Cross-Site Scripting",
+            "severity": "medium",
+            "nuclei_templates": [
+                "http/vulnerabilities/avaya/avaya-aura-xss.yaml"
+            ],
+            "nuclei_tags": "xss,avaya,aura,iot,vuln"
+        },
+        {
+            "cve": "avtech-dvr-ssrf",
+            "title": "AVTECH DVR - SSRF",
+            "severity": "medium",
+            "nuclei_templates": [
+                "http/vulnerabilities/avtech/avtech-dvr-ssrf.yaml"
+            ],
+            "nuclei_tags": "ssrf,avtech,unauth,iot,vuln"
+        },
+        {
+            "cve": "avtech-unauth-file-download",
+            "title": "AVTECH Video Surveillance Product - Unauthenticated File Download",
+            "severity": "high",
+            "nuclei_templates": [
+                "http/vulnerabilities/avtech/avtech-unauth-file-download.yaml"
+            ],
+            "nuclei_tags": "exposure,avtech,unauth,download,iot,vuln"
+        },
+        {
+            "cve": "huawei-hg255s-lfi",
+            "title": "Huawei HG255s - Local File Inclusion",
+            "severity": "high",
+            "nuclei_templates": [
+                "http/vulnerabilities/huawei/huawei-hg255s-lfi.yaml"
+            ],
+            "nuclei_tags": "huawei,lfi,router,vuln"
+        },
+        {
+            "cve": "netgear-wnr614-auth-bypass",
+            "title": "Netgear WNR614 - Improper Authentication",
+            "severity": "high",
+            "nuclei_templates": [
+                "http/vulnerabilities/netgear/netgear-wnr614-auth-bypass.yaml"
+            ],
+            "nuclei_tags": "cve,cve2024,netgear,router,exposure,wnr614,unauth,vuln"
+        },
+        {
+            "cve": "acti-video-lfi",
+            "title": "ACTi-Video Monitoring - Local File Inclusion",
+            "severity": "high",
+            "nuclei_templates": [
+                "http/vulnerabilities/other/acti-video-lfi.yaml"
+            ],
+            "nuclei_tags": "acti,lfi,iot,video,monitoring,vuln"
+        },
+        {
+            "cve": "beward-ipcamera-disclosure",
+            "title": "BEWARD N100 H.264 VGA IP Camera M2.1.6 - Arbitrary File Disclosure",
+            "severity": "high",
+            "nuclei_templates": [
+                "http/vulnerabilities/other/beward-ipcamera-disclosure.yaml"
+            ],
+            "nuclei_tags": "iot,camera,disclosure,edb,vuln"
+        },
+        {
+            "cve": "clodop-printer-lfi",
+            "title": "C-Lodop Printer - Arbitrary File Read",
+            "severity": "high",
+            "nuclei_templates": [
+                "http/vulnerabilities/other/clodop-printer-lfi.yaml"
+            ],
+            "nuclei_tags": "c-lodop,lfi,printer,iot,vuln"
+        },
+        {
+            "cve": "commax-credentials-disclosure",
+            "title": "COMMAX Smart Home Ruvie CCTV Bridge DVR - RTSP Credentials Disclosure",
+            "severity": "critical",
+            "nuclei_templates": [
+                "http/vulnerabilities/other/commax-credentials-disclosure.yaml"
+            ],
+            "nuclei_tags": "commax,exposure,camera,iot,vuln"
+        },
+        {
+            "cve": "comtrend-password-exposure",
+            "title": "Comtrend ADSL - Remote Code Execution",
+            "severity": "high",
+            "nuclei_templates": [
+                "http/vulnerabilities/other/comtrend-password-exposure.yaml"
+            ],
+            "nuclei_tags": "router,exposure,iot,rce,edb,vuln"
+        },
+        {
+            "cve": "eyelock-nano-lfd",
+            "title": "EyeLock nano NXT 3.5 - Arbitrary File Retrieval",
+            "severity": "high",
+            "nuclei_templates": [
+                "http/vulnerabilities/other/eyelock-nano-lfd.yaml"
+            ],
+            "nuclei_tags": "iot,lfi,eyelock,vuln"
+        },
+        {
+            "cve": "fastbee-arbitrary-file-read",
+            "title": "FastBee - Local File Inclusion",
+            "severity": "high",
+            "nuclei_templates": [
+                "http/vulnerabilities/other/fastbee-arbitrary-file-read.yaml"
+            ],
+            "nuclei_tags": "fastbee,iot,lfi,vuln"
+        },
+        {
+            "cve": "flir-ax8-rce",
+            "title": "FLIR-AX8 res.php - Remote Code Execution",
+            "severity": "critical",
+            "nuclei_templates": [
+                "http/vulnerabilities/other/flir-ax8-rce.yaml"
+            ],
+            "nuclei_tags": "flir-ax8,rce,exploitdb,iot,sensor,authenticated,vuln"
+        },
+        {
+            "cve": "goip-1-lfi",
+            "title": "GoIP-1 GSM - Local File Inclusion",
+            "severity": "high",
+            "nuclei_templates": [
+                "http/vulnerabilities/other/goip-1-lfi.yaml"
+            ],
+            "nuclei_tags": "gsm,goip,lfi,iot,vuln"
+        },
+        {
+            "cve": "huawei-router-auth-bypass",
+            "title": "Huawei Router - Authentication Bypass",
+            "severity": "critical",
+            "nuclei_templates": [
+                "http/vulnerabilities/other/huawei-router-auth-bypass.yaml"
+            ],
+            "nuclei_tags": "auth-bypass,router,edb,huawei,vuln"
+        },
+        {
+            "cve": "kyocera-m2035dn-lfi",
+            "title": "Kyocera Command Center RX ECOSYS M2035dn - Local File Inclusion",
+            "severity": "high",
+            "nuclei_templates": [
+                "http/vulnerabilities/other/kyocera-m2035dn-lfi.yaml"
+            ],
+            "nuclei_tags": "edb,printer,iot,kyocera,lfi,vuln"
+        },
+        {
+            "cve": "netgear-router-auth-bypass",
+            "title": "NETGEAR DGN2200v1 - Authentication Bypass",
+            "severity": "high",
+            "nuclei_templates": [
+                "http/vulnerabilities/other/netgear-router-auth-bypass.yaml"
+            ],
+            "nuclei_tags": "netgear,auth-bypass,router,vuln"
+        },
+        {
+            "cve": "netgear-router-exposure",
+            "title": "NETGEAR Routers - Serial Number Disclosure",
+            "severity": "medium",
+            "nuclei_templates": [
+                "http/vulnerabilities/other/netgear-router-exposure.yaml"
+            ],
+            "nuclei_tags": "edb,netgear,exposure,iot,router,vuln"
+        },
+        {
+            "cve": "netgear-wac124-router-auth-bypass",
+            "title": "NETGEAR WAC124 - Authentication Bypass",
+            "severity": "high",
+            "nuclei_templates": [
+                "http/vulnerabilities/other/netgear-wac124-router-auth-bypass.yaml"
+            ],
+            "nuclei_tags": "netgear,auth-bypass,router,iot,vuln"
+        },
+        {
+            "cve": "seowon-router-rce",
+            "title": "Seowon 130-SLC router - Remote Code Execution",
+            "severity": "critical",
+            "nuclei_templates": [
+                "http/vulnerabilities/other/seowon-router-rce.yaml"
+            ],
+            "nuclei_tags": "unauth,iot,edb,rce,seowon,router,vuln"
+        },
+        {
+            "cve": "xerox-efi-lfi",
+            "title": "Xerox DC260 EFI Fiery Controller Webtools 2.0 - Local File Inclusion",
+            "severity": "high",
+            "nuclei_templates": [
+                "http/vulnerabilities/other/xerox-efi-lfi.yaml"
+            ],
+            "nuclei_tags": "iot,xerox,disclosure,lfi,packetstorm,edb,vuln"
+        },
+        {
+            "cve": "ruijie-rg-eg-web-mis-rce",
+            "title": "Ruijie RG-EG - Remote Code Execution",
+            "severity": "critical",
+            "nuclei_templates": [
+                "http/vulnerabilities/ruijie/ruijie-rg-eg-web-mis-rce.yaml"
+            ],
+            "nuclei_tags": "ruijie,router,iot,rce,vuln"
+        },
+        {
+            "cve": "tongda-action-uploadfile",
+            "title": "Tongda OA v2017 action_upload - Arbitrary File Upload",
+            "severity": "critical",
+            "nuclei_templates": [
+                "http/vulnerabilities/tongda/tongda-action-uploadfile.yaml"
+            ],
+            "nuclei_tags": "tongda,fileupload,intrusive,router,vuln"
+        },
+        {
+            "cve": "mdns-ptzoptics-detect",
+            "title": "PTZOptics Device via mDNS - Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "javascript/udp/misconfiguration/mdns-ptzoptics-detect.yaml"
+            ],
+            "nuclei_tags": "mdns,udp,js,ptzoptics,camera,iot,exposure"
+        },
+        {
+            "cve": "rtl-tcp-server-detect",
+            "title": "RTL-TCP Server Detection",
+            "severity": "info",
+            "nuclei_templates": [
+                "network/detection/rtl-tcp-server-detect.yaml"
+            ],
+            "nuclei_tags": "rtl-sdr,sdr,radio,iot,network,detect"
+        },
+        {
+            "cve": "printers-info-leak",
+            "title": "Unauthorized Printer Access",
+            "severity": "info",
+            "nuclei_templates": [
+                "network/misconfig/printers-info-leak.yaml"
+            ],
+            "nuclei_tags": "network,iot,printer,misconfig,tcp,pjl,vuln"
+        }
+    ],
+    "ZTE": [
+        {
+            "cve": "CVE-2014-2321",
+            "title": "ZTE Cable Modem Web Shell",
+            "severity": "critical",
+            "nuclei_templates": [
+                "http/cves/2014/CVE-2014-2321.yaml"
+            ],
+            "nuclei_tags": "cve2014,cve,iot,zte,vkev,vuln"
+        },
+        {
+            "cve": "CVE-2021-21745",
+            "title": "ZTE MF971R - Referer authentication bypass",
+            "severity": "medium",
+            "nuclei_templates": [
+                "http/cves/2021/CVE-2021-21745.yaml"
+            ],
+            "nuclei_tags": "cve2021,cve,zte,auth-bypass,router,vkev,vuln"
+        },
+        {
+            "cve": "CVE-2025-53558",
+            "title": "ZTE ZXHN-F660T/F660A - Default Credentials",
+            "severity": "high",
+            "nuclei_templates": [
+                "http/cves/2025/CVE-2025-53558.yaml"
+            ],
+            "nuclei_tags": "cve,cve2025,default-login,zte,vuln,vkev"
+        },
+        {
+            "cve": "zte-panel",
+            "title": "ZTE Panel - Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/exposed-panels/zte-panel.yaml"
+            ],
+            "nuclei_tags": "panel,zte,discovery"
+        },
+        {
+            "cve": "backdoored-zte",
+            "title": "ZTE Router Panel - Detect",
+            "severity": "critical",
+            "nuclei_templates": [
+                "network/backdoor/backdoored-zte.yaml"
+            ],
+            "nuclei_tags": "edb,network,zte,telnet,backdoor,router,tcp,vuln"
+        }
+    ],
+    "TPLINK": [
+        {
+            "cve": "CVE-2015-3035",
+            "title": "TP-LINK - Local File Inclusion",
+            "severity": "high",
+            "nuclei_templates": [
+                "http/cves/2015/CVE-2015-3035.yaml"
+            ],
+            "nuclei_tags": "cve2015,cve,router,lfi,seclists,tplink,kev,tp-link,vkev,vuln"
+        },
+        {
+            "cve": "CVE-2021-41653",
+            "title": "TP-Link - OS Command Injection",
+            "severity": "critical",
+            "nuclei_templates": [
+                "http/cves/2021/CVE-2021-41653.yaml"
+            ],
+            "nuclei_tags": "cve2021,cve,tplink,rce,router,tp-link,vkev,vuln"
+        },
+        {
+            "cve": "CVE-2022-25061",
+            "title": "TP-Link TL-WR840N - Command Injection",
+            "severity": "critical",
+            "nuclei_templates": [
+                "http/cves/2022/CVE-2022-25061.yaml"
+            ],
+            "nuclei_tags": "cve,cve2022,tplink,router,rce,iot,authenticated,vuln"
+        },
+        {
+            "cve": "CVE-2024-57514",
+            "title": "TP-Link Archer A20 v3 Router - Cross-site Scripting",
+            "severity": "medium",
+            "nuclei_templates": [
+                "http/cves/2024/CVE-2024-57514.yaml"
+            ],
+            "nuclei_tags": "cve,cve2024,tplink,router,xss,vuln"
+        },
+        {
+            "cve": "tplink-wR940n-default-login",
+            "title": "TP-Link Wireless N Router WR940N - Default-Login",
+            "severity": "high",
+            "nuclei_templates": [
+                "http/default-logins/tplink/tplink-wR940n-default-login.yaml"
+            ],
+            "nuclei_tags": "tplink,wR940n,default-login,misconfig,vuln"
+        },
+        {
+            "cve": "tplink-r470t-panel",
+            "title": "TP-LINK Router R470T - Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/exposed-panels/tplink/tplink-r470t-panel.yaml"
+            ],
+            "nuclei_tags": "tplink,r470t,panel,login,detect,discovery"
+        }
+    ],
+    "DLINK": [
+        {
+            "cve": "CVE-2015-7245",
+            "title": "D-Link DVG-N5402SP - Local File Inclusion",
+            "severity": "high",
+            "nuclei_templates": [
+                "http/cves/2015/CVE-2015-7245.yaml"
+            ],
+            "nuclei_tags": "cve2015,cve,dlink,lfi,packetstorm,edb,d-link,vuln"
+        },
+        {
+            "cve": "CVE-2018-10822",
+            "title": "D-Link Routers - Local File Inclusion",
+            "severity": "high",
+            "nuclei_templates": [
+                "http/cves/2018/CVE-2018-10822.yaml"
+            ],
+            "nuclei_tags": "cve2018,cve,dlink,edb,seclists,lfi,router,vuln"
+        },
+        {
+            "cve": "CVE-2018-10823",
+            "title": "D-Link Routers - Remote Command Injection",
+            "severity": "high",
+            "nuclei_templates": [
+                "http/cves/2018/CVE-2018-10823.yaml"
+            ],
+            "nuclei_tags": "cve,cve2018,rce,iot,dlink,router,edb,seclists,vkev,vuln"
+        },
+        {
+            "cve": "CVE-2018-6530",
+            "title": "D-Link - Unauthenticated Remote Code Execution",
+            "severity": "critical",
+            "nuclei_templates": [
+                "http/cves/2018/CVE-2018-6530.yaml"
+            ],
+            "nuclei_tags": "cve,cve2018,d-link,rce,oast,unauth,kev,dlink,vkev,vuln"
+        },
+        {
+            "cve": "CVE-2019-13101",
+            "title": "D-Link DIR-600M - Authentication Bypass",
+            "severity": "critical",
+            "nuclei_templates": [
+                "http/cves/2019/CVE-2019-13101.yaml"
+            ],
+            "nuclei_tags": "cve2019,cve,packetstorm,edb,dlink,router,iot,vkev,vuln"
+        },
+        {
+            "cve": "CVE-2019-16057",
+            "title": "D-Link DNS-320 - Remote Code Execution",
+            "severity": "critical",
+            "nuclei_templates": [
+                "http/cves/2019/CVE-2019-16057.yaml"
+            ],
+            "nuclei_tags": "cve,cve2019,lfi,rce,kev,sharecenter,dlink,vkev,vuln"
+        },
+        {
+            "cve": "CVE-2019-16920",
+            "title": "D-Link Routers - Remote Code Execution",
+            "severity": "critical",
+            "nuclei_templates": [
+                "http/cves/2019/CVE-2019-16920.yaml"
+            ],
+            "nuclei_tags": "cve2019,cve,dlink,rce,router,unauth,kev,vkev,vuln"
+        },
+        {
+            "cve": "CVE-2019-17506",
+            "title": "D-Link DIR-868L/817LW - Information Disclosure",
+            "severity": "critical",
+            "nuclei_templates": [
+                "http/cves/2019/CVE-2019-17506.yaml"
+            ],
+            "nuclei_tags": "cve,cve2019,dlink,router,disclosure,vkev,vuln"
+        },
+        {
+            "cve": "CVE-2020-24579",
+            "title": "D-Link DSL 2888a - Authentication Bypass/Remote Command Execution",
+            "severity": "high",
+            "nuclei_templates": [
+                "http/cves/2020/CVE-2020-24579.yaml"
+            ],
+            "nuclei_tags": "cve,cve2020,dlink,rce,vuln"
+        },
+        {
+            "cve": "CVE-2020-25078",
+            "title": "D-Link DCS-2530L/DCS-2670L - Administrator Password Disclosure",
+            "severity": "high",
+            "nuclei_templates": [
+                "http/cves/2020/CVE-2020-25078.yaml"
+            ],
+            "nuclei_tags": "cve,cve2020,dlink,kev,vkev,vuln"
+        },
+        {
+            "cve": "CVE-2020-25506",
+            "title": "D-Link DNS-320 - Unauthenticated Remote Code Execution",
+            "severity": "critical",
+            "nuclei_templates": [
+                "http/cves/2020/CVE-2020-25506.yaml"
+            ],
+            "nuclei_tags": "cve,cve2020,dlink,rce,oast,mirai,unauth,router,kev,vkev,vuln"
+        },
+        {
+            "cve": "CVE-2020-9376",
+            "title": "D-Link DIR-610 Devices - Information Disclosure",
+            "severity": "high",
+            "nuclei_templates": [
+                "http/cves/2020/CVE-2020-9376.yaml"
+            ],
+            "nuclei_tags": "cve,cve2020,dlink,disclosure,router,vuln"
+        },
+        {
+            "cve": "CVE-2021-21816",
+            "title": "D-Link DIR-3040 1.13B03 - Information Disclosure",
+            "severity": "medium",
+            "nuclei_templates": [
+                "http/cves/2021/CVE-2021-21816.yaml"
+            ],
+            "nuclei_tags": "cve2021,cve,dlink,exposure,router,syslog,vuln"
+        },
+        {
+            "cve": "CVE-2021-40655",
+            "title": "D-Link DIR-605 - Information Disclosure",
+            "severity": "high",
+            "nuclei_templates": [
+                "http/cves/2021/CVE-2021-40655.yaml"
+            ],
+            "nuclei_tags": "cve,cve2021,dlink,kev,dir-605,info-leak,vkev,vuln"
+        },
+        {
+            "cve": "CVE-2021-42627",
+            "title": "D-Link DIR-615 - Unauthorized Access",
+            "severity": "critical",
+            "nuclei_templates": [
+                "http/cves/2021/CVE-2021-42627.yaml"
+            ],
+            "nuclei_tags": "cve2021,cve,d-link,router,unauth,dir-615,roteador,dlink,vuln"
+        },
+        {
+            "cve": "CVE-2021-45382",
+            "title": "D-Link - Remote Command Execution",
+            "severity": "critical",
+            "nuclei_templates": [
+                "http/cves/2021/CVE-2021-45382.yaml"
+            ],
+            "nuclei_tags": "cve2021,cve,dlink,kev,rce,vkev,vuln"
+        },
+        {
+            "cve": "CVE-2021-46379",
+            "title": "D-Link DIR850 ET850-1.08TRb03 - Open Redirect",
+            "severity": "medium",
+            "nuclei_templates": [
+                "http/cves/2021/CVE-2021-46379.yaml"
+            ],
+            "nuclei_tags": "cve,cve2021,redirect,dlink,router,vkev,vuln"
+        },
+        {
+            "cve": "CVE-2021-46381",
+            "title": "D-Link DAP-1620 - Local File Inclusion",
+            "severity": "high",
+            "nuclei_templates": [
+                "http/cves/2021/CVE-2021-46381.yaml"
+            ],
+            "nuclei_tags": "cve2021,cve,lfi,router,packetstorm,dlink,vkev,vuln"
+        },
+        {
+            "cve": "CVE-2022-28955",
+            "title": "D-Link DIR-816L - Improper Access Control",
+            "severity": "high",
+            "nuclei_templates": [
+                "http/cves/2022/CVE-2022-28955.yaml"
+            ],
+            "nuclei_tags": "cve2022,cve,dlink,exposure,vuln"
+        },
+        {
+            "cve": "CVE-2023-25280",
+            "title": "D-Link DIR820LA1_FW105B03 'ping_addr' - OS Command Injection",
+            "severity": "critical",
+            "nuclei_templates": [
+                "http/cves/2023/CVE-2023-25280.yaml"
+            ],
+            "nuclei_tags": "cve,cve2023,rce,unauth,kev,dlink,vkev,vuln"
+        },
+        {
+            "cve": "CVE-2023-4542",
+            "title": "D-Link DAR-8000-10 - Command Injection",
+            "severity": "critical",
+            "nuclei_templates": [
+                "http/cves/2023/CVE-2023-4542.yaml"
+            ],
+            "nuclei_tags": "cve,cve2023,dlink,vkev,vuln"
+        },
+        {
+            "cve": "CVE-2023-5074",
+            "title": "D-Link D-View 8 v2.0.1.28 - Authentication Bypass",
+            "severity": "critical",
+            "nuclei_templates": [
+                "http/cves/2023/CVE-2023-5074.yaml"
+            ],
+            "nuclei_tags": "cve2023,cve,d-link,auth-bypass,dlink,vkev,vuln"
+        },
+        {
+            "cve": "CVE-2024-3272",
+            "title": "D-Link Network Attached Storage - Backdoor Account",
+            "severity": "critical",
+            "nuclei_templates": [
+                "http/cves/2024/CVE-2024-3272.yaml"
+            ],
+            "nuclei_tags": "cve,cve2024,dlink,nas,kev,vkev,vuln"
+        },
+        {
+            "cve": "CVE-2024-3274",
+            "title": "D-LINK DNS-320L,DNS-320LW and DNS-327L - Information Disclosure",
+            "severity": "medium",
+            "nuclei_templates": [
+                "http/cves/2024/CVE-2024-3274.yaml"
+            ],
+            "nuclei_tags": "cve,cve2024,dlink,exposure,vuln"
+        },
+        {
+            "cve": "CVE-2024-33113",
+            "title": "D-LINK DIR-845L bsc_sms_inbox.php file - Information Disclosure",
+            "severity": "medium",
+            "nuclei_templates": [
+                "http/cves/2024/CVE-2024-33113.yaml"
+            ],
+            "nuclei_tags": "cve,cve2024,dlink,info-leak,vuln"
+        },
+        {
+            "cve": "CVE-2024-57045",
+            "title": "D-Link DIR-859 - Information Disclosure",
+            "severity": "critical",
+            "nuclei_templates": [
+                "http/cves/2024/CVE-2024-57045.yaml"
+            ],
+            "nuclei_tags": "cve,cve2024,dlink,disclosure,unauth,vuln"
+        },
+        {
+            "cve": "dlink-centralized-default-login",
+            "title": "D-Link AC Centralized Management System - Default Login",
+            "severity": "high",
+            "nuclei_templates": [
+                "http/default-logins/d-link/dlink-centralized-default-login.yaml"
+            ],
+            "nuclei_tags": "default-login,dlink,vuln"
+        },
+        {
+            "cve": "dlink-wireless",
+            "title": "D-Link Wireless Router Panel - Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/exposed-panels/d-link-wireless.yaml"
+            ],
+            "nuclei_tags": "dlink,router,edb,panel,discovery"
+        },
+        {
+            "cve": "dlink-file-read",
+            "title": "D-Link - Local File Inclusion",
+            "severity": "high",
+            "nuclei_templates": [
+                "http/misconfiguration/d-link-arbitary-fileread.yaml"
+            ],
+            "nuclei_tags": "dlink,lfi,misconfig,vuln"
+        },
+        {
+            "cve": "dlink-config-dump",
+            "title": "D-Link DAP-1325 - Information Disclosure",
+            "severity": "critical",
+            "nuclei_templates": [
+                "http/misconfiguration/dlink-config-dump.yaml"
+            ],
+            "nuclei_tags": "misconfig,config,dump,dlink,auth-bypass,disclosure,vuln"
+        },
+        {
+            "cve": "dlink-unauth-cgi-script",
+            "title": "D-Link DNS Series  CGI Script - Unauthenticated",
+            "severity": "low",
+            "nuclei_templates": [
+                "http/misconfiguration/dlink-unauth-cgi-script.yaml"
+            ],
+            "nuclei_tags": "unauth,dlink,misconfig,vuln"
+        },
+        {
+            "cve": "dlink-nas-rce",
+            "title": "D-Link NAS `sc_mgr.cgi` - Remote Code Execution",
+            "severity": "critical",
+            "nuclei_templates": [
+                "http/vulnerabilities/dlink/dlink-nas-rce.yaml"
+            ],
+            "nuclei_tags": "dlink,nas,rce,vuln"
+        },
+        {
+            "cve": "dlink-netgear-xss",
+            "title": "Dlink DSR-250 and Netgear Prosafe - Cross-Site Scripting",
+            "severity": "medium",
+            "nuclei_templates": [
+                "http/vulnerabilities/dlink/dlink-netgear-xss.yaml"
+            ],
+            "nuclei_tags": "xss,dlink,dsr250,netgear,vuln"
+        },
+        {
+            "cve": "dlink-850L-info-leak",
+            "title": "Dlink Dir-850L Info Leak",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/vulnerabilities/other/dlink-850L-info-leak.yaml"
+            ],
+            "nuclei_tags": "dlink,vuln"
+        }
+    ],
+    "HIKVISION": [
+        {
+            "cve": "CVE-2017-7921",
+            "title": "Hikvision - Authentication Bypass",
+            "severity": "critical",
+            "nuclei_templates": [
+                "http/cves/2017/CVE-2017-7921.yaml"
+            ],
+            "nuclei_tags": "cve,cve2017,auth-bypass,hikvision,vkev,vuln,kev"
+        },
+        {
+            "cve": "CVE-2021-36260",
+            "title": "Hikvision IP camera/NVR - Remote Command Execution",
+            "severity": "critical",
+            "nuclei_templates": [
+                "http/cves/2021/CVE-2021-36260.yaml"
+            ],
+            "nuclei_tags": "cve2021,cve,hikvision,rce,iot,intrusive,kev,vkev,vuln"
+        },
+        {
+            "cve": "CVE-2023-6895",
+            "title": "Hikvision IP ping.php - Command Execution",
+            "severity": "critical",
+            "nuclei_templates": [
+                "http/cves/2023/CVE-2023-6895.yaml"
+            ],
+            "nuclei_tags": "cve,cve2023,hikvision,rce,vuln,vkev"
+        },
+        {
+            "cve": "hikvision-info-leak",
+            "title": "Hikvision Configuration File - Detect",
+            "severity": "medium",
+            "nuclei_templates": [
+                "http/exposures/configs/hikvision-info-leak.yaml"
+            ],
+            "nuclei_tags": "exposure,config,hikvision,vuln"
+        },
+        {
+            "cve": "hikvision-cam-info-exposure",
+            "title": "Hikvision IP Camera - Info Exposure",
+            "severity": "high",
+            "nuclei_templates": [
+                "http/iot/hikvision-cam-info-exposure.yaml"
+            ],
+            "nuclei_tags": "hikvision,iot,camera,exposure,discovery"
+        },
+        {
+            "cve": "hikvision-env",
+            "title": "Hikvision Springboot Env Actuator - Detect",
+            "severity": "high",
+            "nuclei_templates": [
+                "http/misconfiguration/hikvision-env.yaml"
+            ],
+            "nuclei_tags": "misconfig,hikvision,springboot,env,vuln"
+        },
+        {
+            "cve": "hikvision-detect",
+            "title": "Hikvision Panel",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/technologies/hikvision-detect.yaml"
+            ],
+            "nuclei_tags": "tech,hikvision,discovery"
+        },
+        {
+            "cve": "hikvision-fastjson-rce",
+            "title": "HIKVISION applyCT Fastjson - Remote Command Execution",
+            "severity": "critical",
+            "nuclei_templates": [
+                "http/vulnerabilities/hikvision/hikvision-fastjson-rce.yaml"
+            ],
+            "nuclei_tags": "hikvision,fastjson,rce,oast,vuln"
+        },
+        {
+            "cve": "hikvision-isecure-info-leak",
+            "title": "HIKVISION iSecure Center - Information Leak",
+            "severity": "high",
+            "nuclei_templates": [
+                "http/vulnerabilities/hikvision/hikvision-isecure-info-leak.yaml"
+            ],
+            "nuclei_tags": "infoleak,iot,hikvision,vuln"
+        },
+        {
+            "cve": "hikvision-ivms-file-upload-bypass",
+            "title": "Hikvison iVMS - File Upload Bypass",
+            "severity": "critical",
+            "nuclei_templates": [
+                "http/vulnerabilities/hikvision/hikvision-ivms-file-upload-bypass.yaml"
+            ],
+            "nuclei_tags": "hikvision,ivms,intrusive,fileupload,auth-bypass,vuln"
+        },
+        {
+            "cve": "hikvision-ivms-file-upload-rce",
+            "title": "Hikvision iVMS-8700 - File Upload Remote Code Execution",
+            "severity": "critical",
+            "nuclei_templates": [
+                "http/vulnerabilities/hikvision/hikvision-ivms-file-upload-rce.yaml"
+            ],
+            "nuclei_tags": "hikvision,ivms,fileupload,rce,intrusive,vuln"
+        },
+        {
+            "cve": "hikvision-js-files-upload",
+            "title": "Hikvision iSecure Center - File Upload",
+            "severity": "critical",
+            "nuclei_templates": [
+                "http/vulnerabilities/hikvision/hikvision-js-files-upload.yaml"
+            ],
+            "nuclei_tags": "fileupload,iot,hikvision,intrusive,vuln"
+        },
+        {
+            "cve": "hikvision-isecure-center-rce",
+            "title": "HIKVISION iSecure Center - Remote Code Execution",
+            "severity": "critical",
+            "nuclei_templates": [
+                "http/vulnerabilities/other/hikvision-isecure-center-rce.yaml"
+            ],
+            "nuclei_tags": "hikvision,isecure,rce,vuln"
+        }
+    ],
+    "OPENWRT": [
+        {
+            "cve": "CVE-2023-39120",
+            "title": "Nodogsplash - Directory Traversal",
+            "severity": "high",
+            "nuclei_templates": [
+                "http/cves/2023/CVE-2023-39120.yaml"
+            ],
+            "nuclei_tags": "cve2023,cve,lfi,openwrt,nodogsplash,vuln"
+        },
+        {
+            "cve": "openwrt-login",
+            "title": "Opentwrt Login / Configuration Interface",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/exposed-panels/openwrt-login.yaml"
+            ],
+            "nuclei_tags": "openwrt,router,panel,discovery"
+        },
+        {
+            "cve": "openwrt-luci-panel",
+            "title": "Opentwrt luCI - Admin Login Page",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/exposed-panels/openwrt/openwrt-luci-panel.yaml"
+            ],
+            "nuclei_tags": "panel,default-login,openwrt,x-wrt,discovery"
+        }
+    ],
+    "NETIS": [
+        {
+            "cve": "CVE-2024-22729",
+            "title": "Netis MW5360 V1.0.1.3031 - Command Injection",
+            "severity": "critical",
+            "nuclei_templates": [
+                "http/cves/2024/CVE-2024-22729.yaml"
+            ],
+            "nuclei_tags": "cve,cve2024,rce,netis,unauth,vkev,vuln"
+        },
+        {
+            "cve": "CVE-2024-48455",
+            "title": "Netis Wifi Router - Information Disclosure",
+            "severity": "high",
+            "nuclei_templates": [
+                "http/cves/2024/CVE-2024-48455.yaml"
+            ],
+            "nuclei_tags": "netis,router,exposure,vkev,vuln"
+        },
+        {
+            "cve": "netis-router",
+            "title": "Netis Router Login Panel - Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/exposed-panels/netis-router.yaml"
+            ],
+            "nuclei_tags": "panel,login,netis,router,discovery"
+        },
+        {
+            "cve": "netis-info-leak",
+            "title": "Netis E1+ V1.2.32533 - WiFi Password Disclosure",
+            "severity": "high",
+            "nuclei_templates": [
+                "http/vulnerabilities/other/netis-info-leak.yaml"
+            ],
+            "nuclei_tags": "netis,exposure,edb,vuln"
+        }
+    ],
+    "UBIQUITI": [
+        {
+            "cve": "aircube-login",
+            "title": "airCube Login - Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/exposed-panels/aircube-login.yaml"
+            ],
+            "nuclei_tags": "panel,aircube,ubiquiti,discovery"
+        }
+    ],
+    "MIKROTIK": [
+        {
+            "cve": "mikrotik-routeros-old",
+            "title": "MikroTik RouterOS Admin Login Panel - Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/exposed-panels/mikrotik/mikrotik-routeros-old.yaml"
+            ],
+            "nuclei_tags": "panel,login,mikrotik,discovery"
+        },
+        {
+            "cve": "mikrotik-routeros",
+            "title": "MikroTik Router OS Login Panel - Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/exposed-panels/mikrotik/mikrotik-routeros.yaml"
+            ],
+            "nuclei_tags": "panel,login,mikrotik,discovery"
+        },
+        {
+            "cve": "mikrotik-httpproxy",
+            "title": "MikroTik httpproxy",
+            "severity": "info",
+            "nuclei_templates": [
+                "http/technologies/mikrotik-httpproxy.yaml"
+            ],
+            "nuclei_tags": "tech,mikrotik,discovery"
+        },
+        {
+            "cve": "mikrotik-ftp-server-detect",
+            "title": "MikroTik FTP server Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "network/detection/mikrotik-ftp-server-detect.yaml"
+            ],
+            "nuclei_tags": "network,ftp,mikrotik,router,detect,detection,tcp,discovery"
+        },
+        {
+            "cve": "mikrotik-routeros-api",
+            "title": "MikroTik RouterOS API - Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "network/detection/mikrotik-routeros-api.yaml"
+            ],
+            "nuclei_tags": "network,mikrotik,detect,detection,tcp,discovery"
+        },
+        {
+            "cve": "mikrotik-ssh-detect",
+            "title": "MikroTik RouterOS SSH - Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "network/detection/mikrotik-ssh-detect.yaml"
+            ],
+            "nuclei_tags": "network,ssh,mikrotik,detect,detection,tcp,discovery"
+        },
+        {
+            "cve": "mikrotik-ftp-detect",
+            "title": "MikroTik FTP Service - Detect",
+            "severity": "info",
+            "nuclei_templates": [
+                "network/detection/ftp/mikrotik-ftp-detect.yaml"
+            ],
+            "nuclei_tags": "network,ftp,mikrotik,detect,detection,tcp,discovery"
+        }
+    ]
+}

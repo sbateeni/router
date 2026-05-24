@@ -184,6 +184,40 @@ ROUTER_CVES_BY_VENDOR: dict[str, tuple[dict, ...]] = {
     ),
 }
 
+# --- Load Dynamic CVEs ---
+import os
+import json
+from engines.utils import log
+
+_dynamic_cves_loaded = False
+def load_dynamic_cves():
+    global _dynamic_cves_loaded, ROUTER_CVES_BY_VENDOR
+    if _dynamic_cves_loaded:
+        return
+    data_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data")
+    json_path = os.path.join(data_dir, "latest_cves.json")
+    if os.path.exists(json_path):
+        try:
+            with open(json_path, 'r', encoding='utf-8') as f:
+                dynamic_cves = json.load(f)
+                count = 0
+                for vendor, cve_list in dynamic_cves.items():
+                    if vendor not in ROUTER_CVES_BY_VENDOR:
+                        ROUTER_CVES_BY_VENDOR[vendor] = ()
+                    # Merge while avoiding exact duplicates by CVE ID
+                    existing_cves = {c["cve"] for c in ROUTER_CVES_BY_VENDOR[vendor]}
+                    new_tuples = list(ROUTER_CVES_BY_VENDOR[vendor])
+                    for cve in cve_list:
+                        if cve["cve"] not in existing_cves:
+                            new_tuples.append(cve)
+                            count += 1
+                    ROUTER_CVES_BY_VENDOR[vendor] = tuple(new_tuples)
+            if count > 0:
+                log(f"Loaded {count} dynamic CVEs from {json_path}", "INFO")
+        except Exception as e:
+            log(f"Failed to load dynamic CVEs: {e}", "ERROR")
+    _dynamic_cves_loaded = True
+
 
 @dataclass
 class CveAssessment:
@@ -361,6 +395,7 @@ def assess_hikvision(
 
 def assess_router(device_type: str, model: str = "", server_banner: str = "") -> DeviceIntel:
     """Build CVE plan for router/gateway."""
+    load_dynamic_cves()
     vendor = device_type if device_type in ROUTER_CVES_BY_VENDOR else "GENERIC"
     cves = ROUTER_CVES_BY_VENDOR.get(vendor, ROUTER_CVES_BY_VENDOR["GENERIC"])
 

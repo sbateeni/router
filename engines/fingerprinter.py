@@ -95,6 +95,8 @@ class Fingerprinter:
                 device_type = "SYNOLOGY"
             elif "laravel" in content:
                 device_type = "LARAVEL"
+            elif "llama.cpp" in content or "llama_cpp" in content or "llama" in self.server:
+                device_type = "LLAMA_CPP"
             elif "netis" in content or ("login.cgi" in content and "adsl router login" in content):
                 device_type = "NETIS"
                 self.model = self.model or "Netis Router"
