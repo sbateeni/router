@@ -14,7 +14,7 @@ from core.classic.individual import (
     run_routersploit_only,
     run_sqlmap_only,
 )
-from core.menu import AI_CHOICES, CLASSIC_CHOICES, RECON_CHOICES, select_tool_menu
+from core.menu import AI_CHOICES, CLASSIC_CHOICES, ENGINE_CHOICES, RECON_CHOICES, select_tool_menu
 from core.recon.runner import (
     run_lan_discovery_only,
     run_nikto_tool,
@@ -24,9 +24,34 @@ from core.recon.runner import (
 from core.scan_config import set_scan_profile
 
 
+def run_device_engine_only(ip, target_dir, manual_mode=False):
+    """Full device AUTO-PWN engine (cameras, routers, OSINT, PoCs)."""
+    import json
+    import os
+
+    from engines.auto_pwn_main import main as engine_main
+
+    target = ip if str(ip).startswith("http") else f"http://{ip}"
+    hints_path = os.path.join(target_dir, "target_hints.json")
+    if os.path.isfile(hints_path):
+        try:
+            with open(hints_path, encoding="utf-8") as fh:
+                hints = json.load(fh)
+            if hints.get("seed_url"):
+                target = hints["seed_url"]
+            elif hints.get("raw") and str(hints["raw"]).startswith("http"):
+                target = hints["raw"]
+        except Exception:
+            pass
+    engine_main(target, manual_mode=manual_mode)
+    return True
+
+
 def run_selected_tool(selection, ip, target_dir, profile="normal", subnet=None):
     set_scan_profile(profile)
 
+    if selection in ENGINE_CHOICES:
+        return run_device_engine_only(ip, target_dir)
     if selection in CLASSIC_CHOICES:
         return _run_classic(selection, ip, target_dir)
     if selection in AI_CHOICES:
@@ -85,4 +110,9 @@ def _run_recon(selection, ip, target_dir, subnet=None):
     return False
 
 
-__all__ = ["run_lan_discovery_only", "run_selected_tool", "select_tool_menu"]
+__all__ = [
+    "run_device_engine_only",
+    "run_lan_discovery_only",
+    "run_selected_tool",
+    "select_tool_menu",
+]

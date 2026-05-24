@@ -67,6 +67,8 @@ router/
 
 Copy `.env.example` to `.env` for Telegram / AI / Shodan keys.
 
+See **[docs/TOOLS.md](docs/TOOLS.md)** for the full tools catalog.
+
 ## Legacy repos
 
 `nuclei-dev-main` is merged into `engines/`. You only need this repo on Kali.

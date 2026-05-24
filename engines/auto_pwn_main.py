@@ -648,6 +648,7 @@ if __name__ == "__main__":
             print("  [4] Update Exploit Arsenal (GitHub Zero-Day Scraper)")
             print("  [5] Social OSINT (Email / Phone / Username Lookup)")
             print("  [6] Decepticon Mode (Autonomous Kill-Chain)")
+            print("  [7] Update Framework & Tools (GitHub Pull)")
             print("  [0] Exit")
             start_choice = input("\n[?] Select option: ").strip()
             
@@ -738,8 +739,15 @@ if __name__ == "__main__":
                     core = DecepticonCore(target)
                     core.run_autonomous_mode()
                 continue
+            elif start_choice == '7':
+                from engines.updater import run_startup_update
+                log("Checking for Framework and Tools Updates from GitHub...", "INFO")
+                # We can call run_startup_update() directly. It already logs if updates were pulled or not.
+                run_startup_update(update_project=True, update_tools=True, update_templates=True)
+                input("\nPress Enter to return to the main menu...")
+                continue
             else:
-                log("Invalid option. Please choose 1, 2, 3, 4, 5, 6, or 0.", "ERROR")
+                log("Invalid option. Please choose 1, 2, 3, 4, 5, 6, 7, or 0.", "ERROR")
         
         if target:
             while True:

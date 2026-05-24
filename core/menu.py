@@ -1,6 +1,7 @@
 CLASSIC_CHOICES = set(range(1, 11))
 AI_CHOICES = {11, 12, 13, 14}
 RECON_CHOICES = {16, 17, 18, 19}
+ENGINE_CHOICES = {21}
 
 
 def select_tool_menu():

@@ -133,6 +133,26 @@ class TestSocialOSINT(unittest.TestCase):
         self.assertEqual(result["platform"], "Sync.me")
 
 
+class TestTelegramExtras(unittest.TestCase):
+    def test_detect_email(self):
+        from core.telegram_extras import detect_osint_message
+
+        result = detect_osint_message("user@example.com")
+        self.assertEqual(result, ("email", "user@example.com"))
+
+    def test_detect_osint_prefix(self):
+        from core.telegram_extras import detect_osint_message
+
+        result = detect_osint_message("osint:user testname")
+        self.assertEqual(result, ("user", "testname"))
+
+    def test_run_osint_invalid(self):
+        from core.telegram_extras import run_osint_action
+
+        msg = run_osint_action("email", "not-an-email")
+        self.assertIn("Invalid", msg)
+
+
 class TestImports(unittest.TestCase):
     def test_import_new_modules(self):
         import engines.hash_extractor  # noqa: F401
