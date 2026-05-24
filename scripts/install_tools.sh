@@ -16,31 +16,71 @@ ensure_project_venv() {
   echo "[*] Using Python: $PY"
 }
 
+install_pip_req() {
+  local label="$1"
+  local req="$2"
+  if [[ ! -f "$req" ]]; then
+    return 0
+  fi
+  echo "  [*] $label"
+  if ! "$PY" -m pip install -q -r "$req"; then
+    echo "  [!] Warning: pip install failed for $label (continuing)"
+    return 1
+  fi
+  return 0
+}
+
+install_pip_path() {
+  local label="$1"
+  local path="$2"
+  if [[ ! -d "$path" ]]; then
+    return 0
+  fi
+  if [[ ! -f "$path/pyproject.toml" && ! -f "$path/setup.py" ]]; then
+    return 0
+  fi
+  echo "  [*] $label (editable install from clone)"
+  if ! "$PY" -m pip install -q "$path"; then
+    echo "  [!] Warning: pip install failed for $label (continuing)"
+    return 1
+  fi
+  return 0
+}
+
 install_python_deps() {
   ensure_project_venv
   echo
   echo "[*] Installing Python dependencies into .venv..."
   "$PY" -m pip install -q -U pip setuptools wheel
 
-  local req failed=0
+  local failed=0
+
+  # Master list — covers project + Dirsearch + RouterSploit + Ingram + OSINT + recon tools
+  install_pip_req "requirements.txt" "$ROOT/requirements.txt" || failed=1
+
+  # Tool-specific pins / extras (after clone)
   for req in \
-    "$ROOT/requirements.txt" \
-    tools/routersploit/requirements.txt \
-    tools/ingram/requirements.txt \
-    tools/netexec/requirements.txt \
-    tools/spiderfoot/requirements.txt \
-    tools/theHarvester/requirements/base.txt; do
-    if [[ -f "$req" ]]; then
-      echo "  [*] $req"
-      if ! "$PY" -m pip install -q -r "$req"; then
-        echo "  [!] Warning: pip install failed for $req (continuing)"
-        failed=1
-      fi
-    fi
+    "$ROOT/tools/routersploit/requirements.txt" \
+    "$ROOT/tools/ingram/requirements.txt" \
+    "$ROOT/tools/dirsearch/requirements.txt" \
+    "$ROOT/tools/spiderfoot/requirements.txt"; do
+    install_pip_req "$req" "$req" || failed=1
   done
 
+  # theHarvester moved to pyproject.toml (no requirements/base.txt on main)
+  install_pip_path "theHarvester" "$ROOT/tools/theHarvester" || failed=1
+
+  # NetExec — heavy AD tooling; may upgrade paramiko (RouterSploit needs 2.12)
+  install_pip_path "NetExec (nxc)" "$ROOT/tools/netexec" || failed=1
+
+  # RouterSploit requires paramiko 2.x (DSSKey); restore after NetExec if needed
+  "$PY" -m pip install -q "paramiko==2.12.0" || failed=1
+
   if [[ "$failed" -eq 1 ]]; then
-    echo "[!] Some optional tool dependencies failed — clones are still usable."
+    echo "[!] Some optional tool dependencies failed — core framework should still run."
+    echo "    Retry: source .venv/bin/activate && pip install -r requirements.txt"
+  else
+    echo "[+] Python dependencies installed into .venv"
   fi
 }
 
@@ -71,13 +111,13 @@ sync_tool() {
   echo "[+] $dir downloaded!"
 }
 
-echo "[1/5] RouterSploit..."
+echo "[1/10] RouterSploit..."
 sync_tool routersploit https://github.com/threat9/routersploit.git
 
-echo "[2/5] Ingram..."
+echo "[2/10] Ingram..."
 sync_tool ingram https://github.com/jorhelp/Ingram.git
 
-echo "[3/5] DefaultCreds..."
+echo "[3/10] DefaultCreds..."
 sync_tool DefaultCreds-cheat-sheet https://github.com/ihebski/DefaultCreds-cheat-sheet.git
 
 echo "[4/10] Dirsearch..."
@@ -113,4 +153,5 @@ echo "Python venv:        $ROOT/.venv/"
 echo
 echo "Activate before running:"
 echo "  source .venv/bin/activate"
-echo "  ./run.sh"
+echo "  chmod +x run.sh && ./run.sh"
+echo

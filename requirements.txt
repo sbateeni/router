@@ -1,52 +1,99 @@
 # ==========================================
-# MASTER REQUIREMENTS FOR ALL AUTO-PWN TOOLS
+# AUTO-PWN UNIFIED — all Python deps for .venv
 # ==========================================
+#
+# Kali / Linux (recommended):
+#   python3 -m venv .venv && source .venv/bin/activate
+#   pip install -U pip setuptools wheel
+#   pip install -r requirements.txt
+#
+# Or full clone + deps:
+#   bash scripts/install_tools.sh
+#
+# Notes:
+#   - pwntools: Linux x86_64 only (Ingram); skipped on Windows via marker
+#   - paramiko==2.12.0: required by RouterSploit (DSSKey)
+#   - NetExec/theHarvester: installed from tools/ after git clone (see install_tools.sh)
 
-# Core HTTP & Network
-requests
-httpx
-requests-ntlm
-httpx-ntlm
-requests-toolbelt
-ntlm-auth
-PySocks
-IPy
-
-# Protocols & Exploitation
-paramiko
-pysnmp
-pwntools
-telnetlib3
-
-# Cryptography
-pycryptodome
-pyopenssl
-
-# Web Scraping & Data Parsing
+# --- Project core (core/, engines/, bin/) ---
+requests>=2.32.0
+urllib3
 beautifulsoup4
 lxml
-Jinja2
-defusedxml
-defusedcsv
-ndjson
+colorama
+python-dotenv
+paramiko==2.12.0
+pycryptodome
+PySocks
+selenium
+webdriver-manager
+telnetlib3
 
-# Databases
+# --- Dirsearch (tools/dirsearch) ---
+httpx
+httpx-ntlm
+requests-ntlm
+requests-toolbelt
+ntlm-auth
+Jinja2
+defusedcsv
+defusedxml
+
+# --- RouterSploit (tools/routersploit) ---
+pysnmp
+
+# --- Ingram (tools/ingram) ---
+gevent
+IPy
+loguru
+ndjson
+tzlocal
+pwntools; platform_system == "Linux" and platform_machine == "x86_64"
+
+# --- SQLMap helpers ---
+Mako
+
+# --- Dirsearch DB / SQL checks ---
 mysql-connector-python
 psycopg[binary]
 
-# Concurrency & Utils
-gevent
-colorama
-loguru
-tzlocal
-setuptools
-
-# Device engine (nuclei-dev merge)
-selenium
-webdriver-manager
-urllib3
-
-# OSINT & environment
-python-dotenv
+# --- OSINT (engines/social_osint, engines/osint_engine) ---
 holehe
 sherlock-project
+
+# --- theHarvester (tools/theHarvester — Decepticon recon) ---
+dnspython
+netaddr
+PyYAML
+aiohttp
+aiodns
+aiofiles
+python-dateutil
+certifi
+ujson
+shodan
+retrying
+
+# --- SpiderFoot (tools/spiderfoot — passive OSINT) ---
+adblockparser
+CherryPy
+cherrypy-cors
+ExifRead
+ipwhois
+phonenumbers
+pygexf
+PyPDF2
+python-whois
+python-docx
+python-pptx
+networkx
+cryptography
+publicsuffixlist
+openpyxl
+
+# --- Shared crypto / SSL ---
+pyopenssl
+
+# --- Build / packaging ---
+setuptools
+wheel

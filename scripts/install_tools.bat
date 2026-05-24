@@ -11,70 +11,80 @@ echo       DOWNLOADING EXTERNAL SECURITY TOOLS
 echo ======================================================
 echo.
 
-:: انتقل لمجلد الأدوات
 if not exist "tools" mkdir tools
 cd tools
 
-:: 1. RouterSploit - إطار استغلال الراوترات والأجهزة المدمجة
-echo [1/5] Downloading RouterSploit...
+echo [1/10] RouterSploit...
 if not exist "routersploit" (
     git clone https://github.com/threat9/routersploit.git
-    echo [+] RouterSploit downloaded!
 ) else (
-    echo [*] Updating RouterSploit...
-    cd routersploit
-    git pull --ff-only
-    cd ..
+    cd routersploit && git pull --ff-only && cd ..
 )
 
-:: 2. Ingram - ماسح كاميرات IP الشامل (Hikvision, Dahua, etc)
-echo [2/5] Downloading Ingram Camera Scanner...
+echo [2/10] Ingram...
 if not exist "ingram" (
     git clone https://github.com/jorhelp/Ingram.git ingram
-    echo [+] Ingram downloaded!
 ) else (
-    echo [*] Updating Ingram...
-    cd ingram
-    git pull --ff-only
-    cd ..
+    cd ingram && git pull --ff-only && cd ..
 )
 
-:: 3. DefaultCreds - قاعدة بيانات ضخمة لكلمات المرور الافتراضية
-echo [3/5] Downloading Default Credentials Database...
+echo [3/10] DefaultCreds...
 if not exist "DefaultCreds-cheat-sheet" (
     git clone https://github.com/ihebski/DefaultCreds-cheat-sheet.git
-    echo [+] DefaultCreds downloaded!
 ) else (
-    echo [*] Updating DefaultCreds...
-    cd DefaultCreds-cheat-sheet
-    git pull --ff-only
-    cd ..
+    cd DefaultCreds-cheat-sheet && git pull --ff-only && cd ..
 )
 
-:: 4. Dirsearch - أداة البحث عن الملفات والمجلدات الحساسة
-echo [4/5] Downloading Dirsearch...
+echo [4/10] Dirsearch...
 if not exist "dirsearch" (
     git clone --depth 1 https://github.com/maurosoria/dirsearch.git
-    echo [+] Dirsearch downloaded!
 ) else (
-    echo [*] Updating Dirsearch...
-    cd dirsearch
-    git pull --ff-only
-    cd ..
+    cd dirsearch && git pull --ff-only && cd ..
 )
 
-:: 5. Sqlmap - أداة فحص واستغلال ثغرات SQL Injection
-echo [5/5] Downloading Sqlmap...
+echo [5/10] Sqlmap...
 if not exist "sqlmap" (
     git clone --depth 1 https://github.com/sqlmapproject/sqlmap.git
 ) else (
-    echo [*] Updating Sqlmap...
-    cd sqlmap
-    git pull --ff-only
-    cd ..
+    cd sqlmap && git pull --ff-only && cd ..
 )
 
-cd ..
+echo [6/10] NetExec...
+if not exist "netexec" (
+    git clone --depth 1 https://github.com/Pennyw0rth/NetExec.git netexec
+) else (
+    cd netexec && git pull --ff-only && cd ..
+)
+
+echo [7/10] Nikto...
+if not exist "nikto" (
+    git clone --depth 1 https://github.com/sullo/nikto.git nikto
+) else (
+    cd nikto && git pull --ff-only && cd ..
+)
+
+echo [8/10] SpiderFoot...
+if not exist "spiderfoot" (
+    git clone --depth 1 https://github.com/smicallef/spiderfoot.git spiderfoot
+) else (
+    cd spiderfoot && git pull --ff-only && cd ..
+)
+
+echo [9/10] theHarvester...
+if not exist "theHarvester" (
+    git clone --depth 1 https://github.com/laramies/theHarvester.git theHarvester
+) else (
+    cd theHarvester && git pull --ff-only && cd ..
+)
+
+echo [10/10] Amass...
+if not exist "amass" (
+    git clone --depth 1 https://github.com/owasp-amass/amass.git amass
+) else (
+    cd amass && git pull --ff-only && cd ..
+)
+
+cd "%ROOT%"
 echo.
 echo [*] Setting up project virtualenv...
 if not exist "%ROOT%\.venv\Scripts\python.exe" (
@@ -87,17 +97,18 @@ echo [*] Installing Python dependencies into .venv...
 if exist "requirements.txt" "%PY%" -m pip install -q -r requirements.txt
 if exist "tools\routersploit\requirements.txt" "%PY%" -m pip install -q -r tools\routersploit\requirements.txt
 if exist "tools\ingram\requirements.txt" "%PY%" -m pip install -q -r tools\ingram\requirements.txt
+if exist "tools\dirsearch\requirements.txt" "%PY%" -m pip install -q -r tools\dirsearch\requirements.txt
+if exist "tools\spiderfoot\requirements.txt" "%PY%" -m pip install -q -r tools\spiderfoot\requirements.txt
+if exist "tools\theHarvester\pyproject.toml" "%PY%" -m pip install -q tools\theHarvester
+if exist "tools\netexec\pyproject.toml" "%PY%" -m pip install -q tools\netexec
+"%PY%" -m pip install -q "paramiko==2.12.0"
 
 echo.
 echo ======================================================
 echo       ALL TOOLS DOWNLOADED SUCCESSFULLY!
 echo ======================================================
 echo.
-echo Tools installed in: auto-pwn\tools\
-echo   - routersploit     : Router exploitation framework
-echo   - ingram           : IP camera mass scanner
-echo   - DefaultCreds     : Default passwords database
-echo   - dirsearch        : Web directory discovery
-echo   - sqlmap           : SQL injection tool
+echo Tools: %ROOT%\tools\
+echo venv:  %ROOT%\.venv\
 echo.
 pause
