@@ -1,4 +1,5 @@
 import os
+import re
 import requests
 
 from core.utils import looks_like_placeholder, valid_env_value
@@ -21,6 +22,8 @@ def load_dotenv(base_dir):
                 key = key.strip()
                 value = value.strip().strip('"').strip("'")
                 if key and key not in os.environ:
+                    if key == "TELEGRAM_CHAT_ID":
+                        value = normalize_chat_id(value)
                     os.environ[key] = value
         return True
     except OSError:
@@ -62,8 +65,19 @@ def _split_message(text):
     return chunks or [text[:MAX_MESSAGE_LEN]]
 
 
+def normalize_chat_id(chat_id):
+    """Accept 6874845252 or 'ID: 6874845252' from .env."""
+    if chat_id is None:
+        return ""
+    text = str(chat_id).strip().strip('"').strip("'")
+    if re.match(r"(?i)^id:\s*", text):
+        text = re.sub(r"(?i)^id:\s*", "", text, count=1).strip()
+    return text
+
+
 def _resolve_chat_id(chat_id=None):
-    return chat_id or os.environ.get("TELEGRAM_CHAT_ID")
+    raw = chat_id or os.environ.get("TELEGRAM_CHAT_ID", "")
+    return normalize_chat_id(raw)
 
 
 def send_telegram_message(text, chat_id=None):
