@@ -62,7 +62,12 @@ def update_cve_database():
         
     log(f"Scanning Nuclei templates in {templates_dir} for Router/IoT CVEs...", "INFO")
     
-    target_tags = {'router', 'iot', 'camera', 'dvr', 'hikvision', 'dahua', 'dlink', 'tplink', 'netis', 'mikrotik', 'zte', 'ubiquiti', 'cisco', 'openwrt'}
+    target_tags = {
+        # IoT & Routers
+        'router', 'iot', 'camera', 'dvr', 'hikvision', 'dahua', 'dlink', 'tplink', 'netis', 'mikrotik', 'zte', 'ubiquiti', 'cisco', 'openwrt',
+        # Operating Systems & Services
+        'windows', 'linux', 'macos', 'unix', 'ubuntu', 'server', 'smb', 'rdp', 'ssh', 'ftp'
+    }
     cves_by_vendor = {}
     
     count = 0
@@ -85,10 +90,19 @@ def update_cve_database():
                 ptags = set(parsed['nuclei_tags'].lower().split(','))
                 if ptags.intersection(target_tags):
                     vendor = "GENERIC"
+                    
+                    # IoT/Routers
                     for v in ['hikvision', 'dahua', 'dlink', 'tplink', 'netis', 'mikrotik', 'zte', 'ubiquiti', 'cisco', 'openwrt']:
                         if v in ptags or v in parsed['title'].lower():
                             vendor = v.upper()
                             break
+                            
+                    # OS/Systems (If not already matched to IoT)
+                    if vendor == "GENERIC":
+                        for v in ['windows', 'linux', 'macos', 'unix', 'ubuntu']:
+                            if v in ptags or v in parsed['title'].lower():
+                                vendor = v.upper()
+                                break
                     
                     if vendor not in cves_by_vendor:
                         cves_by_vendor[vendor] = []

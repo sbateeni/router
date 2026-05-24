@@ -24,10 +24,10 @@ def run_nmap(ip, target_dir):
     if profile["nmap_deep_enabled"] and open_ports:
         tcp_ports = [str(p["port"]) for p in open_ports if p.get("port")]
         if tcp_ports:
-            print(f"[*] Running deep Nmap on open ports: {', '.join(tcp_ports)}")
+            print(f"[*] Running deep Nmap with OS fingerprinting (-O) on open ports: {', '.join(tcp_ports)}")
             deep_log = os.path.join(target_dir, "nmap_deep_scan.txt")
             deep_cmd = [
-                "nmap", "-sC", "-sV", "-A", "--script=default,vuln,http-enum,http-title",
+                "nmap", "-O", "-sV", "--osscan-guess", "--script=default,vuln,http-enum,http-title",
                 "-p", ",".join(tcp_ports), ip,
             ]
             deep_success, deep_output = run_cmd(deep_cmd, capture=True, log_file=deep_log)
@@ -58,6 +58,7 @@ def merge_nmap_results(base_ports, deep_ports):
 
 def parse_nmap(nmap_output):
     open_ports = []
+    os_match = None
     pattern = re.compile(r"^(\d+)/tcp\s+open\s+(\S+)\s*(.*)$", re.MULTILINE)
     for match in pattern.finditer(nmap_output):
         port = int(match.group(1))
@@ -71,6 +72,24 @@ def parse_nmap(nmap_output):
     if vendor_match:
         vendor = vendor_match.group(1).strip()
         open_ports.append({"port": 0, "service": vendor, "vendor": vendor})
+        
+    os_guess_match = re.search(r"OS guesses?:\s*(.+)", nmap_output, re.IGNORECASE)
+    os_details_match = re.search(r"OS details?:\s*(.+)", nmap_output, re.IGNORECASE)
+    
+    os_info = None
+    if os_details_match:
+        os_info = os_details_match.group(1).strip()
+    elif os_guess_match:
+        os_info = os_guess_match.group(1).strip()
+        
+    if os_info:
+        # Determine OS Family
+        os_family = "UNKNOWN_OS"
+        if "Windows" in os_info: os_family = "WINDOWS"
+        elif "Linux" in os_info: os_family = "LINUX"
+        elif "Mac OS" in os_info or "Apple" in os_info: os_family = "MACOS"
+        open_ports.append({"port": -1, "os_family": os_family, "os_details": os_info})
+
     return open_ports
 
 
@@ -78,8 +97,10 @@ def save_recon_summary(target_dir, ip, open_ports, profile):
     summary = {
         "target": ip,
         "profile": profile.get("label", "unknown"),
-        "open_ports": [p for p in open_ports if p.get("port")],
+        "open_ports": [p for p in open_ports if p.get("port") and p.get("port") > 0],
         "vendor": next((p.get("vendor") for p in open_ports if p.get("port") == 0), None),
+        "os_family": next((p.get("os_family") for p in open_ports if p.get("port") == -1), None),
+        "os_details": next((p.get("os_details") for p in open_ports if p.get("port") == -1), None),
         "service_queries": [],
     }
     for entry in summary["open_ports"]:

