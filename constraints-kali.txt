@@ -1,0 +1,8 @@
+# Force these after any tool pip step (RouterSploit vs theHarvester vs old NetExec)
+# https://github.com/laramies/theHarvester/blob/master/pyproject.toml
+# https://github.com/threat9/routersploit — paramiko 2.x for DSSKey
+paramiko==2.12.0
+beautifulsoup4==4.14.3
+dnspython==2.8.0
+lxml==6.1.1
+requests==2.32.2

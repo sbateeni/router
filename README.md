@@ -12,7 +12,7 @@ cd router
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -U pip setuptools wheel
-pip install -r requirements.txt   # all Python deps for core + tools
+pip install -r requirements-kali.txt   # Kali: exact pins from upstream tools
 chmod +x run.sh scripts/install_tools.sh
 bash scripts/install_tools.sh    # clones tools/ + merges tool-specific pins
 ./run.sh
@@ -71,6 +71,37 @@ router/
 Copy `.env.example` to `.env` for Telegram / AI / Shodan keys.
 
 See **[docs/TOOLS.md](docs/TOOLS.md)** for the full tools catalog.
+
+### Kali `.venv` (correct package versions)
+
+Pins match official tool repos ([theHarvester](https://github.com/laramies/theHarvester/blob/master/pyproject.toml), [dirsearch](https://github.com/maurosoria/dirsearch/blob/master/requirements.txt), [RouterSploit](https://github.com/threat9/routersploit/blob/master/requirements.txt)):
+
+| Package | Version | Why |
+|---------|---------|-----|
+| `paramiko` | **2.12.0** | RouterSploit (`DSSKey`) |
+| `beautifulsoup4` | **4.14.3** | theHarvester |
+| `dnspython` | **2.8.0** | theHarvester |
+| `lxml` | **6.1.1** | theHarvester (avoid SpiderFoot `lxml<5` build) |
+| `requests` | **2.32.2** | RouterSploit |
+
+**NetExec (`nxc`)**: never in `.venv` — Kali package: `sudo apt install netexec` ([kali.org/tools/netexec](https://www.kali.org/tools/netexec/))
+
+**SpiderFoot**: never `pip install -r tools/spiderfoot/requirements.txt` — use `requirements-kali.txt` or `sudo apt install spiderfoot`
+
+Repair a broken venv:
+
+```bash
+git pull
+bash scripts/fix_venv_kali.sh
+```
+
+Clean reinstall:
+
+```bash
+rm -rf .venv && python3 -m venv .venv && source .venv/bin/activate
+pip install -r requirements-kali.txt
+bash scripts/install_tools.sh
+```
 
 ## Legacy repos
 

@@ -98,10 +98,9 @@ if exist "requirements.txt" "%PY%" -m pip install -q -r requirements.txt
 if exist "tools\routersploit\requirements.txt" "%PY%" -m pip install -q -r tools\routersploit\requirements.txt
 if exist "tools\ingram\requirements.txt" "%PY%" -m pip install -q -r tools\ingram\requirements.txt
 if exist "tools\dirsearch\requirements.txt" "%PY%" -m pip install -q -r tools\dirsearch\requirements.txt
-if exist "tools\spiderfoot\requirements.txt" "%PY%" -m pip install -q -r tools\spiderfoot\requirements.txt
-if exist "tools\theHarvester\pyproject.toml" "%PY%" -m pip install -q tools\theHarvester
-if exist "tools\netexec\pyproject.toml" "%PY%" -m pip install -q tools\netexec
+if exist "tools\theHarvester\pyproject.toml" "%PY%" -m pip install -q --no-deps tools\theHarvester
 "%PY%" -m pip install -q "paramiko==2.12.0"
+echo [i] NetExec: use system install on Kali (apt install netexec), not .venv - conflicts with RouterSploit
 
 echo.
 echo ======================================================
