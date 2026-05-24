@@ -2,6 +2,7 @@
 Telegram control bot: send IP → choose attack mode → scan runs automatically.
 Supports a per-chat queue when a scan is already running.
 """
+import json
 import re
 import threading
 import time
@@ -40,6 +41,23 @@ from core.telegram_extras import (
 
 MAX_QUEUE_SIZE = 10
 
+# Shown in Telegram when user taps "/" (setMyCommands on bot start)
+BOT_COMMANDS = [
+    ("start", "بدء — ترحيب ومساعدة"),
+    ("help", "قائمة الأوامر"),
+    ("engine", "Device Engine — AUTO-PWN"),
+    ("osint", "Social OSINT — email/phone/user"),
+    ("lan", "فحص الشبكة المحلية LAN"),
+    ("history", "أهداف مسحّة سابقاً"),
+    ("poc", "GitHub PoC scraper"),
+    ("update", "تحديث المشروع والأدوات"),
+    ("decepticon", "سلسلة Decepticon"),
+    ("status", "حالة المسح الحالي"),
+    ("queue", "قائمة الانتظار"),
+    ("cancel", "إلغاء الاختيار"),
+    ("clearqueue", "مسح قائمة الانتظار"),
+]
+
 # selection, label (Arabic), profile override
 ATTACK_MODES = [
     (1, "مسح كامل — كل الأدوات", "normal"),
@@ -66,6 +84,24 @@ _sessions = {}
 def _bot_token():
     import os
     return os.environ.get("TELEGRAM_BOT_TOKEN", "").strip()
+
+
+def register_bot_commands():
+    """Register slash menu in Telegram (appears when user types /)."""
+    token = _bot_token()
+    if not token:
+        return False
+    payload = {
+        "commands": json.dumps(
+            [{"command": cmd, "description": desc} for cmd, desc in BOT_COMMANDS]
+        ),
+    }
+    try:
+        _telegram_request("setMyCommands", token, payload, timeout=15)
+        return True
+    except Exception as exc:
+        print(f"[!] setMyCommands failed: {exc}")
+        return False
 
 
 def _allowed_chat(chat_id):
@@ -519,6 +555,7 @@ def _handle_message(message, base_dir):
         send_to_chat(
             chat_id,
             "Router Auto-Pwn — Telegram\n\n"
+            "📋 اضغط / في الشات لعرض قائمة الأوامر\n\n"
             "▶ مسح شبكي: أرسل IP / domain / URL ثم اختر نوع المسح\n"
             "  188.225.134.26 | router.com/login.html | http://site.com?id=1\n\n"
             "▶ Device Engine: /engine http://IP\n"
@@ -630,6 +667,11 @@ def run_telegram_bot(base_dir, poll_timeout=25):
         print("[!] أعد TELEGRAM_BOT_TOKEN و TELEGRAM_CHAT_ID في .env")
         return 1
 
+    if register_bot_commands():
+        print("[+] Telegram command menu registered (type / in chat)")
+    else:
+        print("[!] Could not register / commands menu — bot still works")
+
     print("[+] Telegram bot running (Ctrl+C to stop)")
     print("[*] Send IP → pick mode. Busy scans queue the next IP automatically.")
 
@@ -654,6 +696,9 @@ def start_telegram_bot_background(base_dir, poll_timeout=25):
             pass
         except Exception as exc:
             print(f"[!] Telegram background bot stopped: {exc}")
+
+    if register_bot_commands():
+        print("[+] Telegram command menu registered (type / in chat)")
 
     thread = threading.Thread(target=worker, daemon=True, name="telegram-bot")
     thread.start()

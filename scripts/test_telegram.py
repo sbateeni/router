@@ -81,6 +81,12 @@ def main():
     )
     if ok:
         print("[+] Test message sent. Check your Telegram chat.")
+        try:
+            from core.telegram_bot import register_bot_commands
+            if register_bot_commands():
+                print("[+] Slash menu registered — type / in Telegram to see commands")
+        except Exception as exc:
+            print(f"[i] setMyCommands skipped: {exc}")
         return 0
 
     print("[!] sendMessage failed (check chat id — message the bot first with /start)")
