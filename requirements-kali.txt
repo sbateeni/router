@@ -62,6 +62,7 @@ tzlocal
 pwntools; platform_system == "Linux" and platform_machine == "x86_64"
 
 # --- Project core / engines ---
+certifi
 urllib3
 python-dotenv
 selenium

@@ -42,9 +42,32 @@ def telegram_placeholder_keys_present():
     return (token and looks_like_placeholder(token)) or (chat_id and looks_like_placeholder(chat_id))
 
 
+def _ssl_verify():
+    """CA bundle for api.telegram.org (fixes Windows Python CERTIFICATE_VERIFY_FAILED)."""
+    flag = os.environ.get("TELEGRAM_SSL_VERIFY", "1").strip().lower()
+    if flag in ("0", "false", "no", "off"):
+        try:
+            import urllib3
+            urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+        except Exception:
+            pass
+        return False
+    try:
+        import certifi
+        return certifi.where()
+    except ImportError:
+        return True
+
+
 def _telegram_request(method, token, payload=None, files=None, timeout=30):
     url = TELEGRAM_API.format(token=token, method=method)
-    response = requests.post(url, data=payload or {}, files=files, timeout=timeout)
+    response = requests.post(
+        url,
+        data=payload or {},
+        files=files,
+        timeout=timeout,
+        verify=_ssl_verify(),
+    )
     response.raise_for_status()
     return response.json()
 

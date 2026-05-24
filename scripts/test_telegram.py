@@ -63,7 +63,15 @@ def main():
         bot = data.get("result", {})
         print(f"[+] Bot OK: @{bot.get('username')} ({bot.get('first_name')})")
     except Exception as exc:
-        print(f"[!] getMe failed: {exc}")
+        err = str(exc)
+        if "CERTIFICATE_VERIFY_FAILED" in err or "SSL" in err.upper():
+            print(f"[!] getMe failed (SSL): {exc}")
+            print("[i] Windows / corporate proxy often causes this.")
+            print("    Try: pip install certifi")
+            print("    Or add to .env: TELEGRAM_SSL_VERIFY=0  (dev only, less secure)")
+            print("    Or test on Kali: python scripts/test_telegram.py")
+        else:
+            print(f"[!] getMe failed: {exc}")
         return 1
 
     print("[*] sendMessage test...")
