@@ -121,20 +121,40 @@ def sync_external_tool(tool):
 
 
 def install_external_tool_dependencies():
-    """Install Python deps for cloned external tools into the active venv."""
+    """Sync .venv with pinned deps (Kali-safe). Do not pip routersploit/ingram reqs — they break theHarvester pins."""
     subprocess.run([sys.executable, "-m", "pip", "install", "-q", "setuptools", "telnetlib3"], check=False)
 
-    req_files = [
-        os.path.join(TOOLS_DIR, "routersploit", "requirements.txt"),
-        os.path.join(TOOLS_DIR, "ingram", "requirements.txt"),
-    ]
-    for req in req_files:
-        if os.path.isfile(req):
-            log(f"Installing dependencies from {os.path.basename(os.path.dirname(req))}...", "INFO")
-            subprocess.run(
-                [sys.executable, "-m", "pip", "install", "-q", "-r", req],
-                check=False,
-            )
+    # NetExec in .venv conflicts with RouterSploit paramiko==2.12 — use: sudo apt install netexec
+    subprocess.run(
+        [sys.executable, "-m", "pip", "uninstall", "-y", "netexec", "certipy-ad"],
+        capture_output=True,
+        check=False,
+    )
+
+    kali_req = os.path.join(ROOT_DIR, "requirements-kali.txt")
+    constraints = os.path.join(ROOT_DIR, "constraints-kali.txt")
+    if os.path.isfile(kali_req):
+        log("Syncing Python deps from requirements-kali.txt...", "INFO")
+        subprocess.run(
+            [sys.executable, "-m", "pip", "install", "-q", "-r", kali_req],
+            check=False,
+        )
+    if os.path.isfile(constraints):
+        subprocess.run(
+            [
+                sys.executable, "-m", "pip", "install", "-q",
+                "-c", constraints,
+                "paramiko", "beautifulsoup4", "dnspython", "lxml", "requests",
+            ],
+            check=False,
+        )
+
+    harvester = os.path.join(TOOLS_DIR, "theHarvester")
+    if os.path.isdir(harvester) and os.path.isfile(os.path.join(harvester, "pyproject.toml")):
+        subprocess.run(
+            [sys.executable, "-m", "pip", "install", "-q", "--no-deps", harvester],
+            check=False,
+        )
 
 
 def update_external_tools():
@@ -152,7 +172,7 @@ def update_project_repo():
         return True
 
     log("Updating main project from GitHub...", "INFO")
-    return pull_repo(ROOT_DIR, "nuclei-dev-main")
+    return pull_repo(ROOT_DIR, "router")
 
 
 def update_nuclei_templates():

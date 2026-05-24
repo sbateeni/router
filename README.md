@@ -91,8 +91,21 @@ Pins match official tool repos ([theHarvester](https://github.com/laramies/theHa
 Repair a broken venv:
 
 ```bash
+# If git pull fails on install_tools.sh:
+git checkout -- scripts/install_tools.sh
 git pull
+
 bash scripts/fix_venv_kali.sh
+```
+
+If `fix_venv_kali.sh` is missing after pull, run manually:
+
+```bash
+source .venv/bin/activate
+pip uninstall -y netexec certipy-ad
+pip install -r requirements-kali.txt
+pip install -c constraints-kali.txt paramiko beautifulsoup4 dnspython lxml requests
+sudo apt install -y netexec
 ```
 
 Clean reinstall:
