@@ -13,9 +13,10 @@ python3 -m venv .venv
 source .venv/bin/activate
 pip install -U pip setuptools wheel
 pip install -r requirements-kali.txt   # Kali: exact pins from upstream tools
-chmod +x run.sh scripts/install_tools.sh
+chmod +x run.sh scripts/install_tools.sh scripts/fix_venv_kali.sh
 bash scripts/install_tools.sh    # clones tools/ + merges tool-specific pins
 ./run.sh
+# If permission denied: bash run.sh
 ```
 
 ## Main entry points
