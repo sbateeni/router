@@ -621,6 +621,7 @@ if __name__ == "__main__":
             print("  [2] Scan Local Network (LAN) to find targets")
             print("  [3] Show Previous Targets (History)")
             print("  [4] Update Exploit Arsenal (GitHub Zero-Day Scraper)")
+            print("  [5] Social OSINT (Email / Phone / Username Lookup)")
             print("  [0] Exit")
             start_choice = input("\n[?] Select option: ").strip()
             
@@ -700,8 +701,12 @@ if __name__ == "__main__":
                     log("Scraper finished. No new PoCs found.", "INFO")
                 input("\nPress Enter to return to the main menu...")
                 continue
+            elif start_choice == '5':
+                from engines.social_osint import run_social_osint_menu
+                run_social_osint_menu()
+                continue
             else:
-                log("Invalid option. Please choose 1, 2, 3, 4, or 0.", "ERROR")
+                log("Invalid option. Please choose 1, 2, 3, 4, 5, or 0.", "ERROR")
         
         if target:
             while True:
