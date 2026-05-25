@@ -712,6 +712,9 @@ def should_run_telegram_background(args):
     import os
     if getattr(args, "no_telegram", False) or getattr(args, "telegram", False):
         return False
+    # run.sh already started scripts/telegram_service.sh (avoid duplicate getUpdates)
+    if os.environ.get("NUCLEI_TELEGRAM_EXTERNAL", "").strip() == "1":
+        return False
     if os.environ.get("TELEGRAM_AUTO", "1").strip().lower() in ("0", "false", "no", "off"):
         return False
     return telegram_configured() and not telegram_placeholder_keys_present()

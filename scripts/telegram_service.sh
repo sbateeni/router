@@ -1,0 +1,68 @@
+#!/usr/bin/env bash
+# Start / stop / status for Telegram bot (used by run.sh)
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$ROOT"
+export PYTHONPATH="$ROOT${PYTHONPATH:+:$PYTHONPATH}"
+
+if [[ -x "$ROOT/.venv/bin/python" ]]; then
+  PY="$ROOT/.venv/bin/python"
+else
+  PY="python3"
+fi
+
+LOG="$ROOT/logs/telegram.log"
+PIDFILE="$ROOT/logs/telegram_bot.pid"
+MATCH="master_pwn.py --telegram"
+
+_is_running() {
+  pgrep -f "$MATCH" >/dev/null 2>&1
+}
+
+cmd="${1:-status}"
+
+case "$cmd" in
+  start)
+    mkdir -p "$ROOT/logs"
+    if _is_running; then
+      echo "[+] Telegram bot already running"
+      exit 0
+    fi
+    if [[ ! -f "$ROOT/.env" ]]; then
+      echo "[!] No .env — copy .env.example and set TELEGRAM_BOT_TOKEN + TELEGRAM_CHAT_ID"
+      exit 1
+    fi
+    nohup "$PY" "$ROOT/bin/master_pwn.py" --telegram >>"$LOG" 2>&1 &
+    echo $! >"$PIDFILE"
+    sleep 1
+    if _is_running; then
+      echo "[+] Telegram bot started (background)"
+      echo "    Chat: @H_the_box_bot — send IP or /start"
+      echo "    Log:  $LOG"
+    else
+      echo "[!] Telegram did not start — see $LOG"
+      exit 1
+    fi
+    ;;
+  stop)
+    if _is_running; then
+      pkill -f "$MATCH" || true
+      sleep 1
+    fi
+    rm -f "$PIDFILE"
+    echo "[+] Telegram bot stopped"
+    ;;
+  status)
+    if _is_running; then
+      echo "[+] Telegram bot: running"
+      pgrep -af "$MATCH" || true
+    else
+      echo "[-] Telegram bot: not running"
+    fi
+    ;;
+  *)
+    echo "Usage: $0 {start|stop|status}"
+    exit 1
+    ;;
+esac

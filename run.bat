@@ -6,6 +6,13 @@ set "PYTHONPATH=%~dp0"
 where python >nul 2>&1 && set PY=python || set PY=py -3
 if exist ".venv\Scripts\python.exe" set PY=.venv\Scripts\python.exe
 
+if exist "scripts\telegram_service.sh" (
+  bash scripts\telegram_service.sh start 2>nul
+  set NUCLEI_TELEGRAM_EXTERNAL=1
+)
+set TG_EXTRA=
+if "%NUCLEI_TELEGRAM_EXTERNAL%"=="1" set TG_EXTRA=--no-telegram
+
 echo ======================================================
 echo    AUTO-PWN UNIFIED — router + nuclei-dev engine
 echo ======================================================
@@ -30,7 +37,7 @@ if "%choice%"=="9" (
 if "%choice%"=="1" (
   set /p target_ip="Target IP: "
   set NUCLEI_SKIP_UPDATE=1
-  %PY% bin\master_pwn.py -t %target_ip% --auto
+  %PY% bin\master_pwn.py %TG_EXTRA% -t %target_ip% --auto
 ) else if "%choice%"=="2" (
   set NUCLEI_SKIP_UPDATE=1
   %PY% bin\auto_pwn.py
@@ -45,7 +52,7 @@ if "%choice%"=="1" (
   %PY% tests\test_device_cve.py -H %target_ip%
 ) else if "%choice%"=="8" (
   set NUCLEI_SKIP_UPDATE=1
-  %PY% bin\master_pwn.py
+  %PY% bin\master_pwn.py %TG_EXTRA%
 ) else (
   echo Invalid option.
 )

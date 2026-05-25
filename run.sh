@@ -11,6 +11,17 @@ else
   PY="python3"
 fi
 
+# Telegram bot in background (one process for all menu options)
+if [[ -x "$ROOT/scripts/telegram_service.sh" ]]; then
+  bash "$ROOT/scripts/telegram_service.sh" start || true
+  export NUCLEI_TELEGRAM_EXTERNAL=1
+fi
+
+TG_ARGS=()
+if [[ "${NUCLEI_TELEGRAM_EXTERNAL:-}" == "1" ]]; then
+  TG_ARGS=(--no-telegram)
+fi
+
 echo "======================================================"
 echo "   AUTO-PWN UNIFIED — router + nuclei-dev engine"
 echo "======================================================"
@@ -22,8 +33,12 @@ echo "  [4] Test Hikvision              tests/test_hikvision_target.py"
 echo "  [5] CVE intelligence report     tests/test_device_cve.py"
 echo "  [6] Camera snapshots            tests/test.py"
 echo "  [7] LAN scan                    bin/lan_pwn.py"
-echo "  [8] Interactive menu            bin/master_pwn.py (no args)"
+echo "  [8] Interactive menu            bin/master_pwn.py (CLI + Telegram already on)"
 echo "  [9] Update from GitHub          project + tools + nuclei"
+if [[ "${NUCLEI_TELEGRAM_EXTERNAL:-}" == "1" ]]; then
+  echo
+  echo "  [*] Telegram bot: running — open @H_the_box_bot (logs/telegram.log)"
+fi
 echo "  [0] Exit"
 echo
 read -rp "Select option [0-9]: " choice
@@ -32,7 +47,7 @@ case "$choice" in
   1)
     read -rp "Target IP: " target_ip
     export NUCLEI_SKIP_UPDATE=1
-    "$PY" "$ROOT/bin/master_pwn.py" -t "$target_ip" --auto
+    "$PY" "$ROOT/bin/master_pwn.py" "${TG_ARGS[@]}" -t "$target_ip" --auto
     ;;
   2)
     export NUCLEI_SKIP_UPDATE=1
@@ -64,7 +79,7 @@ case "$choice" in
     ;;
   8)
     export NUCLEI_SKIP_UPDATE=1
-    "$PY" "$ROOT/bin/master_pwn.py"
+    "$PY" "$ROOT/bin/master_pwn.py" "${TG_ARGS[@]}"
     ;;
   9)
     echo
