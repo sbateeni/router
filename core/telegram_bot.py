@@ -13,7 +13,9 @@ import requests
 from core.notify import (
     _telegram_request,
     load_dotenv,
+    normalize_chat_id,
     notify_scan_complete,
+    send_telegram_message,
     telegram_configured,
     telegram_placeholder_keys_present,
 )
@@ -106,10 +108,25 @@ def register_bot_commands():
 
 def _allowed_chat(chat_id):
     import os
-    allowed = os.environ.get("TELEGRAM_CHAT_ID", "").strip()
+    allowed = normalize_chat_id(os.environ.get("TELEGRAM_CHAT_ID", ""))
     if not allowed or telegram_placeholder_keys_present():
         return True
     return str(chat_id) == str(allowed)
+
+
+def _ensure_polling_mode():
+    """Long-poll getUpdates fails if a webhook is still registered."""
+    token = _bot_token()
+    if not token:
+        return
+    try:
+        info = _telegram_request("getWebhookInfo", token, {}, timeout=15)
+        url = (info.get("result") or {}).get("url") or ""
+        if url:
+            print(f"[!] Webhook active ({url}) — deleting for polling...", flush=True)
+        _telegram_request("deleteWebhook", token, {"drop_pending_updates": False}, timeout=15)
+    except Exception as exc:
+        print(f"[!] deleteWebhook failed: {exc}", flush=True)
 
 
 def send_to_chat(chat_id, text, reply_markup=None):
@@ -546,7 +563,12 @@ def _handle_message(message, base_dir):
     text = (message.get("text") or "").strip()
 
     if not _allowed_chat(chat_id):
-        send_to_chat(chat_id, "غير مصرح. ضع TELEGRAM_CHAT_ID في .env لحسابك فقط.")
+        send_to_chat(
+            chat_id,
+            f"غير مصرح لهذا الحساب.\n"
+            f"ضع في .env:\nTELEGRAM_CHAT_ID={chat_id}\n"
+            f"(المعرّف الحالي في .env لا يطابق محادثتك)",
+        )
         return
 
     sess = _session(chat_id)
@@ -651,7 +673,11 @@ def _poll_updates_loop(base_dir, poll_timeout=25, stop_event=None):
                 if "callback_query" in update:
                     _handle_callback(update["callback_query"], base_dir)
                 elif "message" in update:
-                    _handle_message(update["message"], base_dir)
+                    msg = update["message"]
+                    who = (msg.get("from") or {}).get("username") or msg.get("chat", {}).get("id")
+                    text_preview = (msg.get("text") or "")[:60]
+                    print(f"[Telegram] ← {who}: {text_preview}", flush=True)
+                    _handle_message(msg, base_dir)
         except KeyboardInterrupt:
             raise
         except requests.exceptions.ReadTimeout:
@@ -667,13 +693,20 @@ def run_telegram_bot(base_dir, poll_timeout=25):
         print("[!] أعد TELEGRAM_BOT_TOKEN و TELEGRAM_CHAT_ID في .env")
         return 1
 
+    _ensure_polling_mode()
+
     if register_bot_commands():
         print("[+] Telegram command menu registered (type / in chat)")
     else:
         print("[!] Could not register / commands menu — bot still works")
 
-    print("[+] Telegram bot running (Ctrl+C to stop)")
-    print("[*] Send IP → pick mode. Busy scans queue the next IP automatically.")
+    send_telegram_message(
+        "✅ البوت يستمع الآن — أرسل /start أو IP\n"
+        "(إذا لم تصلك هذه الرسالة، تحقق من logs/telegram.log)",
+    )
+
+    print("[+] Telegram bot running (Ctrl+C to stop)", flush=True)
+    print("[*] Send IP or /start to @H_the_box_bot — polling getUpdates...", flush=True)
 
     try:
         _poll_updates_loop(base_dir, poll_timeout)

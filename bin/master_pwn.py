@@ -395,10 +395,6 @@ def main():
     if telegram_placeholder_keys_present():
         print("[!] .env still has placeholder Telegram values. Replace them for notifications.\n")
 
-    # تحديث الكود من GitHub قبل قراءة أي معاملات جديدة (مثل --auto)
-    if update_self_repo():
-        os.execv(sys.executable, [sys.executable] + sys.argv)
-
     parser = argparse.ArgumentParser(description="Master Auto-Pwn Script for Routers (Modular Version)")
     parser.add_argument("-t", "--target", help="Target IP address (optional — interactive menu if omitted)")
     parser.add_argument(
@@ -438,6 +434,10 @@ def main():
     if args.telegram:
         print("[*] Telegram-only mode (--telegram)\n")
         raise SystemExit(run_telegram_bot(base_dir))
+
+    # تحديث GitHub — لا يُشغَّل مع --telegram (يُستخدم telegram_daemon.py)
+    if update_self_repo():
+        os.execv(sys.executable, [sys.executable] + sys.argv)
 
     if should_run_telegram_background(args):
         start_telegram_bot_background(base_dir)

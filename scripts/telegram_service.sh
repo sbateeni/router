@@ -14,7 +14,7 @@ fi
 
 LOG="$ROOT/logs/telegram.log"
 PIDFILE="$ROOT/logs/telegram_bot.pid"
-MATCH="master_pwn.py --telegram"
+MATCH="telegram_daemon.py"
 
 _is_running() {
   pgrep -f "$MATCH" >/dev/null 2>&1
@@ -33,7 +33,7 @@ case "$cmd" in
       echo "[!] No .env — copy .env.example and set TELEGRAM_BOT_TOKEN + TELEGRAM_CHAT_ID"
       exit 1
     fi
-    nohup "$PY" "$ROOT/bin/master_pwn.py" --telegram >>"$LOG" 2>&1 &
+    nohup "$PY" "$ROOT/bin/telegram_daemon.py" >>"$LOG" 2>&1 &
     echo $! >"$PIDFILE"
     sleep 1
     if _is_running; then
@@ -50,6 +50,8 @@ case "$cmd" in
       pkill -f "$MATCH" || true
       sleep 1
     fi
+    # old entry point before telegram_daemon.py
+    pkill -f "master_pwn.py --telegram" 2>/dev/null || true
     rm -f "$PIDFILE"
     echo "[+] Telegram bot stopped"
     ;;
