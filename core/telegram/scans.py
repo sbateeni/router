@@ -34,15 +34,6 @@ def run_scan_job(chat_id, job, base_dir):
     target_dir = os.path.join(base_dir, "targets", workspace)
     os.makedirs(target_dir, exist_ok=True)
     os.environ["AUTOPWN_SCAN_SOURCE"] = "telegram"
-    try:
-        from core.live_scan_log import begin as live_begin
-
-        live_begin(
-            f"{scan_host} | {job.get('mode_label', '?')} | profile={scan_profile}",
-            source="telegram",
-        )
-    except Exception:
-        pass
     reset_target_workspace(target_dir)
 
     hints = job.get("hints") or {}
@@ -152,7 +143,7 @@ def start_scan(chat_id, job, base_dir):
                 f"النوع: {job.get('mode_label')}\n"
                 f"الملف الشخصي: {job['profile']}\n\n"
                 f"سيصلك التقرير عند الانتهاء.\n\n"
-                f"📺 في طرفية start.sh تظهر أسطر [SCAN] تلقائياً.\n"
+                f"📺 عند بدء المسح تُفتح نافذة Live Scan تلقائياً\n"
                 f"📂 أو: tail -f {live_log_path()}",
             )
 
@@ -162,11 +153,6 @@ def start_scan(chat_id, job, base_dir):
                 send_to_chat(chat_id, f"❌ خطأ أثناء المسح: {exc}")
             finally:
                 os.environ.pop("AUTOPWN_SCAN_SOURCE", None)
-                try:
-                    from core.live_scan_log import end as live_end
-                    live_end()
-                except Exception:
-                    pass
 
             try:
                 process_queue(chat_id, base_dir)

@@ -1,15 +1,43 @@
-"""Mirror scan output to logs/LIVE_SCAN.log for tail -f in the Kali terminal."""
+"""Mirror scan output to logs/LIVE_SCAN.log; auto-open live terminal when scan starts."""
 import os
+import subprocess
 from datetime import datetime
 
-from core.paths import logs_dir
+from core.paths import logs_dir, project_root
 
 _active = False
 _log_path = None
+_terminal_opened = False
 
 
 def path():
     return os.path.join(logs_dir(), "LIVE_SCAN.log")
+
+
+def _spawn_live_terminal():
+    """Open a new terminal window with tail -f (once per scan)."""
+    global _terminal_opened
+    if _terminal_opened:
+        return
+    if os.environ.get("AUTOPWN_LIVE_WINDOW", "1").strip() == "0":
+        return
+
+    script = os.path.join(project_root(), "scripts", "open_live_terminal.sh")
+    if not os.path.isfile(script):
+        return
+
+    try:
+        subprocess.Popen(
+            ["bash", script],
+            cwd=project_root(),
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            start_new_session=True,
+        )
+        _terminal_opened = True
+        print("[+] Opening live scan terminal window...", flush=True)
+    except OSError:
+        pass
 
 
 def begin(target_label, source="scan"):
@@ -23,11 +51,10 @@ def begin(target_label, source="scan"):
         fh.write(f"Source : {source}\n")
         fh.write(f"Target : {target_label}\n")
         fh.write("=" * 60 + "\n\n")
+    _spawn_live_terminal()
 
 
 def write(text):
-    import os
-
     log = _log_path or path()
     if not _active and not os.environ.get("AUTOPWN_SCAN_SOURCE"):
         return
@@ -43,7 +70,7 @@ def write(text):
 
 
 def end(note=None):
-    global _active
+    global _active, _terminal_opened
     if not _active:
         return
     write("\n" + "=" * 60)
@@ -52,6 +79,7 @@ def end(note=None):
         write(note)
     write("=" * 60 + "\n")
     _active = False
+    _terminal_opened = False
 
 
 def is_active():

@@ -48,17 +48,27 @@ def run_device_engine_only(ip, target_dir, manual_mode=False):
 
 
 def run_selected_tool(selection, ip, target_dir, profile="normal", subnet=None):
-    set_scan_profile(profile)
+    import os
 
-    if selection in ENGINE_CHOICES:
-        return run_device_engine_only(ip, target_dir)
-    if selection in CLASSIC_CHOICES:
-        return _run_classic(selection, ip, target_dir)
-    if selection in AI_CHOICES:
-        return _run_ai(selection, ip, target_dir)
-    if selection in RECON_CHOICES:
-        return _run_recon(selection, ip, target_dir, subnet=subnet)
-    return False
+    set_scan_profile(profile)
+    source = os.environ.get("AUTOPWN_SCAN_SOURCE", "cli")
+    os.environ["AUTOPWN_SCAN_SOURCE"] = source
+
+    from core.live_scan_log import begin as live_begin, end as live_end
+
+    live_begin(f"{ip} | selection={selection} | profile={profile}", source=source)
+    try:
+        if selection in ENGINE_CHOICES:
+            return run_device_engine_only(ip, target_dir)
+        if selection in CLASSIC_CHOICES:
+            return _run_classic(selection, ip, target_dir)
+        if selection in AI_CHOICES:
+            return _run_ai(selection, ip, target_dir)
+        if selection in RECON_CHOICES:
+            return _run_recon(selection, ip, target_dir, subnet=subnet)
+        return False
+    finally:
+        live_end()
 
 
 def _run_classic(selection, ip, target_dir):

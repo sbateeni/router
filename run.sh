@@ -7,7 +7,7 @@
 # يشغّل تلقائياً:
 #   1) بوت @H_the_box_bot في الخلفية (يستقبل IP من تيليجرام)
 #   2) هذه القائمة للمسح من الطرفية
-#   3) أسطر [SCAN] عند مسح من تيليجرام (ملف logs/LIVE_SCAN.log)
+#   3) عند بدء أي مسح → نافذة Live Scan تُفتح تلقائياً
 # ═══════════════════════════════════════════════════════════════════
 set -euo pipefail
 
@@ -48,7 +48,8 @@ _stop_live_tail() {
 }
 
 _start_live_tail() {
-  [[ "${AUTOPWN_LIVE_VIEW:-1}" == "1" ]] || return 0
+  # عرض [SCAN] في نفس الطرفية — معطّل افتراضياً (استخدم نافذة جديدة)
+  [[ "${AUTOPWN_LIVE_INLINE:-0}" == "1" ]] || return 0
   _stop_live_tail
   (
     tail -n 0 -f "$LIVE_LOG" 2>/dev/null | while IFS= read -r line; do
@@ -68,7 +69,7 @@ if [[ -z "${AUTOPWN_SKIP_TELEGRAM:-}" ]] && [[ -x "$ROOT/scripts/telegram_servic
   fi
 fi
 
-# tmux اختياري: AUTOPWN_USE_TMUX=1 bash run.sh
+# tmux كامل: AUTOPWN_USE_TMUX=1 bash run.sh
 if [[ "${AUTOPWN_USE_TMUX:-}" == "1" ]] && [[ -z "${AUTOPWN_NO_TMUX:-}" ]] \
     && command -v tmux &>/dev/null && [[ -z "${TMUX:-}" ]]; then
   echo "[*] tmux: أعلى = مسح حي | أسفل = القائمة"
@@ -76,15 +77,14 @@ if [[ "${AUTOPWN_USE_TMUX:-}" == "1" ]] && [[ -z "${AUTOPWN_NO_TMUX:-}" ]] \
   exec tmux new-session -s autopwn \
     "tail -f '$LIVE_LOG' | sed -u 's/^/[SCAN] /'" \; \
     split-window -v -t autopwn \
-    "export AUTOPWN_SKIP_TELEGRAM=1 AUTOPWN_NO_TMUX=1 AUTOPWN_LIVE_VIEW=0; cd '$ROOT'; exec bash '$ROOT/run.sh'"
+    "export AUTOPWN_SKIP_TELEGRAM=1 AUTOPWN_NO_TMUX=1 AUTOPWN_LIVE_WINDOW=0 AUTOPWN_LIVE_INLINE=0; cd '$ROOT'; exec bash '$ROOT/run.sh'"
 fi
 
 _start_live_tail
 trap '_stop_live_tail' EXIT
 
 echo
-echo "  [*] مخرجات المسح (تيليجرام أو [1]): أسطر [SCAN] أدناه — لا تغلق هذه النافذة"
-echo "  [*] ملف حي: tail -f logs/LIVE_SCAN.log"
+echo "  [*] عند بدء مسح (تيليجرام أو [1]/[8]) → نافذة Live Scan تلقائياً"
 echo
 
 TG_ARGS=()
@@ -99,7 +99,7 @@ echo "   AUTO-PWN — تيليجرام + Kali (ملف واحد: run.sh)"
 echo "======================================================"
 if [[ "${NUCLEI_TELEGRAM_EXTERNAL:-}" == "1" ]]; then
   echo "  Telegram: ON  → @H_the_box_bot"
-  echo "  مسح من التيليجرام يظهر هنا: [SCAN] ..."
+  echo "  المسح → نافذة Live Scan تلقائية عند البدء"
 else
   echo "  Telegram: OFF → bash scripts/telegram_service.sh start"
 fi

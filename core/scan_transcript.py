@@ -23,12 +23,7 @@ def begin(target_dir, header=None, live_source="cli"):
     global _active_path
     _active_path = transcript_path(target_dir)
     os.makedirs(target_dir, exist_ok=True)
-    try:
-        from core.live_scan_log import begin as live_begin
-
-        live_begin(header or target_dir, source=live_source)
-    except Exception:
-        pass
+    # Live log + terminal window: core.runner.run_selected_tool → live_scan_log.begin
     with open(_active_path, "w", encoding="utf-8") as fh:
         fh.write("============================================================\n")
         fh.write(" SCAN TRANSCRIPT (chronological — like terminal output)\n")
