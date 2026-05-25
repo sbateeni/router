@@ -1,8 +1,9 @@
-"""Mirror scan output to logs/LIVE_SCAN.log (optional file — no extra terminals)."""
+"""Mirror scan output to logs/LIVE_SCAN.log; auto-open tail window on scan start."""
 import os
+import subprocess
 from datetime import datetime
 
-from core.paths import logs_dir
+from core.paths import logs_dir, project_root
 
 _active = False
 _log_path = None
@@ -10,6 +11,24 @@ _log_path = None
 
 def path():
     return os.path.join(logs_dir(), "LIVE_SCAN.log")
+
+
+def _open_tail_window(title: str):
+    if os.environ.get("AUTOPWN_LIVE_WINDOW", "1").strip() == "0":
+        return
+    script = os.path.join(project_root(), "scripts", "open_live_log.sh")
+    if not os.path.isfile(script):
+        return
+    try:
+        subprocess.Popen(
+            ["bash", script, title[:80]],
+            cwd=project_root(),
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            start_new_session=True,
+        )
+    except OSError:
+        pass
 
 
 def begin(target_label, source="scan"):
@@ -23,6 +42,7 @@ def begin(target_label, source="scan"):
         fh.write(f"Source : {source}\n")
         fh.write(f"Target : {target_label}\n")
         fh.write("=" * 60 + "\n\n")
+    _open_tail_window(f"Scan: {target_label}")
 
 
 def write(text):

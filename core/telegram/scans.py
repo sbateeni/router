@@ -89,7 +89,9 @@ def process_queue(chat_id, base_dir):
         extra = f"\nبعده: {remaining} في الانتظار" if remaining else ""
         send_to_chat(
             chat_id,
-            f"▶ بدء المسح التالي\nالهدف: {job['ip']}\nالنوع: {job.get('mode_label')}{extra}",
+            f"▶ بدء المسح التالي\nالهدف: {job['ip']}\n"
+            f"النوع: {job.get('mode_label')}{extra}\n"
+            f"📺 تُفتح نافذة Live Log تلقائياً",
         )
 
         try:
@@ -140,7 +142,8 @@ def start_scan(chat_id, job, base_dir):
                 f"▶ بدء المسح\nالهدف: {job['ip']}\n"
                 f"النوع: {job.get('mode_label')}\n"
                 f"الملف الشخصي: {job['profile']}\n\n"
-                f"سيصلك التقرير في تيليجرام عند الانتهاء.",
+                f"سيصلك التقرير في تيليجرام عند الانتهاء.\n"
+                f"📺 تُفتح نافذة Live Log تلقائياً (tail -f logs/LIVE_SCAN.log)",
             )
 
             try:
