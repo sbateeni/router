@@ -21,7 +21,7 @@ PROFILES = {
         "hydra_forms": 4,
     },
     "deep": {
-        "label": "Deep / Full Power",
+        "label": "Deep / Full Tool Merge",
         "nmap_quick_args": ["-sS", "-sV", "-T4", "--open", "-F"],
         "nmap_deep_enabled": True,
         "dirsearch_threads": 80,

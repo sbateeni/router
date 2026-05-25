@@ -61,6 +61,10 @@ def _sync_profile(ip, target_dir, context, phase_label):
     return profile
 
 
+def _is_deep_scan():
+    return get_profile_name() == "deep"
+
+
 def run_all_classic_tools(ip, target_dir, selection=1):
     """Full classic scan — tools chosen from live target profile after each phase."""
     from core.scan_transcript import begin as transcript_begin, end as transcript_end, event as transcript_event, phase as transcript_phase
@@ -69,12 +73,35 @@ def run_all_classic_tools(ip, target_dir, selection=1):
     profile = {}
     hints = load_target_hints(target_dir)
     hint_line = hints.get("raw") or hints.get("seed_url") or ip
-    transcript_begin(target_dir, header=f"Target: {hint_line} | profile: {get_profile_name()}")
+    deep = _is_deep_scan()
+    transcript_begin(
+        target_dir,
+        header=f"Target: {hint_line} | profile: {get_profile_name()}"
+        + (" | FULL TOOL MERGE" if deep else ""),
+    )
 
     if hints:
         apply_target_hints(context, hints)
         print(f"[*] Target hints: {hints.get('raw') or hints.get('seed_url')}")
         transcript_event(f"[*] Target hints: {hints.get('raw') or hints.get('seed_url')}")
+
+    osint_ports: list[int] = []
+    if deep:
+        print("\n>>> PHASE 0: Deep OSINT & recon (Shodan, Social, domain tools)")
+        transcript_phase("PHASE 0: Deep OSINT & recon")
+        try:
+            from engines.deep_scan_extras import run_deep_domain_recon, run_deep_osint_phase
+
+            osint_data = run_deep_osint_phase(ip, target_dir, hints)
+            for p in osint_data.get("shodan", {}).get("ports") or []:
+                try:
+                    osint_ports.append(int(p))
+                except (TypeError, ValueError):
+                    pass
+            run_deep_domain_recon(ip, target_dir, hints)
+        except Exception as exc:
+            print(f"[!] Deep Phase 0 error: {exc}")
+        _phase_delay()
 
     transcript_phase(f"PHASE 1: Scanning & Reconnaissance [{get_profile_name()}]")
     print(f"\n>>> PHASE 1: Scanning & Reconnaissance [{get_profile_name()}]")
@@ -120,6 +147,12 @@ def run_all_classic_tools(ip, target_dir, selection=1):
         if should_run_tool(profile, "nikto"):
             for port in profile.get("web_ports") or []:
                 run_nikto(build_url(ip, port), target_dir)
+
+        if deep:
+            from core.recon_tools import run_nmap_vuln_scripts
+
+            print("\n[+] Deep: Nmap vuln scripts...")
+            run_nmap_vuln_scripts(ip, target_dir)
     except Exception as exc:
         print(f"[!] Phase 1 optional tools error: {exc}")
 
@@ -201,32 +234,63 @@ def run_all_classic_tools(ip, target_dir, selection=1):
     print("======================================================")
     transcript_phase("PHASE 3: Exploitation (profile-driven)")
     try:
-        print("\n[+] Device Exploit Engine (Hikvision / Netis / CVE / creds)...")
-        try:
-            from engines.integration import run_device_exploit_engine
+        if deep:
+            print("\n[+] Deep Device Engine (full merge — all engine modules)...")
+            try:
+                from engines.deep_scan_extras import run_full_device_engine
 
-            engine_result = run_device_exploit_engine(
-                ip, target_dir, web_ports=profile.get("web_ports") or context.web_ports, profile=profile,
-            )
-            if engine_result.get("exploited"):
-                context.exploited = True
-            creds = engine_result.get("credentials") or []
-            if creds:
-                print(f"[+] Engine credentials: {', '.join(creds)}")
-        except Exception as exc:
-            print(f"[!] Device engine error: {exc}")
-
-        if should_run_tool(profile, "routersploit"):
-            if run_routersploit(ip, target_dir):
-                context.exploited = True
+                engine_result = run_full_device_engine(
+                    ip,
+                    target_dir,
+                    web_ports=profile.get("web_ports") or context.web_ports,
+                    profile=profile,
+                    hints=hints,
+                    osint_ports=osint_ports,
+                )
+                if engine_result.get("exploited"):
+                    context.exploited = True
+                creds = engine_result.get("credentials") or []
+                if creds:
+                    print(f"[+] Engine credentials: {', '.join(creds)}")
+            except Exception as exc:
+                print(f"[!] Deep device engine error: {exc}")
         else:
-            print(f"[*] RouterSploit skipped: {get_tool_config(profile, 'routersploit').get('reason', '')}")
+            print("\n[+] Device Exploit Engine (Hikvision / Netis / CVE / creds)...")
+            try:
+                from engines.integration import run_device_exploit_engine
 
-        if should_run_tool(profile, "ingram"):
-            if run_ingram(ip, target_dir):
-                context.exploited = True
-        else:
-            print(f"[*] Ingram skipped: {get_tool_config(profile, 'ingram').get('reason', '')}")
+                engine_result = run_device_exploit_engine(
+                    ip, target_dir, web_ports=profile.get("web_ports") or context.web_ports, profile=profile,
+                )
+                if engine_result.get("exploited"):
+                    context.exploited = True
+                creds = engine_result.get("credentials") or []
+                if creds:
+                    print(f"[+] Engine credentials: {', '.join(creds)}")
+            except Exception as exc:
+                print(f"[!] Device engine error: {exc}")
+
+            if should_run_tool(profile, "routersploit"):
+                if run_routersploit(ip, target_dir):
+                    context.exploited = True
+            else:
+                print(f"[*] RouterSploit skipped: {get_tool_config(profile, 'routersploit').get('reason', '')}")
+
+            if should_run_tool(profile, "ingram"):
+                if run_ingram(ip, target_dir):
+                    context.exploited = True
+            else:
+                print(f"[*] Ingram skipped: {get_tool_config(profile, 'ingram').get('reason', '')}")
+
+        if deep:
+            try:
+                from engines.lateral_agent import LateralAgent
+
+                print("\n[+] Deep: NetExec lateral (system nxc)...")
+                lateral = LateralAgent(ip, target_dir)
+                lateral.execute()
+            except Exception as exc:
+                print(f"[!] NetExec lateral skipped: {exc}")
     except KeyboardInterrupt:
         handle_keyboard_interrupt()
 

@@ -43,7 +43,8 @@ Complete reference of every tool, module, and external dependency used in this p
 
 | # | Tool | Module | External binary |
 |---|------|--------|-----------------|
-| 1 | Full classic scan | `core/classic/full_scan.py` | All below |
+| 1 | Full classic scan (`normal`) | `core/classic/full_scan.py` | Profile-driven tools below |
+| 1d | **Deep full merge** (`deep`) | `full_scan.py` + `engines/deep_scan_extras.py` | Everything in #1 **plus** Phase 0 OSINT, full device engine, NetExec lateral |
 | 2 | Nmap | `core/scanner.py` | `nmap` |
 | 3 | Nuclei | `core/web/nuclei.py` | `nuclei` / `nuclei.exe` |
 | 4 | Dirsearch | `core/web/dirsearch.py` | Python in `tools/dirsearch/` |

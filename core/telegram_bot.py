@@ -61,7 +61,7 @@ BOT_COMMANDS = [
 # selection, label (Arabic), profile override
 ATTACK_MODES = [
     (1, "مسح كامل — كل الأدوات", "normal"),
-    (1, "مسح عميق — Full Power", "deep"),
+    (1, "مسح عميق — كل الأدوات مدمجة", "deep"),
     (21, "Device Engine — AUTO-PWN", "normal"),
     (2, "Nmap فقط", "normal"),
     (3, "Nuclei فقط", "normal"),
