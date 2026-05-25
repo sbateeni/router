@@ -39,12 +39,33 @@ def _phase_delay():
     time.sleep(get_scan_profile().get("phase_delay_seconds", 5))
 
 
-def _sync_profile(ip, target_dir, context, phase_label):
+def _merge_profile_into_context(profile, context):
+    """Feed artifact summary back into scan context (deep scan chaining)."""
+    for url in profile.get("priority_urls") or []:
+        if url and url not in context.discovered_urls:
+            context.discovered_urls.append(url)
+        if url and url not in context.discovered_paths:
+            context.discovered_paths.append(url)
+    for path in profile.get("login_paths") or []:
+        if path and path not in context.login_paths:
+            context.login_paths.append(path)
+    for port in profile.get("web_ports") or []:
+        try:
+            p = int(port)
+            if p not in context.web_ports:
+                context.web_ports.append(p)
+        except (TypeError, ValueError):
+            pass
+
+
+def _sync_profile(ip, target_dir, context, phase_label, deep=False):
     """Rebuild profile from all artifacts so far and persist routing plan."""
     from core.scan_transcript import event as transcript_event
 
     profile = build_target_profile(ip, target_dir, context=context)
     save_target_profile(target_dir, profile)
+    if deep:
+        _merge_profile_into_context(profile, context)
     msg = f"[*] Target profile updated ({phase_label}) → {os.path.join(target_dir, 'target_profile.json')}"
     print(f"\n{msg}")
     transcript_event(msg)
@@ -90,6 +111,7 @@ def run_all_classic_tools(ip, target_dir, selection=1):
     osint_ports: list[int] = []
     if deep:
         print("\n>>> PHASE 0: Deep OSINT & recon (Shodan, Social, domain tools)")
+        print("[*] Deep mode: ALL tools will run — results feed the next phase")
         transcript_phase("PHASE 0: Deep OSINT & recon")
         try:
             from engines.deep_scan_extras import run_deep_domain_recon, run_deep_osint_phase
@@ -124,7 +146,7 @@ def run_all_classic_tools(ip, target_dir, selection=1):
             context.web_ports.insert(0, hints["port"])
         apply_target_hints(context, hints)
 
-    profile = _sync_profile(ip, target_dir, context, "after Nmap")
+    profile = _sync_profile(ip, target_dir, context, "after Nmap", deep=deep)
 
     try:
         if should_run_tool(profile, "whatweb"):
@@ -159,7 +181,7 @@ def run_all_classic_tools(ip, target_dir, selection=1):
         print(f"[!] Phase 1 optional tools error: {exc}")
 
     refresh_report(ip, target_dir, selection, context.exploited, context, "Phase 1 - Reconnaissance")
-    profile = _sync_profile(ip, target_dir, context, "after Phase 1")
+    profile = _sync_profile(ip, target_dir, context, "after Phase 1", deep=deep)
     _phase_delay()
 
     web_ports = profile.get("web_ports") or context.web_ports
@@ -177,7 +199,7 @@ def run_all_classic_tools(ip, target_dir, selection=1):
             else:
                 print("[*] Dirsearch skipped by profile.")
 
-            profile = _sync_profile(ip, target_dir, context, "after Dirsearch")
+            profile = _sync_profile(ip, target_dir, context, "after Dirsearch", deep=deep)
 
             if should_run_tool(profile, "metasploit"):
                 msf_cmds = os.path.join(target_dir, "MSF_EXPLOIT_COMMANDS.txt")
@@ -200,7 +222,7 @@ def run_all_classic_tools(ip, target_dir, selection=1):
                 context.discovered_paths + context.gau_urls + context.ffuf_candidates
             ))
 
-            profile = _sync_profile(ip, target_dir, context, "after path discovery")
+            profile = _sync_profile(ip, target_dir, context, "after path discovery", deep=deep)
 
             nuclei_cfg = get_tool_config(profile, "nuclei")
             if should_run_tool(profile, "nuclei"):
@@ -228,7 +250,7 @@ def run_all_classic_tools(ip, target_dir, selection=1):
             handle_keyboard_interrupt()
 
         refresh_report(ip, target_dir, selection, context.exploited, context, "Phase 2 - Web Enumeration")
-        profile = _sync_profile(ip, target_dir, context, "after Phase 2")
+        profile = _sync_profile(ip, target_dir, context, "after Phase 2", deep=deep)
     _phase_delay()
 
     print("\n======================================================")
@@ -256,6 +278,28 @@ def run_all_classic_tools(ip, target_dir, selection=1):
                     print(f"[+] Engine credentials: {', '.join(creds)}")
             except Exception as exc:
                 print(f"[!] Deep device engine error: {exc}")
+
+            print("\n[+] Deep: RouterSploit + Ingram (classic modules)...")
+            if run_routersploit(ip, target_dir):
+                context.exploited = True
+            if run_ingram(ip, target_dir):
+                context.exploited = True
+
+            print("\n[+] Deep: GitHub PoC arsenal (scripts/new_pocs/)...")
+            try:
+                from engines.deep_scan_extras import run_deep_poc_arsenal
+
+                poc_hits = run_deep_poc_arsenal(
+                    ip,
+                    target_dir,
+                    web_ports=profile.get("web_ports") or context.web_ports,
+                    device_type=profile.get("target_type", "UNKNOWN"),
+                )
+                if poc_hits:
+                    context.exploited = True
+                    print(f"[+] PoC arsenal: {len(poc_hits)} script(s) reported success")
+            except Exception as exc:
+                print(f"[!] PoC arsenal error: {exc}")
         else:
             print("\n[+] Device Exploit Engine (Hikvision / Netis / CVE / creds)...")
             try:
@@ -297,7 +341,7 @@ def run_all_classic_tools(ip, target_dir, selection=1):
         handle_keyboard_interrupt()
 
     refresh_report(ip, target_dir, selection, context.exploited, context, "Phase 3 - Exploitation")
-    profile = _sync_profile(ip, target_dir, context, "after Phase 3")
+    profile = _sync_profile(ip, target_dir, context, "after Phase 3", deep=deep)
     _phase_delay()
 
     if (profile.get("login_ports") or context.login_ports or profile.get("login_paths")) and should_run_tool(profile, "hydra"):
@@ -324,6 +368,6 @@ def run_all_classic_tools(ip, target_dir, selection=1):
         print("[*] Hydra skipped by target profile or no login surface.")
 
     _, confirmed = refresh_report(ip, target_dir, selection, context.exploited, context, "Phase 4 - Brute Force")
-    _sync_profile(ip, target_dir, context, "final")
+    _sync_profile(ip, target_dir, context, "final", deep=deep)
     transcript_end(note=f"Confirmed exploit: {'YES' if confirmed else 'NO'}")
     return confirmed

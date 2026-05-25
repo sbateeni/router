@@ -145,11 +145,6 @@ def run_cmd(command, capture=False, log_file=None):
         exec_line = f"\n[>] Executing: {' '.join(command) if isinstance(command, list) else command}"
         print(exec_line)
         try:
-            from core.live_scan_log import write as live_write
-            live_write(exec_line)
-        except Exception:
-            pass
-        try:
             from core.scan_transcript import command as transcript_command, output as transcript_output
             transcript_command(command)
         except Exception:
@@ -180,11 +175,6 @@ def run_cmd(command, capture=False, log_file=None):
 
             if output:
                 print(output)
-                try:
-                    from core.live_scan_log import write as live_write
-                    live_write(output)
-                except Exception:
-                    pass
             return ok, ""
 
         result = subprocess.run(command)

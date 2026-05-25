@@ -135,6 +135,39 @@ def _run_hash_cracker(ip: str, target_dir: str, loot: LootReport) -> None:
         log(f"[Deep] Hash cracker skipped: {exc}", "WARNING")
 
 
+def run_deep_poc_arsenal(
+    ip: str,
+    target_dir: str,
+    web_ports: list[int] | None = None,
+    device_type: str = "UNKNOWN",
+) -> list[dict]:
+    """Run matching + aggressive PoCs from scripts/new_pocs/ (deep scan only)."""
+    from engines.poc_runner import PoCRunner
+
+    ports = web_ports or [80, 443]
+    all_results: list[dict] = []
+    dt_map = {
+        "router": "GENERIC_ROUTER",
+        "web_server": "UNKNOWN",
+        "fortinet_gateway": "GENERIC_ROUTER",
+        "hybrid_web_fortinet": "GENERIC_ROUTER",
+    }
+    engine_dt = dt_map.get(device_type, device_type.upper().replace(" ", "_"))
+
+    for port in ports[:6]:
+        runner = PoCRunner(ip, port)
+        matched = runner.run_matching(engine_dt, min_score=1, limit=8)
+        aggressive = runner.run_aggressive(limit=10)
+        for r in matched + aggressive:
+            all_results.append(r)
+            if r.get("success"):
+                _save_json(
+                    os.path.join(target_dir, "POC_SUCCESS.json"),
+                    {"ip": ip, "port": port, "results": all_results},
+                )
+    return [r for r in all_results if r.get("success")]
+
+
 def run_full_device_engine(
     ip: str,
     target_dir: str,
@@ -305,22 +338,11 @@ def run_full_device_engine(
             except Exception as exc:
                 log(f"[Deep] Ingram: {exc}", "WARNING")
 
-        try:
-            from engines.poc_runner import PoCRunner
-
-            for pr in PoCRunner(ip, port).run_matching(device_type):
-                loot.add_note(f"PoC {pr.get('rel', '?')}: success={pr.get('success')}")
-                if pr.get("success"):
-                    summary["exploited"] = True
-        except Exception as exc:
-            log(f"[Deep] PoC runner: {exc}", "WARNING")
-
         if device_intel.assessments:
             for h in scanner.scan_cve_intel(target_url, device_intel):
                 tid = h.get("template-id", "?") if isinstance(h, dict) else str(h)
                 summary["cve_notes"].append(tid)
 
-        # Path fuzzer (.env etc.)
         try:
             from engines.fuzzer_module import Fuzzer
 

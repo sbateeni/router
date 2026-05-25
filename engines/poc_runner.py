@@ -140,8 +140,8 @@ class PoCRunner:
 
         return last_result
 
-    def run_matching(self, device_type: str) -> list[dict]:
-        matches = self.match_pocs(device_type)
+    def run_matching(self, device_type: str, min_score: int = 2, limit: int = 5) -> list[dict]:
+        matches = self.match_pocs(device_type, min_score=min_score, limit=limit)
         if not matches:
             log(f"No matching PoCs in {self.poc_dir} for device type {device_type}.", "INFO")
             return []
@@ -157,6 +157,27 @@ class PoCRunner:
                 log(f"  PoC reported success: {poc['rel']}", "PWN")
             else:
                 log(f"  PoC finished (no clear success): {poc['rel']}", "INFO")
+        return results
+
+    def run_aggressive(self, limit: int = 12) -> list[dict]:
+        """Deep scan: try PoCs by filename/CVE keywords even without device match."""
+        ranked = []
+        for poc in self.discover_pocs():
+            name = poc["name"].lower()
+            bonus = sum(2 for k in ("exploit", "cve", "rce", "poc") if k in name)
+            ranked.append((bonus, poc))
+        ranked.sort(key=lambda x: x[0], reverse=True)
+        picks = [p for _, p in ranked[:limit]]
+        if not picks:
+            return []
+        log(f"Deep PoC pass: trying {len(picks)} script(s) from {self.poc_dir}...", "INFO")
+        results = []
+        for poc in picks:
+            result = self.run_poc(poc["path"])
+            result["rel"] = poc["rel"]
+            results.append(result)
+            if result["success"]:
+                log(f"  PoC success: {poc['rel']}", "PWN")
         return results
 
 

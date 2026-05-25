@@ -339,6 +339,11 @@ def print_target_profile(profile):
 
 
 def should_run_tool(profile, tool_name):
+    """Deep profile: run every tool (no SKIP). Normal: follow target_profile plan."""
+    from core.scan_config import get_profile_name
+
+    if get_profile_name() == "deep":
+        return True
     plan = profile.get("tool_plan") or {}
     entry = plan.get(tool_name) or {}
     return bool(entry.get("run"))

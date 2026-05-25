@@ -14,9 +14,20 @@ else
   PY="python3"
 fi
 
-# إغلاق tmux قديم (من تجارب سابقة) حتى لا تبقى الطرفية مقسومة
+# إغلاق tmux/ tail قديم (يسبب الشاشة المقسومة و [SCAN] في الصورة)
+pkill -f "tail.*LIVE_SCAN\.log" 2>/dev/null || true
 tmux kill-session -t autopwn 2>/dev/null || true
 tmux kill-session -t autopwn-live 2>/dev/null || true
+
+if [[ -n "${TMUX:-}" ]]; then
+  _sess="$(tmux display-message -p '#S' 2>/dev/null || true)"
+  if [[ "$_sess" == "autopwn" || "$_sess" == "autopwn-live" ]]; then
+    echo "[!] أنت داخل tmux قديم (شاشة مقسومة)."
+    echo "    اكتب:  tmux kill-session -t $_sess"
+    echo "    ثم افتح طرفية جديدة و:  bash run.sh"
+    exit 1
+  fi
+fi
 
 if [[ ! -f "$ROOT/.env" ]]; then
   echo "[!] أنشئ .env:  cp .env.example .env && nano .env"
