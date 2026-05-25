@@ -19,9 +19,9 @@ def main():
     print(explain_telegram_config(base))
     load_telegram_env(base)
     if telegram_configured() and not telegram_placeholder_keys_present():
-        print("\n[+] Telegram env OK — run: bash scripts/telegram_service.sh start")
+        print("\n[+] Telegram env OK — run: bash run.sh")
         return 0
-    print("\n[!] Fix .env then: bash scripts/telegram_service.sh start")
+    print("\n[!] Fix .env then: bash run.sh")
     return 1
 
 

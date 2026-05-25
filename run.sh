@@ -1,14 +1,7 @@
 #!/usr/bin/env bash
-# ═══════════════════════════════════════════════════════════════════
-# AUTO-PWN — ملف تشغيل واحد (تيليجرام + قائمة Kali)
-#
-#   cd ~/router && bash run.sh
-#
-# يشغّل تلقائياً:
-#   1) بوت @H_the_box_bot في الخلفية (يستقبل IP من تيليجرام)
-#   2) هذه القائمة للمسح من الطرفية
-#   3) عند بدء أي مسح → نافذة Live Scan تُفتح تلقائياً
-# ═══════════════════════════════════════════════════════════════════
+# AUTO-PWN — تشغيل واحد فقط:  bash run.sh
+# • يبدأ تيليجرام تلقائياً (@H_the_box_bot)
+# • القائمة محلياً | [9] للتحديث من GitHub
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -21,87 +14,41 @@ else
   PY="python3"
 fi
 
-# ── فحص .env (لا يُرفع مع git — يجب نسخه يدوياً إلى Kali) ──
+# إغلاق tmux قديم (من تجارب سابقة) حتى لا تبقى الطرفية مقسومة
+tmux kill-session -t autopwn 2>/dev/null || true
+tmux kill-session -t autopwn-live 2>/dev/null || true
+
 if [[ ! -f "$ROOT/.env" ]]; then
-  echo "[!] ملف .env غير موجود في: $ROOT/.env"
-  echo "    من Windows:  scp .env kali:~/router/.env"
-  echo "    أو انسخ من:  cp .env.example .env && nano .env"
+  echo "[!] أنشئ .env:  cp .env.example .env && nano .env"
   exit 1
 fi
 
-if [[ -f "$ROOT/scripts/check_telegram_env.py" ]]; then
-  if ! "$PY" "$ROOT/scripts/check_telegram_env.py"; then
-    echo "[!] أصلح .env ثم أعد: bash run.sh"
-    exit 1
-  fi
-fi
-
-LIVE_LOG="$ROOT/logs/LIVE_SCAN.log"
+# تيليجرام (خلفية)
 mkdir -p "$ROOT/logs"
-touch "$LIVE_LOG"
-
-_stop_live_tail() {
-  if [[ -f "$ROOT/logs/live_tail.pid" ]]; then
-    kill "$(cat "$ROOT/logs/live_tail.pid")" 2>/dev/null || true
-    rm -f "$ROOT/logs/live_tail.pid"
-  fi
-}
-
-_start_live_tail() {
-  # عرض [SCAN] في نفس الطرفية — معطّل افتراضياً (استخدم نافذة جديدة)
-  [[ "${AUTOPWN_LIVE_INLINE:-0}" == "1" ]] || return 0
-  _stop_live_tail
-  (
-    tail -n 0 -f "$LIVE_LOG" 2>/dev/null | while IFS= read -r line; do
-      printf '\033[36m[SCAN]\033[0m %s\n' "$line"
-    done
-  ) &
-  echo $! >"$ROOT/logs/live_tail.pid"
-}
-
-# ── 1) تيليجرام (عملية واحدة في الخلفية لكل المشروع) ──
-if [[ -z "${AUTOPWN_SKIP_TELEGRAM:-}" ]] && [[ -x "$ROOT/scripts/telegram_service.sh" ]]; then
-  if bash "$ROOT/scripts/telegram_service.sh" start; then
-    export NUCLEI_TELEGRAM_EXTERNAL=1
-  else
-    echo "[!] البوت لم يبدأ — راجع: tail -20 logs/telegram.log"
-    echo "    يمكنك متابعة القائمة المحلية بدون تيليجرام."
-  fi
+if [[ -f "$ROOT/scripts/check_telegram_env.py" ]]; then
+  "$PY" "$ROOT/scripts/check_telegram_env.py" || exit 1
 fi
 
-# tmux كامل: AUTOPWN_USE_TMUX=1 bash run.sh
-if [[ "${AUTOPWN_USE_TMUX:-}" == "1" ]] && [[ -z "${AUTOPWN_NO_TMUX:-}" ]] \
-    && command -v tmux &>/dev/null && [[ -z "${TMUX:-}" ]]; then
-  echo "[*] tmux: أعلى = مسح حي | أسفل = القائمة"
-  sleep 1
-  exec tmux new-session -s autopwn \
-    "tail -f '$LIVE_LOG' | sed -u 's/^/[SCAN] /'" \; \
-    split-window -v -t autopwn \
-    "export AUTOPWN_SKIP_TELEGRAM=1 AUTOPWN_NO_TMUX=1 AUTOPWN_LIVE_WINDOW=0 AUTOPWN_LIVE_INLINE=0; cd '$ROOT'; exec bash '$ROOT/run.sh'"
+TG_OK=0
+if pgrep -f "telegram_daemon.py" >/dev/null 2>&1; then
+  TG_OK=1
+elif [[ -x "$ROOT/.venv/bin/python" ]] || command -v python3 &>/dev/null; then
+  nohup "$PY" "$ROOT/bin/telegram_daemon.py" >>"$ROOT/logs/telegram.log" 2>&1 &
+  sleep 2
+  pgrep -f "telegram_daemon.py" >/dev/null 2>&1 && TG_OK=1
 fi
 
-_start_live_tail
-trap '_stop_live_tail' EXIT
+export NUCLEI_TELEGRAM_EXTERNAL=1
+TG_ARGS=(--no-telegram)
 
-echo
-echo "  [*] عند بدء مسح (تيليجرام أو [1]/[8]) → نافذة Live Scan تلقائياً"
-echo
-
-TG_ARGS=()
-if [[ "${NUCLEI_TELEGRAM_EXTERNAL:-}" == "1" ]]; then
-  TG_ARGS=(--no-telegram)
-fi
-
-# ── 2) القائمة المحلية ──
 echo
 echo "======================================================"
-echo "   AUTO-PWN — تيليجرام + Kali (ملف واحد: run.sh)"
+echo "   AUTO-PWN UNIFIED — router + nuclei-dev engine"
 echo "======================================================"
-if [[ "${NUCLEI_TELEGRAM_EXTERNAL:-}" == "1" ]]; then
-  echo "  Telegram: ON  → @H_the_box_bot"
-  echo "  المسح → نافذة Live Scan تلقائية عند البدء"
+if [[ "$TG_OK" == "1" ]]; then
+  echo "  Telegram: ON  (@H_the_box_bot)"
 else
-  echo "  Telegram: OFF → bash scripts/telegram_service.sh start"
+  echo "  Telegram: OFF — راجع logs/telegram.log"
 fi
 echo
 echo "  [1] Full auto scan (--auto)"
@@ -111,7 +58,7 @@ echo "  [4] Test Hikvision"
 echo "  [5] CVE intelligence report"
 echo "  [6] Camera snapshots"
 echo "  [7] LAN scan"
-echo "  [8] Interactive menu (master_pwn)"
+echo "  [8] Interactive menu"
 echo "  [9] Update from GitHub"
 echo "  [0] Exit"
 echo
@@ -157,11 +104,9 @@ case "$choice" in
     ;;
   9)
     echo
-    echo "[*] Checking GitHub for updates..."
     "$PY" "$ROOT/scripts/update_tools.py"
     ;;
   0)
-    echo "Bye."
     exit 0
     ;;
   *)

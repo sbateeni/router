@@ -135,16 +135,12 @@ def start_scan(chat_id, job, base_dir):
                 sess["current_mode"] = job.get("mode_label")
                 sess["state"] = "scanning"
 
-            from core.live_scan_log import path as live_log_path
-
             send_to_chat(
                 chat_id,
                 f"▶ بدء المسح\nالهدف: {job['ip']}\n"
                 f"النوع: {job.get('mode_label')}\n"
                 f"الملف الشخصي: {job['profile']}\n\n"
-                f"سيصلك التقرير عند الانتهاء.\n\n"
-                f"📺 عند بدء المسح تُفتح نافذة Live Scan تلقائياً\n"
-                f"📂 أو: tail -f {live_log_path()}",
+                f"سيصلك التقرير في تيليجرام عند الانتهاء.",
             )
 
             try:
