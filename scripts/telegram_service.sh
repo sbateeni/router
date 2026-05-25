@@ -35,6 +35,11 @@ case "$cmd" in
       echo "    or: cp .env.example .env && nano .env"
       exit 1
     fi
+    if [[ ! -f "$ROOT/scripts/check_telegram_env.py" ]]; then
+      echo "[!] Old repo — run: git checkout -- bin/telegram_daemon.py scripts/telegram_service.sh && git pull"
+      echo "    Or: bash scripts/kali_sync_telegram.sh"
+      exit 1
+    fi
     if ! "$PY" "$ROOT/scripts/check_telegram_env.py"; then
       exit 1
     fi
