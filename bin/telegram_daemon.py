@@ -8,7 +8,7 @@ import _bootstrap
 _bootstrap.install()
 
 from core.paths import setup_project_env, project_root
-from core.notify import load_dotenv
+from core.notify import load_telegram_env
 from core.telegram_bot import run_telegram_bot
 
 setup_project_env()
@@ -16,7 +16,7 @@ setup_project_env()
 
 def main():
     base = project_root()
-    load_dotenv(base)
+    load_telegram_env(base)
     print("[*] Telegram daemon starting...", flush=True)
     return run_telegram_bot(base)
 

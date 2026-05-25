@@ -12,7 +12,8 @@ import requests
 
 from core.notify import (
     _telegram_request,
-    load_dotenv,
+    explain_telegram_config,
+    load_telegram_env,
     normalize_chat_id,
     notify_scan_complete,
     send_telegram_message,
@@ -688,9 +689,10 @@ def _poll_updates_loop(base_dir, poll_timeout=25, stop_event=None):
 
 
 def run_telegram_bot(base_dir, poll_timeout=25):
-    load_dotenv(base_dir)
+    load_telegram_env(base_dir)
     if not telegram_configured() or telegram_placeholder_keys_present():
-        print("[!] أعد TELEGRAM_BOT_TOKEN و TELEGRAM_CHAT_ID في .env")
+        print("[!] Telegram غير جاهز — راجع .env على هذا الجهاز:\n")
+        print(explain_telegram_config(base_dir))
         return 1
 
     _ensure_polling_mode()
@@ -718,7 +720,7 @@ def run_telegram_bot(base_dir, poll_timeout=25):
 
 def start_telegram_bot_background(base_dir, poll_timeout=25):
     """Start Telegram polling in a daemon thread; local CLI menu keeps running."""
-    load_dotenv(base_dir)
+    load_telegram_env(base_dir)
     if not telegram_configured() or telegram_placeholder_keys_present():
         return None
 

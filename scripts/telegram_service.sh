@@ -30,18 +30,25 @@ case "$cmd" in
       exit 0
     fi
     if [[ ! -f "$ROOT/.env" ]]; then
-      echo "[!] No .env — copy .env.example and set TELEGRAM_BOT_TOKEN + TELEGRAM_CHAT_ID"
+      echo "[!] No .env at $ROOT/.env (not in git — copy from your PC):"
+      echo "    scp .env kali:~/router/.env"
+      echo "    or: cp .env.example .env && nano .env"
+      exit 1
+    fi
+    if ! "$PY" "$ROOT/scripts/check_telegram_env.py"; then
       exit 1
     fi
     nohup "$PY" "$ROOT/bin/telegram_daemon.py" >>"$LOG" 2>&1 &
     echo $! >"$PIDFILE"
-    sleep 1
+    sleep 2
     if _is_running; then
       echo "[+] Telegram bot started (background)"
       echo "    Chat: @H_the_box_bot — send IP or /start"
       echo "    Log:  $LOG"
     else
       echo "[!] Telegram did not start — see $LOG"
+      tail -15 "$LOG" 2>/dev/null || true
+      "$PY" "$ROOT/scripts/check_telegram_env.py" || true
       exit 1
     fi
     ;;
