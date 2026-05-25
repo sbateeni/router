@@ -15,6 +15,16 @@ from core.telegram.sessions import chat_lock, get_session, mode_keyboard
 from core.telegram.targets import job_from_target, target_prompt_text
 
 
+def force_idle(sess):
+    """Reset session after error or /stopscan (fixes stuck «مسح جاري»)."""
+    sess["scanning"] = False
+    sess["current_ip"] = None
+    sess["current_mode"] = None
+    sess["state"] = "idle"
+    sess["ip"] = None
+    sess["pending_ip"] = None
+
+
 def run_scan_job(chat_id, job, base_dir):
     scan_host = job.get("scan_host") or job["ip"]
     workspace = job.get("workspace_name") or sanitize_target_dir_name(scan_host)
@@ -24,6 +34,15 @@ def run_scan_job(chat_id, job, base_dir):
     target_dir = os.path.join(base_dir, "targets", workspace)
     os.makedirs(target_dir, exist_ok=True)
     os.environ["AUTOPWN_SCAN_SOURCE"] = "telegram"
+    try:
+        from core.live_scan_log import begin as live_begin
+
+        live_begin(
+            f"{scan_host} | {job.get('mode_label', '?')} | profile={scan_profile}",
+            source="telegram",
+        )
+    except Exception:
+        pass
     reset_target_workspace(target_dir)
 
     hints = job.get("hints") or {}
@@ -96,6 +115,7 @@ def process_queue(chat_id, base_dir):
     sess["ip"] = None
     sess["pending_ip"] = None
 
+    force_idle(sess)
     if not sess["queue"]:
         send_to_chat(chat_id, "✓ جميع المسوحات في قائمة الانتظار اكتملت.")
 
@@ -142,8 +162,17 @@ def start_scan(chat_id, job, base_dir):
                 send_to_chat(chat_id, f"❌ خطأ أثناء المسح: {exc}")
             finally:
                 os.environ.pop("AUTOPWN_SCAN_SOURCE", None)
+                try:
+                    from core.live_scan_log import end as live_end
+                    live_end()
+                except Exception:
+                    pass
 
-            process_queue(chat_id, base_dir)
+            try:
+                process_queue(chat_id, base_dir)
+            except Exception as exc:
+                send_to_chat(chat_id, f"❌ خطأ في قائمة الانتظار: {exc}")
+                force_idle(get_session(chat_id))
 
         threading.Thread(target=worker, daemon=True).start()
 

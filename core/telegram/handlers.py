@@ -4,7 +4,7 @@ from core.telegram_extras import detect_osint_message, run_osint_action
 
 from core.telegram.api import allowed_chat, answer_callback, send_to_chat
 from core.telegram.commands import handle_slash_command, run_async_task
-from core.telegram.scans import enqueue_or_prompt, start_scan
+from core.telegram.scans import enqueue_or_prompt, force_idle, start_scan
 from core.telegram.sessions import format_status, get_session, mode_keyboard
 from core.telegram.targets import job_from_target, parse_target
 
@@ -43,10 +43,23 @@ def handle_callback(callback, base_dir):
         if not target:
             send_to_chat(chat_id, "أرسل IP أو URL أولاً.")
             return
+        if isinstance(target, str):
+            target = parse_target(target)
+        if not target:
+            send_to_chat(chat_id, "❌ هدف غير صالح.")
+            return
         job = job_from_target(target, selection, scan_profile)
         sess["pending_ip"] = None
         sess["state"] = "idle"
-        start_scan(chat_id, job, base_dir)
+        if sess.get("scanning") or sess.get("queue"):
+            sess["queue"].append(job)
+            send_to_chat(
+                chat_id,
+                f"✓ أُضيف {job['ip']} للانتظار (الموقع {len(sess['queue'])})\n"
+                f"النوع: {job.get('mode_label')}",
+            )
+        else:
+            start_scan(chat_id, job, base_dir)
         return
 
     target = sess.get("ip")
@@ -87,7 +100,7 @@ def handle_message(message, base_dir):
             "  أو أرسل email/phone مباشرة\n\n"
             "▶ /lan — LAN scan | /lan attack 1 — AUTO-PWN\n"
             "▶ /history | /poc | /update | /decepticon http://IP\n\n"
-            "/status /queue /clearqueue /cancel",
+            "/status /queue /clearqueue /cancel /stopscan",
         )
         return
 
@@ -117,14 +130,13 @@ def handle_message(message, base_dir):
         send_to_chat(chat_id, f"✓ تم مسح {cleared} IP من قائمة الانتظار.\n{format_status(sess)}")
         return
 
-    if text == "/cancel":
-        sess["state"] = "idle"
-        sess["ip"] = None
-        sess["pending_ip"] = None
+    if text in ("/cancel", "/stopscan", "/stop"):
+        force_idle(sess)
         send_to_chat(
             chat_id,
-            "تم إلغاء الاختيار.\n"
-            "(المسح الجاري وقائمة الانتظار لم تُلغَ — /clearqueue لمسح الانتظار)",
+            "✓ تم إلغاء حالة «مسح جاري» واختيار الهدف.\n"
+            "(عملية المسح في الخلفية قد تستمر — /clearqueue لمسح الانتظار)\n"
+            f"{format_status(sess)}",
         )
         return
 

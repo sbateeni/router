@@ -26,10 +26,14 @@ def begin(target_label, source="scan"):
 
 
 def write(text):
-    if not _active or not _log_path:
+    import os
+
+    log = _log_path or path()
+    if not _active and not os.environ.get("AUTOPWN_SCAN_SOURCE"):
         return
     try:
-        with open(_log_path, "a", encoding="utf-8") as fh:
+        os.makedirs(os.path.dirname(log), exist_ok=True)
+        with open(log, "a", encoding="utf-8") as fh:
             fh.write(text)
             if text and not text.endswith("\n"):
                 fh.write("\n")

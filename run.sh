@@ -82,6 +82,11 @@ fi
 _start_live_tail
 trap '_stop_live_tail' EXIT
 
+echo
+echo "  [*] مخرجات المسح (تيليجرام أو [1]): أسطر [SCAN] أدناه — لا تغلق هذه النافذة"
+echo "  [*] ملف حي: tail -f logs/LIVE_SCAN.log"
+echo
+
 TG_ARGS=()
 if [[ "${NUCLEI_TELEGRAM_EXTERNAL:-}" == "1" ]]; then
   TG_ARGS=(--no-telegram)
