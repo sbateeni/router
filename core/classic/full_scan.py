@@ -89,6 +89,16 @@ def _is_deep_scan():
 def run_all_classic_tools(ip, target_dir, selection=1):
     """Full classic scan — tools chosen from live target profile after each phase."""
     from core.scan_transcript import begin as transcript_begin, end as transcript_end, event as transcript_event, phase as transcript_phase
+    from core.telegram.phase_notify import notify_phase_complete
+
+    def _phase_done(phase_id, title, profile_obj=None, skipped=False, skip_reason=""):
+        notify_phase_complete(
+            phase_id, title, ip, target_dir,
+            profile=profile_obj or profile,
+            context=context,
+            skipped=skipped,
+            skip_reason=skip_reason,
+        )
 
     context = ScanContext()
     profile = {}
@@ -126,6 +136,7 @@ def run_all_classic_tools(ip, target_dir, selection=1):
         except Exception as exc:
             print(f"[!] Deep Phase 0 error: {exc}")
         _phase_delay()
+        _phase_done("0", "PHASE 0: Deep OSINT & recon")
 
     transcript_phase(f"PHASE 1: Scanning & Reconnaissance [{get_profile_name()}]")
     print(f"\n>>> PHASE 1: Scanning & Reconnaissance [{get_profile_name()}]")
@@ -182,6 +193,7 @@ def run_all_classic_tools(ip, target_dir, selection=1):
 
     refresh_report(ip, target_dir, selection, context.exploited, context, "Phase 1 - Reconnaissance")
     profile = _sync_profile(ip, target_dir, context, "after Phase 1", deep=deep)
+    _phase_done("1", f"PHASE 1: Scanning & Recon [{get_profile_name()}]")
     _phase_delay()
 
     web_ports = profile.get("web_ports") or context.web_ports
@@ -251,6 +263,12 @@ def run_all_classic_tools(ip, target_dir, selection=1):
 
         refresh_report(ip, target_dir, selection, context.exploited, context, "Phase 2 - Web Enumeration")
         profile = _sync_profile(ip, target_dir, context, "after Phase 2", deep=deep)
+        _phase_done("2", "PHASE 2: Web Enumeration")
+    else:
+        _phase_done(
+            "2", "PHASE 2: Web Enumeration",
+            skipped=True, skip_reason="لا منافذ ويب — تم تخطي enumeration",
+        )
     _phase_delay()
 
     print("\n======================================================")
@@ -342,6 +360,7 @@ def run_all_classic_tools(ip, target_dir, selection=1):
 
     refresh_report(ip, target_dir, selection, context.exploited, context, "Phase 3 - Exploitation")
     profile = _sync_profile(ip, target_dir, context, "after Phase 3", deep=deep)
+    _phase_done("3", "PHASE 3: Exploitation")
     _phase_delay()
 
     if (profile.get("login_ports") or context.login_ports or profile.get("login_paths")) and should_run_tool(profile, "hydra"):
@@ -364,8 +383,13 @@ def run_all_classic_tools(ip, target_dir, selection=1):
                 pass
         except KeyboardInterrupt:
             handle_keyboard_interrupt()
+        _phase_done("4", "PHASE 4: Credential Brute-Force")
     else:
         print("[*] Hydra skipped by target profile or no login surface.")
+        _phase_done(
+            "4", "PHASE 4: Credential Brute-Force",
+            skipped=True, skip_reason="Hydra — لا login surface أو مُستبعد بالملف الشخصي",
+        )
 
     _, confirmed = refresh_report(ip, target_dir, selection, context.exploited, context, "Phase 4 - Brute Force")
     _sync_profile(ip, target_dir, context, "final", deep=deep)

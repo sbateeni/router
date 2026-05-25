@@ -34,6 +34,7 @@ def run_scan_job(chat_id, job, base_dir):
     target_dir = os.path.join(base_dir, "targets", workspace)
     os.makedirs(target_dir, exist_ok=True)
     os.environ["AUTOPWN_SCAN_SOURCE"] = "telegram"
+    os.environ["AUTOPWN_TELEGRAM_CHAT_ID"] = str(chat_id)
     reset_target_workspace(target_dir)
 
     hints = job.get("hints") or {}
@@ -71,6 +72,7 @@ def run_scan_job(chat_id, job, base_dir):
         profile=scan_profile, ai_analysis=ai_analysis, chat_id=str(chat_id),
     )
     os.environ.pop("AUTOPWN_SCAN_SOURCE", None)
+    os.environ.pop("AUTOPWN_TELEGRAM_CHAT_ID", None)
     return confirmed
 
 
@@ -100,6 +102,7 @@ def process_queue(chat_id, base_dir):
             send_to_chat(chat_id, f"❌ خطأ أثناء مسح {job['ip']}: {exc}")
         finally:
             os.environ.pop("AUTOPWN_SCAN_SOURCE", None)
+            os.environ.pop("AUTOPWN_TELEGRAM_CHAT_ID", None)
 
     sess["scanning"] = False
     sess["current_ip"] = None
@@ -143,7 +146,8 @@ def start_scan(chat_id, job, base_dir):
                 f"النوع: {job.get('mode_label')}\n"
                 f"الملف الشخصي: {job['profile']}\n\n"
                 f"سيصلك التقرير في تيليجرام عند الانتهاء.\n"
-                f"📺 تُفتح نافذة Live Log تلقائياً (tail -f logs/LIVE_SCAN.log)",
+                f"📺 تُفتح نافذة Live Log تلقائياً\n"
+                f"📨 ملخص كل PHASE يُرسل هنا عند انتهائه",
             )
 
             try:
@@ -152,6 +156,7 @@ def start_scan(chat_id, job, base_dir):
                 send_to_chat(chat_id, f"❌ خطأ أثناء المسح: {exc}")
             finally:
                 os.environ.pop("AUTOPWN_SCAN_SOURCE", None)
+            os.environ.pop("AUTOPWN_TELEGRAM_CHAT_ID", None)
 
             try:
                 process_queue(chat_id, base_dir)
