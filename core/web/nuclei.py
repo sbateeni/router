@@ -3,7 +3,7 @@ import json
 import os
 
 from core.scan_config import get_scan_profile
-from core.utils import run_cmd
+from core.utils import run_cmd, valid_env_value
 from core.web.nuclei_config import build_nuclei_base_cmd, custom_template_dir, nuclei_tags_for_profile, resolve_nuclei_cmd
 
 SIGNIFICANT_NUCLEI_SEVERITIES = {"critical", "high", "medium"}
@@ -76,9 +76,42 @@ def parse_nuclei_jsonl(jsonl_path):
     return findings
 
 
+def _nuclei_timeouts():
+    profile = get_scan_profile()
+    cmd_t = profile.get("nuclei_cmd_timeout", 480)
+    http_t = profile.get("nuclei_http_timeout", 10)
+    rl = profile.get("nuclei_rate_limit", 150)
+    env_cmd = os.environ.get("NUCLEI_CMD_TIMEOUT", "").strip()
+    env_http = os.environ.get("NUCLEI_HTTP_TIMEOUT", "").strip()
+    if valid_env_value(env_cmd):
+        try:
+            cmd_t = int(env_cmd)
+        except ValueError:
+            pass
+    if valid_env_value(env_http):
+        try:
+            http_t = int(env_http)
+        except ValueError:
+            pass
+    return cmd_t, http_t, rl
+
+
+def _nuclei_scan_flags(export_path):
+    _, http_t, rl = _nuclei_timeouts()
+    return [
+        "-silent", "-jle", export_path,
+        "-timeout", str(http_t),
+        "-rl", str(rl),
+        "-mhe", "30",
+        "-retries", "1",
+    ]
+
+
 def run_nuclei(target_url, target_dir, tags=None):
     profile = get_scan_profile()
+    cmd_timeout, http_t, rl = _nuclei_timeouts()
     print(f"\n[+] Running Nuclei (Vulnerability Scanning) [{profile['label']}]...")
+    print(f"[*] Nuclei limits: cmd_timeout={cmd_timeout}s http_timeout={http_t}s rate={rl}/s")
     if tags:
         print(f"[*] Nuclei tags (from target profile): {tags}")
     custom = custom_template_dir()
@@ -97,14 +130,21 @@ def run_nuclei(target_url, target_dir, tags=None):
             print("[!] Skipping nuclei scan due to missing templates.")
             return False
 
-    validate_log = os.path.join(target_dir, "nuclei_validate.txt")
-    run_cmd([nuclei_cmd, "-validate"], capture=True, log_file=validate_log)
+    validate_marker = os.path.join(target_dir, ".nuclei_validated")
+    if os.environ.get("NUCLEI_VALIDATE") == "1" and not os.path.isfile(validate_marker):
+        validate_log = os.path.join(target_dir, "nuclei_validate.txt")
+        run_cmd([nuclei_cmd, "-validate"], capture=True, log_file=validate_log, timeout=180)
+        try:
+            with open(validate_marker, "w", encoding="utf-8") as fh:
+                fh.write("ok\n")
+        except OSError:
+            pass
 
     def run_scan(base_command, export_path):
         if os.path.exists(export_path):
             os.remove(export_path)
-        command = base_command + ["-silent", "-jle", export_path]
-        return run_cmd(command, capture=True, log_file=stdout_log)
+        command = base_command + _nuclei_scan_flags(export_path)
+        return run_cmd(command, capture=True, log_file=stdout_log, timeout=cmd_timeout)
 
     base_cmd = build_nuclei_base_cmd(target_url)
     tag_list = tags if tags else nuclei_tags_for_profile(profile)

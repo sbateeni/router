@@ -206,6 +206,44 @@ Telegram phase summaries: `core/telegram/phase_notify.py` reads all artifacts ab
 
 ---
 
+## Parallel job engine (`core/phase_jobs.py`)
+
+**Policy:** أدوات مستقلة تُشغَّل **بالتوازي** مع timeout لكل job — لا تعليق على Nuclei أو Hydra أو changeme.
+
+| Module | Role |
+|--------|------|
+| `core/phase_jobs.py` | `PhaseRunner` — thread pool, per-job timeout, group timeout, `PHASE_N_JOBS.json` |
+| `core/phase_log.py` | `logs/PHASE_N.log` per batch (+ optional terminal via `AUTOPWN_PHASE_WINDOWS=1`) |
+| `core/classic/parallel_phases.py` | Phase 1 recon, Phase 2 web, Phase 3 RouterSploit+Ingram |
+
+### Parallel batches
+
+| Batch | Phase ID | Jobs (concurrent) |
+|-------|----------|-------------------|
+| IoT stack | `1-iot` | nuclei-templates, UPnP, changeme, Default-Hunter, jeanphorn |
+| Recon tools | `1-recon` | whatweb×ports, nikto×ports, searchsploit×queries, nmap-vuln (deep) |
+| Dirsearch | `2-dirsearch` | dirsearch×ports |
+| Path discovery | `2-paths` | gau + ffuf×ports |
+| Nuclei | `2-nuclei` | nuclei×URLs (3–4 workers) |
+| Genzai | `2-genzai` | genzai×ports |
+| Classic exploit | `3-classic` | RouterSploit + Ingram |
+| IoT exploit | `3-iot` | CamOver, CamRaptor, IoTBreaker, Rustsploit, IoTScan |
+| IoTBreaker CVEs | `3-iotbreaker` | fingerprint, vuln, scan + 9×CVE `--check` |
+
+### Environment tuning (Kali)
+
+```bash
+export AUTOPWN_MAX_WORKERS=8          # concurrent jobs (default 6 normal / 8 deep)
+export AUTOPWN_JOB_TIMEOUT=600        # per-tool max seconds
+export AUTOPWN_PHASE_TIMEOUT=3600       # whole batch max seconds
+export NUCLEI_CMD_TIMEOUT=300           # per Nuclei URL
+export AUTOPWN_PHASE_WINDOWS=1          # open gnome-terminal per phase log
+```
+
+Logs: `logs/LIVE_SCAN.log` (global) + `logs/PHASE_2-nuclei.log` (per batch) + `targets/{ip}/PHASE_*_JOBS.json`
+
+---
+
 ## System binaries
 
 | Binary | Kali | Windows | Termux |

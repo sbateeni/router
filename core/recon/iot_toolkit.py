@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import glob
 import json
 import os
 import re
@@ -248,16 +249,36 @@ def _enrich_upnp_devices(devices: list[dict], target_dir: str) -> None:
             fh.write("\n\n".join(lines))
 
 
-def run_all_default_cred_scans(ip: str, target_dir: str, open_ports: list | None = None) -> list[dict]:
-    """changeme + Default-Hunter (both YAML cred databases)."""
+def run_changeme_only(ip: str, target_dir: str, open_ports: list | None = None) -> list[dict]:
     protocols = _protocols_for_ports(open_ports)
-    all_hits: list[dict] = []
+    hits: list[dict] = []
     for name, rel in CRED_SCANNERS:
-        all_hits.extend(_run_cred_scanner(name, rel, ip, target_dir, protocols))
-    all_hits.extend(_run_default_hunter(ip, target_dir, protocols))
+        hits.extend(_run_cred_scanner(name, rel, ip, target_dir, protocols))
+    return hits
+
+
+def run_all_default_cred_scans(ip: str, target_dir: str, open_ports: list | None = None) -> list[dict]:
+    """changeme + Default-Hunter (sequential fallback)."""
+    all_hits = run_changeme_only(ip, target_dir, open_ports)
+    all_hits.extend(_run_default_hunter(ip, target_dir, _protocols_for_ports(open_ports)))
     _save_json(os.path.join(target_dir, "CHANGEME_HITS.json"), all_hits)
     _save_json(os.path.join(target_dir, "IOT_DEFAULT_CREDS.json"), all_hits)
     return all_hits
+
+
+def _merge_and_save_default_creds(target_dir: str, *hit_lists) -> list[dict]:
+    merged: list[dict] = []
+    seen: set[str] = set()
+    for hits in hit_lists:
+        for h in hits or []:
+            key = str(h)
+            if key in seen:
+                continue
+            seen.add(key)
+            merged.append(h)
+    _save_json(os.path.join(target_dir, "CHANGEME_HITS.json"), merged)
+    _save_json(os.path.join(target_dir, "IOT_DEFAULT_CREDS.json"), merged)
+    return merged
 
 
 def _genzai_cmd(url: str) -> list[list[str]]:
@@ -281,19 +302,46 @@ def run_genzai_scan(ip: str, target_dir: str, web_ports: list | None = None) -> 
     results: dict[str, Any] = {"findings": []}
 
     for port in ports[:8]:
-        scheme = "https" if port in (443, 8443) else "http"
-        url = f"{scheme}://{ip}" if port in (80, 443) else f"{scheme}://{ip}:{port}"
-        log_file = os.path.join(target_dir, f"genzai_port_{port}.txt")
-        output = ""
-        for cmd in _genzai_cmd(url):
-            ok, output = run_cmd(cmd, capture=True, log_file=log_file)
-            if output and "not found" not in output.lower() and "error" not in output.lower()[:80]:
-                break
-        if output:
-            results["findings"].append({"url": url, "output": output[:4000]})
+        finding = run_genzai_single_port(ip, target_dir, port)
+        if finding:
+            results["findings"].append(finding)
 
     _save_json(os.path.join(target_dir, "GENZAI_RESULTS.json"), results)
     print(f"[*] Genzai: {len(results['findings'])} URL(s) scanned")
+    return results
+
+
+def run_genzai_single_port(ip: str, target_dir: str, port: int) -> dict | None:
+    """Scan one web port with Genzai; returns finding dict or None."""
+    if not shutil.which("genzai"):
+        return None
+    scheme = "https" if port in (443, 8443) else "http"
+    url = f"{scheme}://{ip}" if port in (80, 443) else f"{scheme}://{ip}:{port}"
+    log_file = os.path.join(target_dir, f"genzai_port_{port}.txt")
+    output = ""
+    for cmd in _genzai_cmd(url):
+        ok, output = run_cmd(cmd, capture=True, log_file=log_file, timeout=90)
+        if output and "not found" not in output.lower() and "error" not in output.lower()[:80]:
+            break
+    if output:
+        return {"url": url, "output": output[:4000]}
+    return None
+
+
+def merge_genzai_port_results(target_dir: str) -> dict:
+    """Merge genzai_port_*.txt logs into GENZAI_RESULTS.json after parallel jobs."""
+    findings: list[dict] = []
+    for path in glob.glob(os.path.join(target_dir, "genzai_port_*.txt")):
+        try:
+            with open(path, encoding="utf-8", errors="ignore") as fh:
+                body = fh.read().strip()
+            if body and "not found" not in body.lower()[:80]:
+                port = re.search(r"genzai_port_(\d+)\.txt", os.path.basename(path))
+                findings.append({"port": int(port.group(1)) if port else 0, "output": body[:4000]})
+        except OSError:
+            pass
+    results = {"findings": findings}
+    _save_json(os.path.join(target_dir, "GENZAI_RESULTS.json"), results)
     return results
 
 
@@ -375,13 +423,63 @@ def build_iot_hydra_wordlists(target_dir: str) -> dict[str, str | None]:
 
 
 def run_phase1_iot_recon(ip: str, target_dir: str, open_ports: list | None = None) -> dict:
-    """Phase 1 — every IP: Nuclei refresh, UPnP, changeme, Default-Hunter, wordlists."""
-    summary: dict[str, Any] = {}
-    summary["nuclei_templates"] = run_nuclei_template_refresh(target_dir)
-    summary["upnp"] = run_upnp_discovery(ip, target_dir)
-    summary["default_creds"] = run_all_default_cred_scans(ip, target_dir, open_ports)
-    summary["wordlists"] = build_iot_hydra_wordlists(target_dir)
-    return summary
+    """Phase 1 — parallel IoT stack: Nuclei refresh, UPnP, changeme, Default-Hunter, wordlists."""
+    from core.phase_jobs import PhaseRunner
+    from core.scan_config import get_scan_profile
+
+    runner = PhaseRunner(target_dir, "1-iot", "Phase 1 — IoT toolkit", max_workers=5)
+    runner.add(
+        "nuclei-templates",
+        lambda: run_nuclei_template_refresh(target_dir),
+        timeout=180,
+        artifacts=("nuclei_template_update.txt",),
+    )
+    runner.add(
+        "upnp",
+        lambda: run_upnp_discovery(ip, target_dir),
+        timeout=120,
+        artifacts=("UPNP_DISCOVERY.json",),
+    )
+    runner.add(
+        "changeme",
+        lambda: run_changeme_only(ip, target_dir, open_ports),
+        timeout=360,
+        artifacts=("changeme_scan.txt",),
+    )
+    runner.add(
+        "default-hunter",
+        lambda: _run_default_hunter(ip, target_dir, _protocols_for_ports(open_ports)),
+        timeout=360,
+        artifacts=("default-hunter_scan.txt",),
+    )
+    runner.add(
+        "jeanphorn-wordlists",
+        lambda: build_iot_hydra_wordlists(target_dir),
+        timeout=60,
+        artifacts=("hydra_iot_passwords.txt", "hydra_iot_combos.txt"),
+    )
+
+    print(f"\n[+] Phase 1 parallel IoT: {len(runner.jobs)} job(s)")
+    results = runner.run(group_timeout=get_scan_profile().get("phase1_iot_timeout", 900))
+
+    changeme_hits = results.get("changeme")
+    dh_hits = results.get("default-hunter")
+    creds = _merge_and_save_default_creds(
+        target_dir,
+        changeme_hits.result if changeme_hits and changeme_hits.ok else [],
+        dh_hits.result if dh_hits and dh_hits.ok else [],
+    )
+
+    upnp_r = results.get("upnp")
+    wl_r = results.get("jeanphorn-wordlists")
+    nuc_r = results.get("nuclei-templates")
+
+    return {
+        "nuclei_templates": bool(nuc_r and nuc_r.ok and nuc_r.result),
+        "upnp": upnp_r.result if upnp_r and upnp_r.ok else [],
+        "default_creds": creds,
+        "wordlists": wl_r.result if wl_r and wl_r.ok else {},
+    }
 
 
 def run_phase2_iot_web(ip: str, target_dir: str, web_ports: list | None) -> dict:

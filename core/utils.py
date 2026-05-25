@@ -136,13 +136,16 @@ def sanitize_routersploit_modules(modules):
     return cleaned
 
 
-def run_cmd(command, capture=False, log_file=None):
+def run_cmd(command, capture=False, log_file=None, timeout=None):
     """
     Run a shell command. When log_file is set, stdout/stderr are saved there.
     Returns (success, combined_output) where success reflects the process exit code.
+    timeout: seconds (None = wait forever). On timeout kills the process and returns (False, message).
     """
     try:
         exec_line = f"\n[>] Executing: {' '.join(command) if isinstance(command, list) else command}"
+        if timeout:
+            exec_line += f" (timeout={timeout}s)"
         print(exec_line)
         try:
             from core.live_scan_log import write as live_write
@@ -156,7 +159,33 @@ def run_cmd(command, capture=False, log_file=None):
             pass
 
         if capture or log_file:
-            result = subprocess.run(command, capture_output=True, text=True)
+            try:
+                result = subprocess.run(
+                    command, capture_output=True, text=True, timeout=timeout,
+                )
+            except subprocess.TimeoutExpired as exc:
+                msg = f"Command timed out after {timeout}s"
+                print(f"[-] {msg}")
+                partial = ""
+                if exc.stdout:
+                    partial += exc.stdout
+                if exc.stderr:
+                    partial += ("\n" if partial else "") + exc.stderr
+                partial = partial.strip()
+                if log_file:
+                    try:
+                        ensure_parent_dir(log_file)
+                        with open(log_file, "w", encoding="utf-8") as f:
+                            f.write(f"{msg}\n\n{partial}".strip())
+                    except OSError:
+                        pass
+                try:
+                    from core.scan_transcript import event as transcript_event
+                    transcript_event(f"[-] {msg}: {' '.join(command) if isinstance(command, list) else command}")
+                except Exception:
+                    pass
+                return False, msg if not partial else f"{msg}\n{partial}"
+
             output = (result.stdout or "") + ("\n" + result.stderr if result.stderr else "")
             output = output.strip()
             ok = result.returncode == 0
@@ -188,7 +217,7 @@ def run_cmd(command, capture=False, log_file=None):
                 print(output)
             return ok, ""
 
-        result = subprocess.run(command)
+        result = subprocess.run(command, timeout=timeout)
         return result.returncode == 0, ""
     except Exception as e:
         print(f"[-] Failed to execute command: {e}")
