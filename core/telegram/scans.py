@@ -99,6 +99,9 @@ def process_queue(chat_id, base_dir):
         try:
             run_scan_job(chat_id, job, base_dir)
         except Exception as exc:
+            import traceback
+            tb = traceback.format_exc(limit=6)
+            print(f"[!] Scan error for {job.get('ip')}: {exc}\n{tb}", flush=True)
             send_to_chat(chat_id, f"❌ خطأ أثناء مسح {job['ip']}: {exc}")
         finally:
             os.environ.pop("AUTOPWN_SCAN_SOURCE", None)
@@ -153,7 +156,10 @@ def start_scan(chat_id, job, base_dir):
             try:
                 run_scan_job(chat_id, job, base_dir)
             except Exception as exc:
-                send_to_chat(chat_id, f"❌ خطأ أثناء المسح: {exc}")
+                import traceback
+                tb = traceback.format_exc(limit=6)
+                print(f"[!] Scan error for {job.get('ip')}: {exc}\n{tb}", flush=True)
+                send_to_chat(chat_id, f"❌ خطأ أثناء المسح: {exc}\n\n`{tb[-800:]}`")
             finally:
                 os.environ.pop("AUTOPWN_SCAN_SOURCE", None)
             os.environ.pop("AUTOPWN_TELEGRAM_CHAT_ID", None)

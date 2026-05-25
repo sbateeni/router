@@ -3,6 +3,7 @@ import os
 import re
 import shutil
 
+from core.classic.context import _is_scan_port_entry
 from core.utils import run_cmd
 
 MSF_SEARCH_FILE = "msf_search.txt"
@@ -313,7 +314,9 @@ def run_metasploit_recon(ip, target_dir, open_ports, vendor=None):
 
     queries = build_search_queries(open_ports, vendor=vendor)
     if not queries and vendor:
-        queries = [vendor.split()[0]]
+        vparts = vendor.split()
+        if vparts:
+            queries = [vparts[0]]
 
     print(f"\n[+] Metasploit module search ({len(queries)} queries)...")
     first = True
@@ -345,13 +348,15 @@ def run_metasploit_recon(ip, target_dir, open_ports, vendor=None):
     web_ports = []
     login_ports = []
     for entry in open_ports or []:
-        if not isinstance(entry, dict) or not entry.get("port"):
+        if not _is_scan_port_entry(entry):
             continue
         port = entry["port"]
         svc = (entry.get("service") or "").lower()
+        svc_parts = svc.split()
+        svc_first = svc_parts[0] if svc_parts else ""
         if port in (80, 443, 8080, 8443) or "http" in svc:
             web_ports.append(port)
-        if port in (21, 22, 23) or svc.split()[0] in ("ssh", "ftp", "telnet"):
+        if port in (21, 22, 23) or svc_first in ("ssh", "ftp", "telnet"):
             login_ports.append(entry)
 
     generate_msf_exploit_commands(

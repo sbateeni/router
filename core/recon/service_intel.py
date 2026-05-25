@@ -56,9 +56,11 @@ def build_searchsploit_queries(open_ports, vendor=None):
         if "fiberhome" in vlower:
             queries.extend(["fiberhome", "fiberhome router"])
         else:
-            first = vendor.split()[0]
-            if len(first) > 3 and first.lower() not in VENDOR_NOISE:
-                queries.append(first)
+            parts = vendor.split()
+            if parts:
+                first = parts[0]
+                if len(first) > 3 and first.lower() not in VENDOR_NOISE:
+                    queries.append(first)
 
     apache_ver = re.search(r"apache\s+httpd\s+([\d.]+)", blob, re.I)
     if apache_ver:

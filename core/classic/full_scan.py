@@ -92,13 +92,16 @@ def run_all_classic_tools(ip, target_dir, selection=1):
     from core.telegram.phase_notify import notify_phase_complete
 
     def _phase_done(phase_id, title, profile_obj=None, skipped=False, skip_reason=""):
-        notify_phase_complete(
-            phase_id, title, ip, target_dir,
-            profile=profile_obj or profile,
-            context=context,
-            skipped=skipped,
-            skip_reason=skip_reason,
-        )
+        try:
+            notify_phase_complete(
+                phase_id, title, ip, target_dir,
+                profile=profile_obj or profile,
+                context=context,
+                skipped=skipped,
+                skip_reason=skip_reason,
+            )
+        except Exception as exc:
+            print(f"[!] Telegram phase notify failed: {exc}")
 
     context = ScanContext()
     profile = {}

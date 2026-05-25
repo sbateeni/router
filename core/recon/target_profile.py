@@ -238,8 +238,12 @@ def build_target_profile(ip, target_dir, context=None):
         login_ports = []
         discovered = []
         for p in ports:
+            port = p.get("port")
+            if not isinstance(port, int) or port <= 0:
+                continue
             svc = str(p.get("service", "")).lower()
-            if p.get("port") in (21, 22, 23) or svc.split()[0] in ("ssh", "ftp", "telnet"):
+            svc_first = svc.split()[0] if svc.split() else ""
+            if port in (21, 22, 23) or svc_first in ("ssh", "ftp", "telnet"):
                 login_ports.append(p)
 
     if not web_ports and ports:
