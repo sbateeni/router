@@ -74,10 +74,12 @@ def run_all_classic_tools(ip, target_dir, selection=1):
     hints = load_target_hints(target_dir)
     hint_line = hints.get("raw") or hints.get("seed_url") or ip
     deep = _is_deep_scan()
+    live_src = "telegram" if os.environ.get("AUTOPWN_SCAN_SOURCE") == "telegram" else "cli"
     transcript_begin(
         target_dir,
         header=f"Target: {hint_line} | profile: {get_profile_name()}"
         + (" | FULL TOOL MERGE" if deep else ""),
+        live_source=live_src,
     )
 
     if hints:

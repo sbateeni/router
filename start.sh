@@ -24,8 +24,8 @@ echo "======================================================"
 echo "  تشغيل مزدوج: Telegram + قائمة Kali"
 echo "  • تيليجرام: @H_the_box_bot (خلفية)"
 echo "  • الطرفية: القائمة أدناه — مسح من هنا أو من التيليجرام"
-echo "  • متابعة المسح: tail -f targets/IP/SCAN_TRANSCRIPT.txt"
-echo "  • سجل البوت:    tail -f logs/telegram.log"
+echo "  • مسح تيليجرام → يظهر في هذه الطرفية [SCAN] (أو tmux split)"
+echo "  • ملف حي: tail -f logs/LIVE_SCAN.log"
 echo "======================================================"
 echo
 

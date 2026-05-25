@@ -13,11 +13,46 @@ else
   PY="python3"
 fi
 
+LIVE_LOG="$ROOT/logs/LIVE_SCAN.log"
+mkdir -p "$ROOT/logs"
+touch "$LIVE_LOG"
+
+_stop_live_tail() {
+  if [[ -f "$ROOT/logs/live_tail.pid" ]]; then
+    kill "$(cat "$ROOT/logs/live_tail.pid")" 2>/dev/null || true
+    rm -f "$ROOT/logs/live_tail.pid"
+  fi
+}
+
+_start_live_tail() {
+  [[ "${AUTOPWN_LIVE_VIEW:-1}" == "1" ]] || return 0
+  _stop_live_tail
+  (
+    tail -n 0 -f "$LIVE_LOG" 2>/dev/null | while IFS= read -r line; do
+      printf '\033[36m[SCAN]\033[0m %s\n' "$line"
+    done
+  ) &
+  echo $! >"$ROOT/logs/live_tail.pid"
+}
+
 # Telegram bot in background (one process for all menu options)
-if [[ -x "$ROOT/scripts/telegram_service.sh" ]]; then
+if [[ -z "${AUTOPWN_SKIP_TELEGRAM:-}" ]] && [[ -x "$ROOT/scripts/telegram_service.sh" ]]; then
   bash "$ROOT/scripts/telegram_service.sh" start || true
   export NUCLEI_TELEGRAM_EXTERNAL=1
 fi
+
+# tmux: pane علوي = مخرجات المسح الحية، سفلي = القائمة
+if [[ -z "${AUTOPWN_NO_TMUX:-}" ]] && command -v tmux &>/dev/null && [[ -z "${TMUX:-}" ]]; then
+  echo "[*] فتح tmux: أعلى = مسح تيليجرام/CLI حي | أسفل = القائمة"
+  sleep 1
+  exec tmux new-session -s autopwn \
+    "tail -f '$LIVE_LOG' | sed -u 's/^/[SCAN] /'" \; \
+    split-window -v -t autopwn \
+    "export AUTOPWN_SKIP_TELEGRAM=1 AUTOPWN_NO_TMUX=1 AUTOPWN_LIVE_VIEW=0; cd '$ROOT'; exec bash '$ROOT/run.sh'"
+fi
+
+_start_live_tail
+trap '_stop_live_tail' EXIT
 
 TG_ARGS=()
 if [[ "${NUCLEI_TELEGRAM_EXTERNAL:-}" == "1" ]]; then
@@ -39,7 +74,8 @@ echo "  [8] Interactive menu            bin/master_pwn.py (CLI + Telegram alread
 echo "  [9] Update from GitHub          project + tools + nuclei"
 if [[ "${NUCLEI_TELEGRAM_EXTERNAL:-}" == "1" ]]; then
   echo
-  echo "  [*] Telegram bot: running — open @H_the_box_bot (logs/telegram.log)"
+  echo "  [*] Telegram: @H_the_box_bot — المسح يظهر هنا كـ [SCAN]"
+  echo "  [*] Live log: tail -f logs/LIVE_SCAN.log"
 fi
 echo "  [0] Exit"
 echo

@@ -19,10 +19,16 @@ def transcript_path(target_dir):
     return os.path.join(target_dir, TRANSCRIPT_FILENAME)
 
 
-def begin(target_dir, header=None):
+def begin(target_dir, header=None, live_source="cli"):
     global _active_path
     _active_path = transcript_path(target_dir)
     os.makedirs(target_dir, exist_ok=True)
+    try:
+        from core.live_scan_log import begin as live_begin
+
+        live_begin(header or target_dir, source=live_source)
+    except Exception:
+        pass
     with open(_active_path, "w", encoding="utf-8") as fh:
         fh.write("============================================================\n")
         fh.write(" SCAN TRANSCRIPT (chronological — like terminal output)\n")
@@ -44,6 +50,12 @@ def end(note=None):
         if note:
             fh.write(f"{note}\n")
         fh.write("============================================================\n")
+    try:
+        from core.live_scan_log import end as live_end
+
+        live_end(note)
+    except Exception:
+        pass
     _active_path = None
 
 
@@ -54,6 +66,12 @@ def _append(text):
         fh.write(text)
         if not text.endswith("\n"):
             fh.write("\n")
+    try:
+        from core.live_scan_log import write as live_write
+
+        live_write(text if text.endswith("\n") else text + "\n")
+    except Exception:
+        pass
 
 
 def phase(title):

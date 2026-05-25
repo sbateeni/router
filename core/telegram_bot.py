@@ -208,13 +208,16 @@ def _format_status(sess):
 
 
 def _run_scan_job(chat_id, job, base_dir):
+    import os
+
     scan_host = job.get("scan_host") or job["ip"]
     workspace = job.get("workspace_name") or sanitize_target_dir_name(scan_host)
     selection = job["selection"]
     scan_profile = job["profile"]
 
-    target_dir = __import__("os").path.join(base_dir, "targets", workspace)
-    __import__("os").makedirs(target_dir, exist_ok=True)
+    target_dir = os.path.join(base_dir, "targets", workspace)
+    os.makedirs(target_dir, exist_ok=True)
+    os.environ["AUTOPWN_SCAN_SOURCE"] = "telegram"
     reset_target_workspace(target_dir)
 
     hints = job.get("hints") or {}
@@ -252,6 +255,7 @@ def _run_scan_job(chat_id, job, base_dir):
         scan_host, target_dir, report_path, confirmed,
         profile=scan_profile, ai_analysis=ai_analysis, chat_id=str(chat_id),
     )
+    os.environ.pop("AUTOPWN_SCAN_SOURCE", None)
     return confirmed
 
 
@@ -277,6 +281,8 @@ def _process_queue(chat_id, base_dir):
             _run_scan_job(chat_id, job, base_dir)
         except Exception as exc:
             send_to_chat(chat_id, f"❌ خطأ أثناء مسح {job['ip']}: {exc}")
+        finally:
+            __import__("os").environ.pop("AUTOPWN_SCAN_SOURCE", None)
 
     sess["scanning"] = False
     sess["current_ip"] = None
@@ -316,20 +322,24 @@ def _start_scan(chat_id, job, base_dir):
                 job.get("scan_host") or job["ip"]
             )
             transcript = __import__("os").path.join(base_dir, "targets", ws_name, "SCAN_TRANSCRIPT.txt")
+            from core.live_scan_log import path as live_log_path
+
             send_to_chat(
                 chat_id,
                 f"▶ بدء المسح\nالهدف: {job['ip']}\n"
                 f"النوع: {job.get('mode_label')}\n"
                 f"الملف الشخصي: {job['profile']}\n\n"
                 f"سيصلك التقرير عند الانتهاء.\n\n"
-                f"📂 متابعة على Kali (طرفية ثانية):\n"
-                f"tail -f {transcript}",
+                f"📺 في طرفية start.sh تظهر أسطر [SCAN] تلقائياً.\n"
+                f"📂 أو: tail -f {live_log_path()}",
             )
 
             try:
                 _run_scan_job(chat_id, job, base_dir)
             except Exception as exc:
                 send_to_chat(chat_id, f"❌ خطأ أثناء المسح: {exc}")
+            finally:
+                __import__("os").environ.pop("AUTOPWN_SCAN_SOURCE", None)
 
             _process_queue(chat_id, base_dir)
 
