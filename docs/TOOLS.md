@@ -122,13 +122,87 @@ Complete reference of every tool, module, and external dependency used in this p
 
 | Directory | Purpose |
 |-----------|---------|
-| `routersploit/` | Router/IoT exploits |
+| `routersploit/` | Router/IoT exploits (Python) |
+| `rustsploit/` | Router/IoT scanner/exploits (Rust, optional build) |
 | `ingram/` | IP camera scanner |
-| `DefaultCreds-cheat-sheet/` | Default passwords |
+| `DefaultCreds-cheat-sheet/` | Default passwords reference |
 | `dirsearch/` | Path enumeration |
 | `sqlmap/` | SQL injection |
-| `nuclei/` | Vulnerability scanner (optional) |
+| `nuclei/` | Vulnerability scanner (optional local clone) |
 | `scripts/new_pocs/` | Downloaded GitHub PoCs |
+| `changeme/` | Default/backdoor credential scanner |
+| `default-hunter/` | SySS modern changeme fork (extended YAML creds) |
+| `jeanphorn-wordlist/` | IoT/router/camera/NAS default password wordlists |
+| `iotbreaker/` | IoT CVE fingerprint + `--check` framework |
+| `iotscan/` | AI-native IoT security assessment CLI |
+| `router_analysis/` | Firmware/router analysis reference (manual) |
+
+---
+
+## IoT toolkit — full stack (every IP, normal + deep scan)
+
+**Policy:** كل IP في الفحص الكلاسيكي (`selection=1`) يمر على **جميع** أدوات IoT ذات الأولوية العالية والمتوسطة — بدون استثناء deep-only.
+
+| Priority | Tool | Phase | Module | Output |
+|----------|------|-------|--------|--------|
+| **High** | Nuclei template refresh | 1 | `iot_toolkit.run_nuclei_template_refresh` | `nuclei_template_update.txt` |
+| **High** | UPnP/SSDP (built-in UDP) | 1 | `iot_toolkit.run_upnp_discovery` | `UPNP_DISCOVERY.json`, `upnp_device_descriptions.txt` |
+| **High** | upnpfuzz | 1 | `iot_toolkit` (if pip) | `upnpfuzz_discover.txt` |
+| **High** | changeme | 1 | `iot_toolkit.run_all_default_cred_scans` | `changeme_scan.txt`, `CHANGEME_HITS.json` |
+| **High** | Default-Hunter | 1 | `iot_toolkit` | `default-hunter_scan.txt`, `IOT_DEFAULT_CREDS.json` |
+| **High** | jeanphorn wordlists → Hydra | 1 + 4 | `build_iot_hydra_wordlists` | `hydra_iot_passwords.txt`, `hydra_iot_combos.txt` |
+| **High** | Genzai | 2 | `run_genzai_scan` | `GENZAI_RESULTS.json`, `genzai_port_*.txt` |
+| **High** | CamOver | 3 | `iot_exploit_extras` | `CAMOVER_HITS.json` |
+| **High** | CamRaptor | 3 | `iot_exploit_extras` | `CAMRAPTOR_HITS.json` |
+| **High** | IoTBreaker (fingerprint/vuln/scan + CVE `--check`) | 3 | `iot_exploit_extras` | `IOTBREAKER_*.txt`, `IOTBREAKER_CHECKS.json` |
+| **Medium** | Rustsploit | 3 | `iot_exploit_extras` | `RUSTSPLOIT_SCAN.json` |
+| **Medium** | IoTScan | 3 | `iot_exploit_extras` | `IOTSCAN_RESULTS.json` |
+| **Medium** | Nuclei (router/IoT tags) | 2 | `core/web/nuclei.py` | `nuclei_*.json` (profile-driven) |
+| **Medium** | CVE-2024-9643 (Four-Faith) | 3 | IoTBreaker + `data/latest_cves.json` | in `IOTBREAKER_CHECKS.json` |
+| **Medium** | dom-one/router_analysis | — | manual / firmware | `tools/router_analysis/` |
+
+**Merged creds:** `IOT_ALL_CREDS.json` (changeme + Default-Hunter + CamOver + CamRaptor)
+
+### IoTBreaker CVE checks (safe `--check` only)
+
+CVE-2021-36260, CVE-2023-1389, CVE-2017-17215, CVE-2014-8361, CVE-2016-6277, CVE-2022-30525, **CVE-2024-9643**, CVE-2020-25506, CVE-2019-7192
+
+### Install (Kali)
+
+```bash
+cd ~/router
+bash scripts/install_tools.sh    # clones all IoT repos + pip extras
+
+# Optional Genzai (Go):
+go install github.com/umair9747/genzai@latest
+# Or: https://github.com/umair9747/genzai/releases
+
+# Optional Rustsploit binary (if cargo installed, install_tools.sh builds release):
+export PATH="$PWD/tools/rustsploit/target/release:$PATH"
+
+pkill -f telegram_daemon.py && bash run.sh
+```
+
+### Pip packages (via `install_tools.sh`)
+
+| Package | Purpose |
+|---------|---------|
+| `upnpfuzz` | Extra UPnP/SSDP discovery |
+| `camover` (EntySec GitHub) | GoAhead/Netwave/CCTV default creds |
+| `camraptor` (EntySec GitHub) | Novo/CeNova/QSee DVR creds |
+| `default-hunter` (editable from `tools/default-hunter`) | Extended YAML default cred DB |
+| `iotscan` (editable from `tools/iotscan`) | IoT modules: network, web, credentials, attack_paths |
+
+### Phase wiring (`core/classic/full_scan.py`)
+
+```
+PHASE 1 → run_phase1_iot_recon()     # Nuclei refresh, UPnP, changeme, Default-Hunter, wordlists
+PHASE 2 → run_genzai_scan()          # + existing Nuclei/Dirsearch/SQLMap
+PHASE 3 → run_phase3_iot_extras()    # CamOver, CamRaptor, IoTBreaker, Rustsploit, IoTScan
+PHASE 4 → build_iot_hydra_wordlists + Hydra (prefers hydra_iot_passwords.txt)
+```
+
+Telegram phase summaries: `core/telegram/phase_notify.py` reads all artifacts above.
 
 ---
 
@@ -163,7 +237,9 @@ Complete reference of every tool, module, and external dependency used in this p
 
 | Path | Contents |
 |------|----------|
-| `targets/{ip}/` | Scan workspace |
+| `targets/{ip}/` | Scan workspace (UPnP, creds, IoT tools, Hydra, Nuclei, …) |
+| `targets/{ip}/IOT_ALL_CREDS.json` | Merged IoT credentials |
+| `targets/{ip}/hydra_iot_passwords.txt` | jeanphorn + IoT defaults for Hydra |
 | `db/` | Pwned target history |
 | `logs/pwn.log` | Global log |
 | `data/latest_cves.json` | CVE database |

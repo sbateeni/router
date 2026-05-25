@@ -104,6 +104,18 @@ def _phase1_lines(profile, context):
     if web_ports:
         lines.append(f"• منافذ ويب: {_join_limited(web_ports)}")
     lines.extend(_profile_brief(profile))
+    upnp = _load_json(os.path.join(target_dir, "UPNP_DISCOVERY.json"))
+    devs = (upnp.get("devices") or []) if upnp else []
+    if devs:
+        lines.append(f"• UPnP/SSDP: {len(devs)} جهاز")
+    cm = _load_json(os.path.join(target_dir, "IOT_DEFAULT_CREDS.json")) or _load_json(
+        os.path.join(target_dir, "CHANGEME_HITS.json")
+    )
+    if cm:
+        lines.append(f"• default creds (changeme/Default-Hunter): {len(cm)} hit(s)")
+    nuc_up = read_file(os.path.join(target_dir, "nuclei_template_update.txt"), 200).strip()
+    if nuc_up:
+        lines.append(f"• Nuclei templates: {'محدّثة' if 'ok' in nuc_up.lower() else 'تحديث فشل/تخطي'}")
     return lines
 
 
@@ -133,6 +145,9 @@ def _phase2_lines(target_dir, context):
         lines.append("• SQLMap: لا SQLi مؤكد")
     if getattr(context, "exploited", False):
         lines.append("• ⚠️ نتائج استغلال محتملة في هذه المرحلة")
+    genzai = _load_json(os.path.join(target_dir, "GENZAI_RESULTS.json"))
+    if genzai.get("findings"):
+        lines.append(f"• Genzai: {len(genzai['findings'])} IoT panel(s)")
     return lines
 
 
@@ -162,6 +177,27 @@ def _phase3_lines(target_dir, context):
             lines.append("• Device engine: تم")
     elif find_files(target_dir, "SUCCESS_*.txt"):
         lines.append("• Device engine: SUCCESS artifacts")
+    camover = _load_json(os.path.join(target_dir, "CAMOVER_HITS.json"))
+    if camover:
+        lines.append(f"• CamOver: {len(camover)} hit(s)")
+    camraptor = _load_json(os.path.join(target_dir, "CAMRAPTOR_HITS.json"))
+    if camraptor:
+        lines.append(f"• CamRaptor: {len(camraptor)} hit(s)")
+    ib = _load_json(os.path.join(target_dir, "IOTBREAKER_CHECKS.json"))
+    vuln_cves = [r.get("cve") for r in ib if isinstance(r, dict) and r.get("vulnerable")]
+    if vuln_cves:
+        lines.append(f"• IoTBreaker: {_join_limited(vuln_cves, 4)}")
+    elif ib:
+        lines.append(f"• IoTBreaker: {len(ib)} فحص CVE/وحدة")
+    rust_iot = _load_json(os.path.join(target_dir, "RUSTSPLOIT_SCAN.json"))
+    if rust_iot.get("output"):
+        lines.append("• Rustsploit: تم")
+    iotscan = _load_json(os.path.join(target_dir, "IOTSCAN_RESULTS.json"))
+    if iotscan.get("output"):
+        lines.append("• IoTScan: تم")
+    all_creds = _load_json(os.path.join(target_dir, "IOT_ALL_CREDS.json"))
+    if all_creds:
+        lines.append(f"• IoT creds مجمّعة: {len(all_creds)}")
     if getattr(context, "exploited", False):
         lines.append("• ⚠️ استغلال/نتائج حرجة محتملة")
     else:

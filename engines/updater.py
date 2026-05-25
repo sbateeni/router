@@ -34,6 +34,41 @@ EXTERNAL_TOOLS = [
         "url": "https://github.com/sqlmapproject/sqlmap.git",
         "depth": 1,
     },
+    {
+        "dir": "changeme",
+        "url": "https://github.com/ztgrace/changeme.git",
+        "depth": 1,
+    },
+    {
+        "dir": "default-hunter",
+        "url": "https://github.com/SySS-Research/Default-Hunter.git",
+        "depth": 1,
+    },
+    {
+        "dir": "jeanphorn-wordlist",
+        "url": "https://github.com/jeanphorn/wordlist.git",
+        "depth": 1,
+    },
+    {
+        "dir": "iotbreaker",
+        "url": "https://github.com/servais1983/IoTBreaker.git",
+        "depth": 1,
+    },
+    {
+        "dir": "iotscan",
+        "url": "https://github.com/sundi133/iotscan.git",
+        "depth": 1,
+    },
+    {
+        "dir": "rustsploit",
+        "url": "https://github.com/s-b-repo/r-routersploit.git",
+        "depth": 1,
+    },
+    {
+        "dir": "router_analysis",
+        "url": "https://github.com/dom-one/router_analysis.git",
+        "depth": 1,
+    },
 ]
 
 

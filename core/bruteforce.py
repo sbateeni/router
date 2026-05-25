@@ -21,8 +21,13 @@ ROUTER_HTTP_FORMS = [
 ]
 
 
-def resolve_password_file():
+def resolve_password_file(target_dir=None):
+    if target_dir:
+        iot_pwd = os.path.join(target_dir, "hydra_iot_passwords.txt")
+        if os.path.isfile(iot_pwd) and os.path.getsize(iot_pwd) > 20:
+            return iot_pwd
     candidates = [
+        os.path.join(TOOLS_DIR, "jeanphorn-wordlist", "passwords", "iot.txt"),
         os.path.join(TOOLS_DIR, "DefaultCreds-cheat-sheet", "default-passwords.txt"),
         os.path.join(TOOLS_DIR, "DefaultCreds-cheat-sheet", "routers.txt"),
         "/usr/share/seclists/Passwords/Default-Credentials/telnet-betterdefaultpasslist.txt",
@@ -134,7 +139,7 @@ def _hydra_hit_from_output(output, mode="http-post-form"):
 
 def run_hydra(ip, login_ports, target_dir):
     profile = get_scan_profile()
-    passwords_file = resolve_password_file()
+    passwords_file = resolve_password_file(target_dir)
     if not passwords_file:
         print("[!] No password wordlist found for Hydra.")
         return False
@@ -199,7 +204,7 @@ def run_web_hydra(ip, web_ports, target_dir, hydra_plan=None):
         print("[!] Hydra is not installed; skipping web login brute-force.")
         return False
 
-    raw_passwords = resolve_password_file()
+    raw_passwords = resolve_password_file(target_dir)
     if not raw_passwords:
         print("[!] No password wordlist found for web Hydra.")
         return False

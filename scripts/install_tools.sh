@@ -95,6 +95,37 @@ install_python_deps() {
     echo "[+] Python dependencies OK in .venv"
     "$PY" -m pip check 2>&1 | grep -i conflict && echo "[i] See conflicts above — run: bash scripts/fix_venv_kali.sh" || true
   fi
+
+  echo
+  echo "[*] Optional IoT Python packages (CamOver, CamRaptor, upnpfuzz)..."
+  "$PY" -m pip install -q upnpfuzz 2>/dev/null || echo "  [i] upnpfuzz pip skipped (optional)"
+  "$PY" -m pip install -q "git+https://github.com/EntySec/CamOver.git" 2>/dev/null \
+    || echo "  [i] CamOver pip skipped (optional)"
+  "$PY" -m pip install -q "git+https://github.com/EntySec/CamRaptor.git" 2>/dev/null \
+    || echo "  [i] CamRaptor pip skipped (optional)"
+
+  if [[ -d "$ROOT/tools/changeme" ]] && [[ -f "$ROOT/tools/changeme/requirements.txt" ]]; then
+    echo "  [*] changeme requirements..."
+    "$PY" -m pip install -q -r "$ROOT/tools/changeme/requirements.txt" 2>/dev/null || true
+  fi
+
+  if [[ -d "$ROOT/tools/default-hunter" ]] && [[ -f "$ROOT/tools/default-hunter/pyproject.toml" ]]; then
+    echo "  [*] Default-Hunter (pip editable)..."
+    "$PY" -m pip install -q -e "$ROOT/tools/default-hunter" 2>/dev/null \
+      || echo "  [i] Default-Hunter pip skipped (optional)"
+  fi
+
+  if [[ -d "$ROOT/tools/iotscan" ]] && [[ -f "$ROOT/tools/iotscan/pyproject.toml" ]]; then
+    echo "  [*] IoTScan (pip editable)..."
+    "$PY" -m pip install -q -e "$ROOT/tools/iotscan" 2>/dev/null \
+      || echo "  [i] IoTScan pip skipped (optional)"
+  fi
+
+  if [[ -d "$ROOT/tools/iotbreaker" ]] && [[ -f "$ROOT/tools/iotbreaker/requirements.txt" ]]; then
+    echo "  [*] IoTBreaker requirements (optional — may conflict; use separate venv if needed)..."
+    "$PY" -m pip install -q -r "$ROOT/tools/iotbreaker/requirements.txt" 2>/dev/null \
+      || echo "  [i] IoTBreaker deps skipped — run from tools/iotbreaker/.venv if needed"
+  fi
 }
 
 echo "======================================================"
@@ -151,11 +182,57 @@ sync_tool spiderfoot https://github.com/smicallef/spiderfoot.git 1
 echo "[9/10] theHarvester..."
 sync_tool theHarvester https://github.com/laramies/theHarvester.git 1
 
-echo "[10/10] Amass..."
+echo "[10/14] Amass..."
 sync_tool amass https://github.com/owasp-amass/amass.git 1
+
+echo "[11/14] changeme (default IoT creds)..."
+sync_tool changeme https://github.com/ztgrace/changeme.git 1
+
+echo "[12/14] jeanphorn IoT wordlists..."
+sync_tool jeanphorn-wordlist https://github.com/jeanphorn/wordlist.git 1
+
+echo "[13/18] IoTBreaker (CVE --check modules)..."
+sync_tool iotbreaker https://github.com/servais1983/IoTBreaker.git 1
+
+echo "[14/18] Default-Hunter (SySS changeme fork)..."
+sync_tool default-hunter https://github.com/SySS-Research/Default-Hunter.git 1
+
+echo "[15/18] IoTScan (AI IoT assessment CLI)..."
+sync_tool iotscan https://github.com/sundi133/iotscan.git 1
+
+echo "[16/18] Rustsploit (Rust RouterSploit — build optional)..."
+sync_tool rustsploit https://github.com/s-b-repo/r-routersploit.git 1
+if command -v cargo &>/dev/null && [[ -d "$ROOT/tools/rustsploit" ]]; then
+  echo "  [*] Building rustsploit release binary (optional)..."
+  (cd "$ROOT/tools/rustsploit" && cargo build --release 2>/dev/null) && \
+    ln -sf "$ROOT/tools/rustsploit/target/release/rustsploit" "$ROOT/tools/rustsploit/rustsploit" 2>/dev/null || \
+    echo "  [i] Rustsploit build skipped — add target/release/rustsploit to PATH manually"
+else
+  echo "  [i] Install Rust (cargo) to build rustsploit, or download release from GitHub"
+fi
+
+echo "[17/18] Genzai (optional Go binary — see docs/TOOLS.md)..."
+if command -v genzai &>/dev/null; then
+  echo "  [+] genzai already installed: $(command -v genzai)"
+else
+  echo "  [i] Install Genzai from: https://github.com/umair9747/genzai/releases"
+  echo "      Or: go install github.com/umair9747/genzai@latest"
+fi
+
+echo "[18/18] dom-one/router_analysis (firmware reference — manual use)..."
+if [[ ! -d "router_analysis" ]]; then
+  sync_tool router_analysis https://github.com/dom-one/router_analysis.git 1 || true
+else
+  sync_tool router_analysis https://github.com/dom-one/router_analysis.git 1 || true
+fi
 
 cd "$ROOT"
 install_python_deps
+
+# Symlink rustsploit into .venv-friendly PATH hint
+if [[ -x "$ROOT/tools/rustsploit/target/release/rustsploit" ]] && [[ ! -x "$ROOT/.venv/bin/rustsploit" ]]; then
+  ln -sf "$ROOT/tools/rustsploit/target/release/rustsploit" "$ROOT/.venv/bin/rustsploit" 2>/dev/null || true
+fi
 
 echo
 echo "======================================================"

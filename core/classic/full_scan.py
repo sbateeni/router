@@ -163,6 +163,15 @@ def run_all_classic_tools(ip, target_dir, selection=1):
     profile = _sync_profile(ip, target_dir, context, "after Nmap", deep=deep)
 
     try:
+        from core.recon.iot_toolkit import run_phase1_iot_recon
+
+        iot_p1 = run_phase1_iot_recon(ip, target_dir, context.open_ports)
+        if iot_p1.get("default_creds"):
+            context.exploited = context.exploited or bool(iot_p1["default_creds"])
+    except Exception as exc:
+        print(f"[!] IoT Phase-1 extras (UPnP/changeme): {exc}")
+
+    try:
         if should_run_tool(profile, "whatweb"):
             for port in profile.get("web_ports") or context.web_ports:
                 run_whatweb(build_url(ip, port), target_dir)
@@ -261,6 +270,15 @@ def run_all_classic_tools(ip, target_dir, selection=1):
             else:
                 print(f"[*] SQLMap skipped: {sql_cfg.get('reason', '')}")
 
+            try:
+                from core.recon.iot_toolkit import run_genzai_scan
+
+                genzai = run_genzai_scan(ip, target_dir, web_ports)
+                if genzai.get("findings"):
+                    transcript_event(f"[+] Genzai: {len(genzai['findings'])} URL(s) fingerprinted")
+            except Exception as exc:
+                print(f"[!] Genzai skipped: {exc}")
+
         except KeyboardInterrupt:
             handle_keyboard_interrupt()
 
@@ -349,6 +367,26 @@ def run_all_classic_tools(ip, target_dir, selection=1):
             else:
                 print(f"[*] Ingram skipped: {get_tool_config(profile, 'ingram').get('reason', '')}")
 
+        try:
+            from engines.iot_exploit_extras import run_phase3_iot_extras
+
+            iot_p3 = run_phase3_iot_extras(
+                ip, target_dir,
+                web_ports=profile.get("web_ports") or context.web_ports,
+            )
+            if (
+                iot_p3.get("camover")
+                or iot_p3.get("camraptor")
+                or iot_p3.get("rustsploit", {}).get("output")
+                or iot_p3.get("iotscan", {}).get("output")
+                or any(
+                    r.get("vulnerable") for r in (iot_p3.get("iotbreaker") or []) if isinstance(r, dict)
+                )
+            ):
+                context.exploited = True
+        except Exception as exc:
+            print(f"[!] IoT Phase-3 extras (CamOver/IoTBreaker): {exc}")
+
         if deep:
             try:
                 from engines.lateral_agent import LateralAgent
@@ -372,6 +410,11 @@ def run_all_classic_tools(ip, target_dir, selection=1):
         print("======================================================")
         transcript_phase("PHASE 4: Credential Brute-Force (profile-driven)")
         try:
+            from core.recon.iot_toolkit import build_iot_hydra_wordlists
+
+            wl = build_iot_hydra_wordlists(target_dir)
+            if wl.get("passwords"):
+                print(f"[+] IoT wordlists ready: {wl['passwords']}")
             if context.login_ports and run_hydra(ip, context.login_ports, target_dir):
                 pass
             hydra_cfg = get_tool_config(profile, "hydra")
