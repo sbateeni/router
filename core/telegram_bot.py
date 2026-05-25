@@ -312,12 +312,18 @@ def _start_scan(chat_id, job, base_dir):
                 sess["current_mode"] = job.get("mode_label")
                 sess["state"] = "scanning"
 
+            ws_name = job.get("workspace_name") or sanitize_target_dir_name(
+                job.get("scan_host") or job["ip"]
+            )
+            transcript = __import__("os").path.join(base_dir, "targets", ws_name, "SCAN_TRANSCRIPT.txt")
             send_to_chat(
                 chat_id,
                 f"▶ بدء المسح\nالهدف: {job['ip']}\n"
                 f"النوع: {job.get('mode_label')}\n"
                 f"الملف الشخصي: {job['profile']}\n\n"
-                f"سيصلك التقرير عند الانتهاء.",
+                f"سيصلك التقرير عند الانتهاء.\n\n"
+                f"📂 متابعة على Kali (طرفية ثانية):\n"
+                f"tail -f {transcript}",
             )
 
             try:

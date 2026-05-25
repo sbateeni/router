@@ -74,22 +74,35 @@ def extract_service_queries(open_ports):
     return list(queries)
 
 
+def _is_scan_port_entry(p):
+    """Real TCP port dict — skip OS (-1) and MAC/vendor (0) metadata rows from Nmap."""
+    if not isinstance(p, dict):
+        return False
+    port = p.get("port")
+    return isinstance(port, int) and port > 0
+
+
 def get_web_ports(open_ports):
     ports = []
     for p in open_ports:
-        if not isinstance(p, dict) or not p.get("port"):
+        if not _is_scan_port_entry(p):
             continue
-        if p["port"] in [80, 443, 8080, 8443] or "http" in p["service"].lower():
-            ports.append(p["port"])
+        service = str(p.get("service", "")).lower()
+        port = p["port"]
+        if port in [80, 443, 8080, 8443] or "http" in service:
+            ports.append(port)
     return ports
 
 
 def get_login_ports(open_ports):
     login = []
     for p in open_ports:
-        if not isinstance(p, dict) or not p.get("port"):
+        if not _is_scan_port_entry(p):
             continue
-        if p["port"] in [21, 22, 23] or p["service"].lower().split()[0] in ["ssh", "ftp", "telnet"]:
+        service = str(p.get("service", "")).lower()
+        port = p["port"]
+        first = service.split()[0] if service else ""
+        if port in [21, 22, 23] or first in ["ssh", "ftp", "telnet"]:
             login.append(p)
     return login
 

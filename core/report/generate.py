@@ -267,7 +267,8 @@ def build_report_text(ip, target_dir, selection, exploited, payload):
     if nmap["ports"]:
         lines.append("Open Ports:")
         for entry in nmap["ports"]:
-            lines.append(f"  - {entry['port']}/tcp  {entry['service']}")
+            svc = entry.get("service") or "unknown"
+            lines.append(f"  - {entry.get('port', '?')}/tcp  {svc}")
     else:
         lines.append("Open Ports: none detected")
 

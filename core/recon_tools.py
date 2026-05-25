@@ -10,13 +10,8 @@ def build_url(ip, port):
 
 
 def get_web_ports(open_ports):
-    ports = []
-    for entry in open_ports:
-        if not isinstance(entry, dict) or not entry.get("port"):
-            continue
-        if entry["port"] in [80, 443, 8080, 8443] or "http" in entry["service"].lower():
-            ports.append(entry["port"])
-    return ports
+    from core.classic.context import get_web_ports as _ctx_web_ports
+    return _ctx_web_ports(open_ports)
 
 
 def run_nikto(target_url, target_dir):

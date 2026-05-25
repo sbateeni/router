@@ -143,8 +143,12 @@ def run_hydra(ip, login_ports, target_dir):
     success_flag = False
 
     for lp in login_ports:
-        port = lp["port"]
-        service = lp["service"].lower()
+        port = lp.get("port")
+        if not port:
+            continue
+        service = str(lp.get("service", "")).lower()
+        if not service:
+            continue
         print(f"\n[+] Brute-forcing {service} on port {port}...")
 
         if service not in ["ssh", "ftp", "telnet"]:
