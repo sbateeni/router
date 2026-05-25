@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# يشغّل: (1) بوت تيليجرام في الخلفية  (2) قائمة المسح في هذه الطرفية
+# أمر واحد من جذر المشروع:  bash start.sh   أو   bash run.sh
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
