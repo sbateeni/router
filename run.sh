@@ -1,12 +1,26 @@
 #!/usr/bin/env bash
 # AUTO-PWN — تشغيل واحد فقط:  bash run.sh
-# • يبدأ تيليجرام تلقائياً (@H_the_box_bot)
-# • القائمة محلياً | [9] للتحديث من GitHub
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$ROOT"
 export PYTHONPATH="$ROOT${PYTHONPATH:+:$PYTHONPATH}"
+
+# ── إذا كنت داخل tmux مقسوم (المشكلة في الصورة) ──
+if [[ -n "${TMUX:-}" ]]; then
+  echo "[!] tmux مفعّل — هذا يسبب الشاشة المقسومة و [SCAN]."
+  echo "[*] جاري إغلاق جلسة tmux..."
+  tmux kill-session 2>/dev/null || true
+  echo "[*] افتح طرفية جديدة (ليست tmux) ثم:"
+  echo "    cd ~/router && bash run.sh"
+  exit 0
+fi
+
+# تنظيف بقايا قديمة
+pkill -f "tail.*LIVE_SCAN\.log" 2>/dev/null || true
+for _s in autopwn autopwn-live; do
+  tmux kill-session -t "$_s" 2>/dev/null || true
+done
 
 if [[ -x "$ROOT/.venv/bin/python" ]]; then
   PY="$ROOT/.venv/bin/python"
@@ -14,27 +28,11 @@ else
   PY="python3"
 fi
 
-# إغلاق tmux/ tail قديم (يسبب الشاشة المقسومة و [SCAN] في الصورة)
-pkill -f "tail.*LIVE_SCAN\.log" 2>/dev/null || true
-tmux kill-session -t autopwn 2>/dev/null || true
-tmux kill-session -t autopwn-live 2>/dev/null || true
-
-if [[ -n "${TMUX:-}" ]]; then
-  _sess="$(tmux display-message -p '#S' 2>/dev/null || true)"
-  if [[ "$_sess" == "autopwn" || "$_sess" == "autopwn-live" ]]; then
-    echo "[!] أنت داخل tmux قديم (شاشة مقسومة)."
-    echo "    اكتب:  tmux kill-session -t $_sess"
-    echo "    ثم افتح طرفية جديدة و:  bash run.sh"
-    exit 1
-  fi
-fi
-
 if [[ ! -f "$ROOT/.env" ]]; then
   echo "[!] أنشئ .env:  cp .env.example .env && nano .env"
   exit 1
 fi
 
-# تيليجرام (خلفية)
 mkdir -p "$ROOT/logs"
 if [[ -f "$ROOT/scripts/check_telegram_env.py" ]]; then
   "$PY" "$ROOT/scripts/check_telegram_env.py" || exit 1
@@ -43,7 +41,7 @@ fi
 TG_OK=0
 if pgrep -f "telegram_daemon.py" >/dev/null 2>&1; then
   TG_OK=1
-elif [[ -x "$ROOT/.venv/bin/python" ]] || command -v python3 &>/dev/null; then
+else
   nohup "$PY" "$ROOT/bin/telegram_daemon.py" >>"$ROOT/logs/telegram.log" 2>&1 &
   sleep 2
   pgrep -f "telegram_daemon.py" >/dev/null 2>&1 && TG_OK=1
@@ -54,74 +52,31 @@ TG_ARGS=(--no-telegram)
 
 echo
 echo "======================================================"
-echo "   AUTO-PWN UNIFIED — router + nuclei-dev engine"
+echo "   AUTO-PWN UNIFIED"
 echo "======================================================"
-if [[ "$TG_OK" == "1" ]]; then
-  echo "  Telegram: ON  (@H_the_box_bot)"
-else
-  echo "  Telegram: OFF — راجع logs/telegram.log"
-fi
+[[ "$TG_OK" == "1" ]] && echo "  Telegram: ON (@H_the_box_bot)" || echo "  Telegram: OFF — logs/telegram.log"
 echo
-echo "  [1] Full auto scan (--auto)"
-echo "  [2] Device engine only"
-echo "  [3] Test router creds"
-echo "  [4] Test Hikvision"
-echo "  [5] CVE intelligence report"
-echo "  [6] Camera snapshots"
-echo "  [7] LAN scan"
-echo "  [8] Interactive menu"
-echo "  [9] Update from GitHub"
-echo "  [0] Exit"
+echo "  [1] Full auto scan     [2] Device engine"
+echo "  [3] Router test        [4] Hikvision test"
+echo "  [5] CVE report         [6] Camera snapshots"
+echo "  [7] LAN scan           [8] Interactive menu"
+echo "  [9] Update GitHub      [0] Exit"
 echo
-read -rp "Select option [0-9]: " choice
+read -rp "Select [0-9]: " choice
 
 case "$choice" in
-  1)
-    read -rp "Target IP: " target_ip
-    export NUCLEI_SKIP_UPDATE=1
-    "$PY" "$ROOT/bin/master_pwn.py" "${TG_ARGS[@]}" -t "$target_ip" --auto
-    ;;
-  2)
-    export NUCLEI_SKIP_UPDATE=1
-    "$PY" "$ROOT/bin/auto_pwn.py"
-    ;;
-  3)
-    read -rp "Target IP: " target_ip
-    "$PY" "$ROOT/tests/test_router_target.py" -H "$target_ip"
-    ;;
-  4)
-    read -rp "Target IP: " target_ip
-    "$PY" "$ROOT/tests/test_hikvision_target.py" -H "$target_ip"
-    ;;
-  5)
-    read -rp "Target IP: " target_ip
-    "$PY" "$ROOT/tests/test_device_cve.py" -H "$target_ip"
-    ;;
-  6)
-    read -rp "Camera IP (empty=default): " cam_ip
-    if [[ -n "$cam_ip" ]]; then
-      "$PY" "$ROOT/tests/test.py" -H "$cam_ip"
-    else
-      "$PY" "$ROOT/tests/test.py"
-    fi
-    ;;
-  7)
-    export NUCLEI_SKIP_UPDATE=1
-    "$PY" "$ROOT/bin/lan_pwn.py"
-    ;;
-  8)
-    export NUCLEI_SKIP_UPDATE=1
-    "$PY" "$ROOT/bin/master_pwn.py" "${TG_ARGS[@]}"
-    ;;
-  9)
-    echo
-    "$PY" "$ROOT/scripts/update_tools.py"
-    ;;
-  0)
-    exit 0
-    ;;
-  *)
-    echo "Invalid option."
-    exit 1
-    ;;
+  1) read -rp "Target IP: " target_ip
+     export NUCLEI_SKIP_UPDATE=1
+     "$PY" "$ROOT/bin/master_pwn.py" "${TG_ARGS[@]}" -t "$target_ip" --auto ;;
+  2) export NUCLEI_SKIP_UPDATE=1; "$PY" "$ROOT/bin/auto_pwn.py" ;;
+  3) read -rp "Target IP: " target_ip; "$PY" "$ROOT/tests/test_router_target.py" -H "$target_ip" ;;
+  4) read -rp "Target IP: " target_ip; "$PY" "$ROOT/tests/test_hikvision_target.py" -H "$target_ip" ;;
+  5) read -rp "Target IP: " target_ip; "$PY" "$ROOT/tests/test_device_cve.py" -H "$target_ip" ;;
+  6) read -rp "Camera IP (empty=default): " cam_ip
+     [[ -n "$cam_ip" ]] && "$PY" "$ROOT/tests/test.py" -H "$cam_ip" || "$PY" "$ROOT/tests/test.py" ;;
+  7) export NUCLEI_SKIP_UPDATE=1; "$PY" "$ROOT/bin/lan_pwn.py" ;;
+  8) export NUCLEI_SKIP_UPDATE=1; "$PY" "$ROOT/bin/master_pwn.py" "${TG_ARGS[@]}" ;;
+  9) "$PY" "$ROOT/scripts/update_tools.py" ;;
+  0) exit 0 ;;
+  *) echo "Invalid."; exit 1 ;;
 esac
