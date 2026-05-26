@@ -116,16 +116,25 @@ def run_all_classic_tools(ip, target_dir, selection=1):
         print("\n>>> PHASE 0: Deep OSINT & recon (Shodan, Social, domain tools)")
         print("[*] Deep mode: ALL tools will run — results feed the next phase")
         transcript_phase("PHASE 0: Deep OSINT & recon")
-        try:
-            from engines.deep_scan_extras import run_deep_domain_recon, run_deep_osint_phase
+        from core.phase_progress import track_phase
 
-            osint_data = run_deep_osint_phase(ip, target_dir, hints)
-            for p in osint_data.get("shodan", {}).get("ports") or []:
-                try:
-                    osint_ports.append(int(p))
-                except (TypeError, ValueError):
-                    pass
-            run_deep_domain_recon(ip, target_dir, hints)
+        try:
+            with track_phase(
+                "0", "Deep OSINT & recon",
+                timeout=get_scan_profile().get("phase0_main_timeout", 900),
+                target_dir=target_dir,
+            ) as prog:
+                prog.set_status("Shodan + social + domain recon")
+                from engines.deep_scan_extras import run_deep_domain_recon, run_deep_osint_phase
+
+                osint_data = run_deep_osint_phase(ip, target_dir, hints)
+                for p in osint_data.get("shodan", {}).get("ports") or []:
+                    try:
+                        osint_ports.append(int(p))
+                    except (TypeError, ValueError):
+                        pass
+                prog.set_status("domain recon")
+                run_deep_domain_recon(ip, target_dir, hints)
         except Exception as exc:
             print(f"[!] Deep Phase 0 error: {exc}")
         _phase_delay()
@@ -133,40 +142,53 @@ def run_all_classic_tools(ip, target_dir, selection=1):
 
     transcript_phase(f"PHASE 1: Scanning & Reconnaissance [{get_profile_name()}]")
     print(f"\n>>> PHASE 1: Scanning & Reconnaissance [{get_profile_name()}]")
+    from core.phase_progress import track_phase
+
     try:
-        context.open_ports = run_nmap(ip, target_dir)
+        with track_phase(
+            "1", f"Scanning & Recon [{get_profile_name()}]",
+            timeout=get_scan_profile().get("phase1_main_timeout", 2400),
+            target_dir=target_dir,
+        ) as prog:
+            prog.set_status("Nmap port scan")
+            try:
+                context.open_ports = run_nmap(ip, target_dir)
+            except KeyboardInterrupt:
+                handle_keyboard_interrupt()
+                context.open_ports = []
+
+            if not context.open_ports:
+                print(f"[-] No open ports found on {ip}.")
+                context.web_ports = []
+                context.login_ports = []
+            else:
+                context.web_ports = get_web_ports(context.open_ports)
+                context.login_ports = get_login_ports(context.open_ports)
+                if hints.get("port") and hints["port"] not in context.web_ports:
+                    context.web_ports.insert(0, hints["port"])
+                apply_target_hints(context, hints)
+
+            profile = _sync_profile(ip, target_dir, context, "after Nmap", deep=deep)
+
+            prog.set_status("IoT toolkit (UPnP, creds, wordlists)")
+            try:
+                from core.recon.iot_toolkit import run_phase1_iot_recon
+
+                iot_p1 = run_phase1_iot_recon(ip, target_dir, context.open_ports)
+                if iot_p1.get("default_creds"):
+                    context.exploited = context.exploited or bool(iot_p1["default_creds"])
+            except Exception as exc:
+                print(f"[!] IoT Phase-1 extras (UPnP/changeme): {exc}")
+
+            prog.set_status("parallel recon (whatweb, nikto, searchsploit)")
+            try:
+                from core.classic.parallel_phases import run_phase1_recon_parallel
+
+                run_phase1_recon_parallel(ip, target_dir, profile, context, deep=deep)
+            except Exception as exc:
+                print(f"[!] Phase 1 parallel recon error: {exc}")
     except KeyboardInterrupt:
         handle_keyboard_interrupt()
-        context.open_ports = []
-
-    if not context.open_ports:
-        print(f"[-] No open ports found on {ip}.")
-        context.web_ports = []
-        context.login_ports = []
-    else:
-        context.web_ports = get_web_ports(context.open_ports)
-        context.login_ports = get_login_ports(context.open_ports)
-        if hints.get("port") and hints["port"] not in context.web_ports:
-            context.web_ports.insert(0, hints["port"])
-        apply_target_hints(context, hints)
-
-    profile = _sync_profile(ip, target_dir, context, "after Nmap", deep=deep)
-
-    try:
-        from core.recon.iot_toolkit import run_phase1_iot_recon
-
-        iot_p1 = run_phase1_iot_recon(ip, target_dir, context.open_ports)
-        if iot_p1.get("default_creds"):
-            context.exploited = context.exploited or bool(iot_p1["default_creds"])
-    except Exception as exc:
-        print(f"[!] IoT Phase-1 extras (UPnP/changeme): {exc}")
-
-    try:
-        from core.classic.parallel_phases import run_phase1_recon_parallel
-
-        run_phase1_recon_parallel(ip, target_dir, profile, context, deep=deep)
-    except Exception as exc:
-        print(f"[!] Phase 1 parallel recon error: {exc}")
 
     refresh_report(ip, target_dir, selection, context.exploited, context, "Phase 1 - Reconnaissance")
     profile = _sync_profile(ip, target_dir, context, "after Phase 1", deep=deep)
@@ -180,24 +202,30 @@ def run_all_classic_tools(ip, target_dir, selection=1):
         print("======================================================")
         transcript_phase("PHASE 2: Web Enumeration (profile-driven)")
         try:
-            from core.classic.parallel_phases import run_phase2_web_parallel
+            with track_phase(
+                "2", "Web Enumeration",
+                timeout=get_scan_profile().get("phase2_main_timeout", 3600),
+                target_dir=target_dir,
+            ) as prog:
+                from core.classic.parallel_phases import run_phase2_web_parallel
 
-            def _sync(label):
-                nonlocal profile
-                profile = _sync_profile(ip, target_dir, context, label, deep=deep)
-                return profile
+                def _sync(label):
+                    nonlocal profile
+                    prog.set_status(label)
+                    profile = _sync_profile(ip, target_dir, context, label, deep=deep)
+                    return profile
 
-            p2 = run_phase2_web_parallel(
-                ip, target_dir, profile, context,
-                sync_profile_fn=_sync,
-                deep=deep,
-            )
-            if p2.get("nuclei_exploited"):
-                context.exploited = True
-            if p2.get("sqlmap_exploited"):
-                context.exploited = True
-            if p2.get("genzai_findings"):
-                transcript_event(f"[+] Genzai: {p2['genzai_findings']} IoT panel(s)")
+                p2 = run_phase2_web_parallel(
+                    ip, target_dir, profile, context,
+                    sync_profile_fn=_sync,
+                    deep=deep,
+                )
+                if p2.get("nuclei_exploited"):
+                    context.exploited = True
+                if p2.get("sqlmap_exploited"):
+                    context.exploited = True
+                if p2.get("genzai_findings"):
+                    transcript_event(f"[+] Genzai: {p2['genzai_findings']} IoT panel(s)")
         except KeyboardInterrupt:
             handle_keyboard_interrupt()
 
@@ -216,98 +244,110 @@ def run_all_classic_tools(ip, target_dir, selection=1):
     print("======================================================")
     transcript_phase("PHASE 3: Exploitation (profile-driven)")
     try:
-        if deep:
-            print("\n[+] Deep Device Engine (full merge — all engine modules)...")
-            try:
-                from engines.deep_scan_extras import run_full_device_engine
+        with track_phase(
+            "3", "Exploitation",
+            timeout=get_scan_profile().get("phase3_main_timeout", 3600),
+            target_dir=target_dir,
+        ) as prog:
+            if deep:
+                prog.set_status("deep device engine")
+                print("\n[+] Deep Device Engine (full merge — all engine modules)...")
+                try:
+                    from engines.deep_scan_extras import run_full_device_engine
 
-                engine_result = run_full_device_engine(
-                    ip,
-                    target_dir,
+                    engine_result = run_full_device_engine(
+                        ip,
+                        target_dir,
+                        web_ports=profile.get("web_ports") or context.web_ports,
+                        profile=profile,
+                        hints=hints,
+                        osint_ports=osint_ports,
+                    )
+                    if engine_result.get("exploited"):
+                        context.exploited = True
+                    creds = engine_result.get("credentials") or []
+                    if creds:
+                        print(f"[+] Engine credentials: {', '.join(creds)}")
+                except Exception as exc:
+                    print(f"[!] Deep device engine error: {exc}")
+
+                prog.set_status("RouterSploit + Ingram")
+                print("\n[+] Deep: RouterSploit + Ingram (parallel)...")
+                from core.classic.parallel_phases import run_phase3_classic_parallel
+
+                if run_phase3_classic_parallel(ip, target_dir, profile, deep=True):
+                    context.exploited = True
+
+                prog.set_status("PoC arsenal")
+                print("\n[+] Deep: GitHub PoC arsenal (scripts/new_pocs/)...")
+                try:
+                    from engines.deep_scan_extras import run_deep_poc_arsenal
+
+                    poc_hits = run_deep_poc_arsenal(
+                        ip,
+                        target_dir,
+                        web_ports=profile.get("web_ports") or context.web_ports,
+                        device_type=profile.get("target_type", "UNKNOWN"),
+                    )
+                    if poc_hits:
+                        context.exploited = True
+                        print(f"[+] PoC arsenal: {len(poc_hits)} script(s) reported success")
+                except Exception as exc:
+                    print(f"[!] PoC arsenal error: {exc}")
+            else:
+                prog.set_status("device exploit engine")
+                print("\n[+] Device Exploit Engine (Hikvision / Netis / CVE / creds)...")
+                try:
+                    from engines.integration import run_device_exploit_engine
+
+                    engine_result = run_device_exploit_engine(
+                        ip, target_dir, web_ports=profile.get("web_ports") or context.web_ports, profile=profile,
+                    )
+                    if engine_result.get("exploited"):
+                        context.exploited = True
+                    creds = engine_result.get("credentials") or []
+                    if creds:
+                        print(f"[+] Engine credentials: {', '.join(creds)}")
+                except Exception as exc:
+                    print(f"[!] Device engine error: {exc}")
+
+                prog.set_status("RouterSploit + Ingram")
+                from core.classic.parallel_phases import run_phase3_classic_parallel
+
+                if run_phase3_classic_parallel(ip, target_dir, profile, deep=False):
+                    context.exploited = True
+
+            prog.set_status("IoT exploit stack")
+            try:
+                from engines.iot_exploit_extras import run_phase3_iot_extras
+
+                iot_p3 = run_phase3_iot_extras(
+                    ip, target_dir,
                     web_ports=profile.get("web_ports") or context.web_ports,
-                    profile=profile,
-                    hints=hints,
-                    osint_ports=osint_ports,
                 )
-                if engine_result.get("exploited"):
+                if (
+                    iot_p3.get("camover")
+                    or iot_p3.get("camraptor")
+                    or iot_p3.get("rustsploit", {}).get("output")
+                    or iot_p3.get("iotscan", {}).get("output")
+                    or any(
+                        r.get("vulnerable") for r in (iot_p3.get("iotbreaker") or []) if isinstance(r, dict)
+                    )
+                ):
                     context.exploited = True
-                creds = engine_result.get("credentials") or []
-                if creds:
-                    print(f"[+] Engine credentials: {', '.join(creds)}")
             except Exception as exc:
-                print(f"[!] Deep device engine error: {exc}")
+                print(f"[!] IoT Phase-3 extras (CamOver/IoTBreaker): {exc}")
 
-            print("\n[+] Deep: RouterSploit + Ingram (parallel)...")
-            from core.classic.parallel_phases import run_phase3_classic_parallel
+            if deep:
+                prog.set_status("NetExec lateral")
+                try:
+                    from engines.lateral_agent import LateralAgent
 
-            if run_phase3_classic_parallel(ip, target_dir, profile, deep=True):
-                context.exploited = True
-
-            print("\n[+] Deep: GitHub PoC arsenal (scripts/new_pocs/)...")
-            try:
-                from engines.deep_scan_extras import run_deep_poc_arsenal
-
-                poc_hits = run_deep_poc_arsenal(
-                    ip,
-                    target_dir,
-                    web_ports=profile.get("web_ports") or context.web_ports,
-                    device_type=profile.get("target_type", "UNKNOWN"),
-                )
-                if poc_hits:
-                    context.exploited = True
-                    print(f"[+] PoC arsenal: {len(poc_hits)} script(s) reported success")
-            except Exception as exc:
-                print(f"[!] PoC arsenal error: {exc}")
-        else:
-            print("\n[+] Device Exploit Engine (Hikvision / Netis / CVE / creds)...")
-            try:
-                from engines.integration import run_device_exploit_engine
-
-                engine_result = run_device_exploit_engine(
-                    ip, target_dir, web_ports=profile.get("web_ports") or context.web_ports, profile=profile,
-                )
-                if engine_result.get("exploited"):
-                    context.exploited = True
-                creds = engine_result.get("credentials") or []
-                if creds:
-                    print(f"[+] Engine credentials: {', '.join(creds)}")
-            except Exception as exc:
-                print(f"[!] Device engine error: {exc}")
-
-            from core.classic.parallel_phases import run_phase3_classic_parallel
-
-            if run_phase3_classic_parallel(ip, target_dir, profile, deep=False):
-                context.exploited = True
-
-        try:
-            from engines.iot_exploit_extras import run_phase3_iot_extras
-
-            iot_p3 = run_phase3_iot_extras(
-                ip, target_dir,
-                web_ports=profile.get("web_ports") or context.web_ports,
-            )
-            if (
-                iot_p3.get("camover")
-                or iot_p3.get("camraptor")
-                or iot_p3.get("rustsploit", {}).get("output")
-                or iot_p3.get("iotscan", {}).get("output")
-                or any(
-                    r.get("vulnerable") for r in (iot_p3.get("iotbreaker") or []) if isinstance(r, dict)
-                )
-            ):
-                context.exploited = True
-        except Exception as exc:
-            print(f"[!] IoT Phase-3 extras (CamOver/IoTBreaker): {exc}")
-
-        if deep:
-            try:
-                from engines.lateral_agent import LateralAgent
-
-                print("\n[+] Deep: NetExec lateral (system nxc)...")
-                lateral = LateralAgent(ip, target_dir)
-                lateral.execute()
-            except Exception as exc:
-                print(f"[!] NetExec lateral skipped: {exc}")
+                    print("\n[+] Deep: NetExec lateral (system nxc)...")
+                    lateral = LateralAgent(ip, target_dir)
+                    lateral.execute()
+                except Exception as exc:
+                    print(f"[!] NetExec lateral skipped: {exc}")
     except KeyboardInterrupt:
         handle_keyboard_interrupt()
 
@@ -322,23 +362,30 @@ def run_all_classic_tools(ip, target_dir, selection=1):
         print("======================================================")
         transcript_phase("PHASE 4: Credential Brute-Force (profile-driven)")
         try:
-            from core.recon.iot_toolkit import build_iot_hydra_wordlists
+            with track_phase(
+                "4", "Credential Brute-Force",
+                timeout=get_scan_profile().get("phase4_main_timeout", 1800),
+                target_dir=target_dir,
+            ) as prog:
+                from core.recon.iot_toolkit import build_iot_hydra_wordlists
 
-            wl = build_iot_hydra_wordlists(target_dir)
-            if wl.get("passwords"):
-                print(f"[+] IoT wordlists ready: {wl['passwords']}")
-            if context.login_ports and run_hydra(ip, context.login_ports, target_dir):
-                pass
-            hydra_cfg = get_tool_config(profile, "hydra")
-            login_paths = profile.get("login_paths") or context.login_paths
-            forms = None
-            if login_paths:
-                forms = [hydra_form_for_path(p) for p in login_paths]
-            elif hydra_cfg.get("http_forms"):
-                forms = [hydra_form_for_path(p) for p in hydra_cfg["http_forms"]]
-            hydra_plan = {"http_forms": forms, "source": "target_profile"} if forms else None
-            if context.web_ports and run_web_hydra(ip, context.web_ports, target_dir, hydra_plan=hydra_plan):
-                pass
+                prog.set_status("IoT wordlists + Hydra")
+                wl = build_iot_hydra_wordlists(target_dir)
+                if wl.get("passwords"):
+                    print(f"[+] IoT wordlists ready: {wl['passwords']}")
+                if context.login_ports and run_hydra(ip, context.login_ports, target_dir):
+                    pass
+                hydra_cfg = get_tool_config(profile, "hydra")
+                login_paths = profile.get("login_paths") or context.login_paths
+                forms = None
+                if login_paths:
+                    forms = [hydra_form_for_path(p) for p in login_paths]
+                elif hydra_cfg.get("http_forms"):
+                    forms = [hydra_form_for_path(p) for p in hydra_cfg["http_forms"]]
+                hydra_plan = {"http_forms": forms, "source": "target_profile"} if forms else None
+                prog.set_status("web Hydra forms")
+                if context.web_ports and run_web_hydra(ip, context.web_ports, target_dir, hydra_plan=hydra_plan):
+                    pass
         except KeyboardInterrupt:
             handle_keyboard_interrupt()
         _phase_done("4", "PHASE 4: Credential Brute-Force")

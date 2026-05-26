@@ -1,16 +1,17 @@
 #!/usr/bin/env bash
-# Opens a terminal tailing logs/PHASE_N.log (set AUTOPWN_PHASE_WINDOWS=1 to auto-open)
+# Opens a dedicated terminal: tail -f logs/PHASE_N.log (auto on Kali GUI via AUTOPWN_PHASE_WINDOWS)
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PHASE="${1:-1}"
 TITLE="${2:-AUTO-PWN Phase $PHASE}"
-LIVE_LOG="$ROOT/logs/PHASE_${PHASE}.log"
+SAFE="${PHASE//\//_}"
+LIVE_LOG="$ROOT/logs/PHASE_${SAFE}.log"
 
 mkdir -p "$ROOT/logs"
 touch "$LIVE_LOG"
 
-_watch="cd '$ROOT' && echo '=== $TITLE ===' && echo '$LIVE_LOG' && echo && tail -n 30 -f '$LIVE_LOG'"
+_watch="cd '$ROOT' && clear && echo '╔══════════════════════════════════════════════════════╗' && echo '║  AUTO-PWN — ${TITLE}' && echo '╚══════════════════════════════════════════════════════╝' && echo && echo 'Log: $LIVE_LOG' && echo 'Close this window when phase finishes.' && echo && tail -n 40 -f '$LIVE_LOG'"
 
 _open_gui() {
   [[ -n "${DISPLAY:-}${WAYLAND_DISPLAY:-}" ]] || return 1

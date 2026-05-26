@@ -213,7 +213,28 @@ Telegram phase summaries: `core/telegram/phase_notify.py` reads all artifacts ab
 | Module | Role |
 |--------|------|
 | `core/phase_jobs.py` | `PhaseRunner` — thread pool, per-job timeout, group timeout, `PHASE_N_JOBS.json` |
-| `core/phase_log.py` | `logs/PHASE_N.log` per batch (+ optional terminal via `AUTOPWN_PHASE_WINDOWS=1`) |
+| `core/phase_log.py` | `logs/PHASE_N.log` per batch + **auto terminal** on Kali GUI |
+
+### Per-phase terminal windows
+
+On Kali with a desktop (GNOME/XFCE), each phase opens its **own terminal** tailing that phase log:
+
+| Window | Log file | Content |
+|--------|----------|---------|
+| `LIVE_SCAN.log` | global | all phases summary |
+| `PHASE 0` … `PHASE 4` | `logs/PHASE_0.log` … | that phase only + heartbeat |
+
+```bash
+# Default on Kali GUI (via run.sh):
+export AUTOPWN_PHASE_WINDOWS=main    # PHASE 0–4 only (~5 windows)
+
+# Also open parallel batches (IoT, Nuclei, Dirsearch, …):
+export AUTOPWN_PHASE_WINDOWS=all
+
+# Disable extra windows:
+export AUTOPWN_PHASE_WINDOWS=0
+export AUTOPWN_MAX_PHASE_WINDOWS=12  # cap open terminals
+```
 | `core/classic/parallel_phases.py` | Phase 1 recon, Phase 2 web, Phase 3 RouterSploit+Ingram |
 
 ### Parallel batches
@@ -237,10 +258,33 @@ export AUTOPWN_MAX_WORKERS=8          # concurrent jobs (default 6 normal / 8 de
 export AUTOPWN_JOB_TIMEOUT=600        # per-tool max seconds
 export AUTOPWN_PHASE_TIMEOUT=3600       # whole batch max seconds
 export NUCLEI_CMD_TIMEOUT=300           # per Nuclei URL
-export AUTOPWN_PHASE_WINDOWS=1          # open gnome-terminal per phase log
+export AUTOPWN_PHASE_WINDOWS=main       # main phases 0–4 (auto on Kali GUI)
+export AUTOPWN_PHASE_WINDOWS=all        # + parallel batches (2-nuclei, 1-iot, …)
+export AUTOPWN_MAX_PHASE_WINDOWS=12
 ```
 
 Logs: `logs/LIVE_SCAN.log` (global) + `logs/PHASE_2-nuclei.log` (per batch) + `targets/{ip}/PHASE_*_JOBS.json`
+
+### Phase heartbeat & countdown (`core/phase_progress.py`)
+
+Every **15s** (configurable) while a phase runs:
+
+```
+[⏱ PHASE 2] Web Enumeration | elapsed 04:32 | countdown 55:28 | jobs 3/8 | active [nuclei-0, nuclei-1] | Dirsearch | ✓ alive
+```
+
+- **elapsed** — time since phase started  
+- **countdown** — time left before phase timeout  
+- **jobs** — parallel batch progress (when using `PhaseRunner`)  
+- **✓ alive** — process is running (not hung)
+
+Telegram scans: same line sent every **90s** so you know the bot is still working.
+
+```bash
+export AUTOPWN_HEARTBEAT_INTERVAL=15      # console/log tick (seconds)
+export AUTOPWN_TELEGRAM_HEARTBEAT=90      # Telegram ping interval
+export AUTOPWN_HEARTBEAT_TELEGRAM=0       # disable Telegram heartbeats
+```
 
 ---
 

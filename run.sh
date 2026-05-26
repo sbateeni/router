@@ -34,6 +34,13 @@ if [[ ! -f "$ROOT/.env" ]]; then
 fi
 
 mkdir -p "$ROOT/logs"
+
+# Live log + per-phase terminal windows (Kali desktop)
+if [[ -n "${DISPLAY:-}${WAYLAND_DISPLAY:-}" ]]; then
+  export AUTOPWN_LIVE_WINDOW="${AUTOPWN_LIVE_WINDOW:-1}"
+  export AUTOPWN_PHASE_WINDOWS="${AUTOPWN_PHASE_WINDOWS:-main}"
+fi
+
 if [[ -f "$ROOT/scripts/check_telegram_env.py" ]]; then
   "$PY" "$ROOT/scripts/check_telegram_env.py" || exit 1
 fi

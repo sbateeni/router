@@ -11,7 +11,8 @@ import traceback
 from dataclasses import dataclass, field
 from typing import Any, Callable
 
-from core.phase_log import begin_phase, end_phase, set_thread_phase, write_phase
+from core.phase_log import set_thread_phase, write_phase
+from core.phase_progress import get_progress
 from core.scan_config import get_scan_profile
 from core.utils import valid_env_value
 
@@ -116,6 +117,9 @@ class PhaseRunner:
 
     def _run_one(self, job: JobSpec) -> JobResult:
         set_thread_phase(self.phase_id)
+        prog = get_progress(self.phase_id)
+        if prog:
+            prog.job_started(job.name)
         start = time.monotonic()
         _log(f"[JOB START] {job.name} (timeout={job.timeout}s)", self.phase_id)
         try:
@@ -145,6 +149,8 @@ class PhaseRunner:
             return JobResult(name=job.name, ok=False, elapsed=elapsed, error=str(exc))
         finally:
             set_thread_phase(None)
+            if prog:
+                prog.job_finished(job.name)
 
     def run(self, group_timeout: int | None = None) -> dict[str, JobResult]:
         if not self.jobs:
@@ -161,13 +167,31 @@ class PhaseRunner:
             else:
                 group_timeout = profile.get("phase_group_timeout")
 
-        begin_phase(self.phase_id, self.label, self.target_dir)
+        from core.phase_progress import track_phase
+
+        with track_phase(
+            self.phase_id,
+            self.label,
+            timeout=group_timeout,
+            total_jobs=len(self.jobs),
+            target_dir=self.target_dir,
+        ) as prog:
+            prog.set_status(f"parallel pool ({len(self.jobs)} jobs, {self.max_workers} workers)")
+            results = self._run_pool(group_timeout, prog)
+
+        ok_n = sum(1 for r in results.values() if r.ok)
+        to_n = sum(1 for r in results.values() if r.timed_out)
+        summary = f"Jobs: {ok_n}/{len(self.jobs)} OK, {to_n} timeout(s)"
+        _log(f"[+] {summary}", self.phase_id)
+        self._save_manifest(results, summary)
+        return results
+
+    def _run_pool(self, group_timeout: int | None, prog) -> dict[str, JobResult]:
         _log(
             f"[*] Parallel pool: {len(self.jobs)} job(s), workers={self.max_workers}, "
             f"group_timeout={group_timeout or 'none'}",
             self.phase_id,
         )
-
         results: dict[str, JobResult] = {}
         deadline = time.time() + group_timeout if group_timeout else None
 
@@ -199,13 +223,6 @@ class PhaseRunner:
                         results[job.name] = JobResult(
                             name=job.name, ok=False, elapsed=0, error=str(exc),
                         )
-
-        ok_n = sum(1 for r in results.values() if r.ok)
-        to_n = sum(1 for r in results.values() if r.timed_out)
-        summary = f"Jobs: {ok_n}/{len(self.jobs)} OK, {to_n} timeout(s)"
-        _log(f"[+] {summary}", self.phase_id)
-        self._save_manifest(results, summary)
-        end_phase(self.phase_id, summary)
         return results
 
     def _save_manifest(self, results: dict[str, JobResult], summary: str) -> None:

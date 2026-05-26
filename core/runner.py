@@ -55,7 +55,9 @@ def run_selected_tool(selection, ip, target_dir, profile="normal", subnet=None):
     os.environ["AUTOPWN_SCAN_SOURCE"] = source
 
     from core.live_scan_log import begin as live_begin, end as live_end
+    from core.phase_log import reset_phase_windows
 
+    reset_phase_windows()
     live_begin(f"{ip} | selection={selection} | profile={profile}", source=source)
     try:
         if selection in ENGINE_CHOICES:

@@ -32,6 +32,13 @@ PROFILES = {
         "phase2_nuclei_timeout": 1800,
         "phase3_iot_timeout": 1500,
         "phase3_classic_timeout": 1200,
+        "phase_heartbeat_interval": 15,
+        "telegram_heartbeat_interval": 90,
+        "phase0_main_timeout": 900,
+        "phase1_main_timeout": 2400,
+        "phase2_main_timeout": 3600,
+        "phase3_main_timeout": 3600,
+        "phase4_main_timeout": 1800,
     },
     "deep": {
         "label": "Deep / Full Tool Merge",
@@ -64,6 +71,13 @@ PROFILES = {
         "phase2_nuclei_timeout": 3600,
         "phase3_iot_timeout": 2400,
         "phase3_classic_timeout": 1800,
+        "phase_heartbeat_interval": 15,
+        "telegram_heartbeat_interval": 90,
+        "phase0_main_timeout": 1200,
+        "phase1_main_timeout": 3600,
+        "phase2_main_timeout": 7200,
+        "phase3_main_timeout": 7200,
+        "phase4_main_timeout": 3600,
     },
 }
 
