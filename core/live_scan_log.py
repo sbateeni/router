@@ -1,6 +1,8 @@
 """Mirror scan output to logs/LIVE_SCAN.log; auto-open tail window on scan start."""
 import os
 import subprocess
+import sys
+from contextlib import contextmanager
 from datetime import datetime
 
 from core.paths import logs_dir, project_root
@@ -74,3 +76,53 @@ def end(note=None):
 
 def is_active():
     return _active
+
+
+class _StdoutTee:
+    """Mirror stdout writes to LIVE_SCAN.log while preserving the real terminal."""
+
+    def __init__(self, original):
+        self._original = original
+
+    def write(self, data):
+        if not data:
+            return 0
+        try:
+            self._original.write(data)
+        except Exception:
+            pass
+        write(data)
+        return len(data)
+
+    def flush(self):
+        try:
+            self._original.flush()
+        except Exception:
+            pass
+
+    def fileno(self):
+        return self._original.fileno()
+
+    def isatty(self):
+        try:
+            return self._original.isatty()
+        except Exception:
+            return False
+
+    @property
+    def encoding(self):
+        return getattr(self._original, "encoding", "utf-8")
+
+
+@contextmanager
+def mirror_stdout():
+    """Tee sys.stdout to LIVE_SCAN.log for the duration of a scan."""
+    if not _active:
+        yield
+        return
+    original = sys.stdout
+    sys.stdout = _StdoutTee(original)
+    try:
+        yield
+    finally:
+        sys.stdout = original

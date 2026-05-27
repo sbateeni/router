@@ -82,6 +82,35 @@ def routersploit_python_ready():
         return False
 
 
+def routersploit_rsf_import_ready():
+    """Verify rsf.py can import (catches missing setuptools, paramiko, etc.)."""
+    rsf_dir = os.path.join(TOOLS_DIR, "routersploit")
+    rsf_py = os.path.join(rsf_dir, "rsf.py")
+    if not os.path.isfile(rsf_py):
+        return False, f"RouterSploit not found at {rsf_py}"
+    code = (
+        "import sys\n"
+        "sys.path.insert(0, '.')\n"
+        "from routersploit.interpreter import RoutersploitInterpreter\n"
+    )
+    try:
+        result = subprocess.run(
+            [PYTHON, "-c", code],
+            cwd=rsf_dir,
+            capture_output=True,
+            text=True,
+            timeout=60,
+        )
+    except subprocess.TimeoutExpired:
+        return False, "RouterSploit import timed out after 60s"
+    except OSError as exc:
+        return False, str(exc)
+    if result.returncode == 0:
+        return True, ""
+    err = (result.stderr or result.stdout or "RouterSploit import failed").strip()
+    return False, err
+
+
 def install_python_packages(packages):
     if not packages:
         return True
@@ -95,9 +124,14 @@ def install_python_packages(packages):
 
 
 def ensure_routersploit_deps():
-    if routersploit_python_ready():
+    ok, err = routersploit_rsf_import_ready()
+    if ok:
         return True
-    print("[*] RouterSploit needs setuptools + pycryptodome + paramiko==2.12.0...")
+
+    print("[*] RouterSploit deps missing or broken — installing...")
+    if err:
+        print(f"[*] Import check: {err.splitlines()[0][:200]}")
+
     rsf_req = os.path.join(TOOLS_DIR, "routersploit", "requirements.txt")
     if os.path.isfile(rsf_req):
         cmd = [PYTHON, "-m", "pip", "install", "-q", "-r", rsf_req]
@@ -107,10 +141,17 @@ def ensure_routersploit_deps():
     if not install_python_packages(list(ROUTERSPLOIT_PACKAGES)):
         print("[!] Failed to install RouterSploit Python dependencies.")
         return False
-    if routersploit_python_ready():
-        print("[+] RouterSploit Python dependencies are ready.")
+
+    ok, err = routersploit_rsf_import_ready()
+    if ok:
+        print("[+] RouterSploit dependencies are ready.")
         return True
-    print("[!] RouterSploit deps missing. Run: bash scripts/fix_routersploit_kali.sh")
+
+    print("[!] RouterSploit still cannot import after install.")
+    if err:
+        for line in err.splitlines()[:8]:
+            print(f"    {line}")
+    print("[!] Run on Kali: bash scripts/fix_routersploit_kali.sh")
     return False
 
 

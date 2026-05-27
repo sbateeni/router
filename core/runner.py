@@ -54,22 +54,33 @@ def run_selected_tool(selection, ip, target_dir, profile="normal", subnet=None):
     source = os.environ.get("AUTOPWN_SCAN_SOURCE", "cli")
     os.environ["AUTOPWN_SCAN_SOURCE"] = source
 
-    from core.live_scan_log import begin as live_begin, end as live_end
+    from core.live_scan_log import begin as live_begin, end as live_end, mirror_stdout
     from core.phase_log import reset_phase_windows
+    from core.scan_transcript import begin as transcript_begin, end as transcript_end
 
     reset_phase_windows()
     live_begin(f"{ip} | selection={selection} | profile={profile}", source=source)
+    if selection != 1:
+        transcript_begin(
+            target_dir,
+            header=f"Selection: {selection} | profile: {profile}",
+            live_source=source,
+        )
     try:
-        if selection in ENGINE_CHOICES:
-            return run_device_engine_only(ip, target_dir)
-        if selection in CLASSIC_CHOICES:
-            return _run_classic(selection, ip, target_dir)
-        if selection in AI_CHOICES:
-            return _run_ai(selection, ip, target_dir)
-        if selection in RECON_CHOICES:
-            return _run_recon(selection, ip, target_dir, subnet=subnet)
-        return False
+        with mirror_stdout():
+            if selection in ENGINE_CHOICES:
+                return run_device_engine_only(ip, target_dir)
+            if selection in CLASSIC_CHOICES:
+                return _run_classic(selection, ip, target_dir)
+            if selection in AI_CHOICES:
+                return _run_ai(selection, ip, target_dir)
+            if selection in RECON_CHOICES:
+                return _run_recon(selection, ip, target_dir, subnet=subnet)
+            print(f"[-] Unknown selection: {selection}")
+            return False
     finally:
+        if selection != 1:
+            transcript_end()
         live_end()
 
 
