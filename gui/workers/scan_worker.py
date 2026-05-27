@@ -1,0 +1,130 @@
+"""Background QThread for long-running scans."""
+
+from __future__ import annotations
+
+import os
+import uuid
+from dataclasses import dataclass
+from typing import Any, Callable
+
+from PyQt6.QtCore import QThread, pyqtSignal
+
+from gui.bridge.input_bridge import install_gui_bridge
+from gui.session import GuiSession
+
+
+@dataclass
+class ScanJob:
+    kind: str  # tool | comprehensive | engine | custom
+    label: str = ""
+    selection: int | None = None
+    manual_mode: bool = False
+    known_open_ports: list[int] | None = None
+    custom_fn: Callable[[], Any] | None = None
+
+
+class ScanWorker(QThread):
+    log_line = pyqtSignal(str)
+    finished_ok = pyqtSignal(bool, str)
+    error = pyqtSignal(str)
+
+    def __init__(self, session: GuiSession, job: ScanJob, parent=None):
+        super().__init__(parent)
+        self._session = session
+        self._job = job
+        self._job_id = f"gui-{uuid.uuid4().hex[:12]}"
+
+    @property
+    def job_id(self) -> str:
+        return self._job_id
+
+    def run(self) -> None:
+        os.environ["AUTOPWN_GUI"] = "1"
+        os.environ["AUTOPWN_LIVE_WINDOW"] = "0"
+        os.environ["AUTOPWN_JOB_ID"] = self._job_id
+        os.environ["AUTOPWN_SCAN_SOURCE"] = "gui"
+        install_gui_bridge()
+
+        from core.scan_cancel import ScanCancelled, finish_job, start_job
+
+        start_job(self._job_id, meta={"label": self._job.label})
+        try:
+            if not self._session.prepare():
+                self.error.emit("No target configured.")
+                return
+            os.environ["ENGINE_WORKSPACE"] = self._session.target_dir
+            self._session.set_profile(self._session.profile)
+            result = self._execute()
+            self.finished_ok.emit(bool(result), self._job.label or "done")
+        except ScanCancelled:
+            self.log_line.emit("[!] Scan cancelled by user.\n")
+            self.finished_ok.emit(False, "cancelled")
+        except Exception as exc:
+            self.error.emit(str(exc))
+            self.finished_ok.emit(False, str(exc))
+        finally:
+            finish_job(self._job_id)
+            os.environ.pop("AUTOPWN_JOB_ID", None)
+
+    def _execute(self) -> Any:
+        job = self._job
+        session = self._session
+        scan_host = session.scan_host
+        target_dir = session.target_dir
+        profile = session.profile
+        subnet = session.subnet or None
+
+        if job.kind == "custom" and job.custom_fn:
+            return job.custom_fn()
+
+        if job.kind == "engine":
+            from engines.auto_pwn_main import main as engine_main
+
+            target = session.target
+            if not target.startswith("http"):
+                target = f"http://{target}"
+            engine_main(
+                target,
+                manual_mode=job.manual_mode,
+                known_open_ports=job.known_open_ports,
+            )
+            return True
+
+        if job.kind == "comprehensive":
+            from core.runner import run_selected_tool
+            from core.report import generate_scan_report
+
+            selection = 1
+            exploited = run_selected_tool(
+                selection,
+                scan_host,
+                target_dir,
+                profile=profile,
+                subnet=subnet,
+            )
+            generate_scan_report(
+                scan_host,
+                target_dir,
+                selection,
+                exploited,
+                current_phase="Completed",
+                profile=profile,
+            )
+            return exploited
+
+        if job.kind == "tool" and job.selection is not None:
+            from core.runner import run_selected_tool
+
+            if job.selection == 21:
+                from core.runner import run_device_engine_only
+
+                return run_device_engine_only(scan_host, target_dir, manual_mode=job.manual_mode)
+            return run_selected_tool(
+                job.selection,
+                scan_host,
+                target_dir,
+                profile=profile,
+                subnet=subnet,
+            )
+
+        raise ValueError(f"Unknown job kind: {job.kind}")
