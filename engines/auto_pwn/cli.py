@@ -110,19 +110,15 @@ def _lan_device_picker():
         log("No devices found on LAN. Try manual entry.", "ERROR")
         return "", None
 
-    print("\n" + "=" * 68)
+    print("\n" + "=" * 100)
     print("      SELECT DEVICE TO START AUTO-PWN")
-    print("      (nmap completed — ports shown below)")
-    print("=" * 68)
-    for i, dev in enumerate(devices):
-        ports = dev.get("open_ports") or []
-        ports_str = ",".join(str(p) for p in ports[:10]) or "—"
-        print(
-            f"  [{i + 1}] IP: {dev['ip']:<15} | Type: {dev['type']:<12} | "
-            f"Ports: {ports_str}"
-        )
-    print("=" * 68)
-    print("  Log: logs/lan_engine_devices.json")
+    print("      (nmap -sV + vendor + services — see logs/lan_engine_devices.json)")
+    print("=" * 100)
+    from engines.lan_scanner import format_device_line
+
+    for i, dev in enumerate(devices, start=1):
+        print(format_device_line(dev, i))
+    print("=" * 100)
 
     while True:
         idx = input("\n[?] Select Device ID (or 'b' to go back): ").strip()
