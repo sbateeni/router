@@ -8,7 +8,7 @@ load_dotenv()
 class OSINTEngine:
     def __init__(self, target_ip):
         self.target_ip = target_ip
-        self.shodan_api_key = os.environ.get("SHODAN_API_KEY")
+        self.shodan_api_key = (os.environ.get("SHODAN_API_KEY") or "").strip()
         self.api_base_url = "https://api.shodan.io"
         self.results = {
             "ports": [],
@@ -42,6 +42,12 @@ class OSINTEngine:
                 log("No information found for this IP on Shodan.", "INFO")
             elif response.status_code == 401:
                 log("Invalid Shodan API Key.", "ERROR")
+            elif response.status_code == 403:
+                log(
+                    "Shodan host lookup requires paid membership (free/oss plan has no query credits). "
+                    "Use nmap locally or upgrade at https://account.shodan.io/",
+                    "WARNING",
+                )
             else:
                 log(f"Shodan API returned status code {response.status_code}", "ERROR")
         except requests.exceptions.RequestException as e:
