@@ -60,17 +60,6 @@ def _profile_brief(profile):
 
 def _phase0_lines(target_dir):
     lines = []
-    shodan = _load_json(os.path.join(target_dir, "SHODAN_OSINT.json"))
-    if shodan:
-        ports = shodan.get("ports") or []
-        if ports:
-            lines.append(f"• Shodan منافذ: {_join_limited(ports)}")
-        org = shodan.get("org") or shodan.get("organization")
-        if org:
-            lines.append(f"• Shodan org: {org}")
-        hosts = shodan.get("hostnames") or shodan.get("domains") or []
-        if hosts:
-            lines.append(f"• Shodan hostnames: {_join_limited(hosts, 5)}")
     social = _load_json(os.path.join(target_dir, "SOCIAL_OSINT.json"))
     if social:
         kind = social.get("kind") or "social"
@@ -83,7 +72,7 @@ def _phase0_lines(target_dir):
         elif recon:
             lines.append("• Domain recon: تم")
     if not lines:
-        lines.append("• OSINT: لا نتائج ملحوظة (أو Shodan غير مُعدّ)")
+        lines.append("• OSINT: لا نتائج ملحوظة")
     return lines
 
 

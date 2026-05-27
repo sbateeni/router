@@ -81,15 +81,6 @@ def build_session(
     if not check_previous_pwn(ip):
         return None
 
-    osint_results: dict = {}
-    if not manual_mode:
-        from engines.osint_engine import OSINTEngine
-
-        osint = OSINTEngine(ip)
-        osint_results = osint.run_shodan_scan()
-        if osint_results.get("ports"):
-            log(f"Pre-loading {len(osint_results['ports'])} open ports from OSINT data...", "INFO")
-
     scanner = Scanner()
     if known_open_ports:
         live_open_ports = sorted({int(p) for p in known_open_ports if p})
@@ -97,16 +88,13 @@ def build_session(
     else:
         live_open_ports = scanner.discover_ports(ip)
 
-    osint_ports = osint_results.get("ports", [])
-    open_ports = list(set(live_open_ports + osint_ports))
+    open_ports = list(live_open_ports)
     url_port = _url_port(target_input)
     if url_port and url_port not in open_ports:
         open_ports.insert(0, url_port)
 
     loot = LootReport(ip)
     loot.open_ports = open_ports
-    if osint_results.get("vulns"):
-        loot.add_note(f"OSINT CVEs (Shodan): {', '.join(osint_results['vulns'])}")
 
     all_passwords = ["QwEzxc321!@#", "Asdasd12", "12345", DEFAULT_PASSWORD]
     all_users = ["admin", "root", "dbadmin", "ubuntu"]

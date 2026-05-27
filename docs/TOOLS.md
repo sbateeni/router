@@ -84,7 +84,6 @@ Complete reference of every tool, module, and external dependency used in this p
 
 | Tool | Module |
 |------|--------|
-| Shodan OSINT | `osint_engine.py` |
 | Social OSINT (email/phone/user) | `social_osint.py` |
 | Fingerprinter | `fingerprinter.py` |
 | CVE intelligence | `device_cve_checker.py` |
@@ -310,7 +309,6 @@ export AUTOPWN_HEARTBEAT_TELEGRAM=0       # disable Telegram heartbeats
 |-----|---------|
 | `TELEGRAM_BOT_TOKEN` / `TELEGRAM_CHAT_ID` | Bot |
 | `GEMINI_API_KEY` | AI tools |
-| `SHODAN_API_KEY` | Shodan OSINT |
 | `NUMLOOKUP_API_KEY` | Phone OSINT (optional) |
 
 ---

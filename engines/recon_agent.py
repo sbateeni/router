@@ -7,7 +7,7 @@ from engines.utils import log
 class ReconAgent:
     """
     Phase 1: Reconnaissance
-    Uses Amass, theHarvester, SpiderFoot, and Shodan (via existing engine).
+    Uses Amass, theHarvester, SpiderFoot.
     """
     def __init__(self, target, output_dir):
         self.target = target
@@ -72,27 +72,11 @@ class ReconAgent:
         else:
             log("[ReconAgent] theHarvester not found in tools directory.", "WARNING")
 
-    def run_shodan(self):
-        log(f"[ReconAgent] Running Shodan OSINT on {self.target}...", "INFO")
-        from engines.osint_engine import OSINTEngine
-        osint = OSINTEngine(self.target)
-        shodan_results = osint.run_shodan_scan()
-        
-        self.results["osint_data"]["shodan"] = shodan_results
-        if "ports" in shodan_results:
-            self.results["open_ports"].extend(shodan_results["ports"])
-            
-    def run_spiderfoot(self):
-        log(f"[ReconAgent] SpiderFoot passive scan skipped in quick-mode.", "INFO")
-        # Full spiderfoot takes too long for a continuous chain unless explicitly needed
-
     def execute(self):
         print("\n" + "="*50)
         print("   [STAGE 1] RECONNAISSANCE AGENT INITIATED")
         print("="*50)
-        
-        self.run_shodan()
-        
+
         # Only run DNS-based recon if it looks like a domain, not an IP
         import re
         is_ip = re.match(r"^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$", self.target)

@@ -45,18 +45,9 @@ def _save_json(path: str, data: dict) -> None:
 
 
 def run_deep_osint_phase(ip: str, target_dir: str, hints: dict | None = None) -> dict[str, Any]:
-    """Shodan + optional social OSINT from hints (email/phone in URL)."""
-    out: dict[str, Any] = {"shodan": {}, "social": None}
+    """Optional social OSINT from hints (email/phone in URL)."""
+    out: dict[str, Any] = {"social": None}
     hints = hints or {}
-
-    try:
-        from engines.osint_engine import OSINTEngine
-
-        osint = OSINTEngine(ip)
-        out["shodan"] = osint.run_shodan_scan()
-        _save_json(os.path.join(target_dir, "SHODAN_OSINT.json"), out["shodan"])
-    except Exception as exc:
-        log(f"[Deep] Shodan OSINT skipped: {exc}", "WARNING")
 
     raw = hints.get("raw") or hints.get("seed_url") or ""
     try:
@@ -174,7 +165,6 @@ def run_full_device_engine(
     web_ports: list[int] | None = None,
     profile: dict | None = None,
     hints: dict | None = None,
-    osint_ports: list[int] | None = None,
 ) -> dict[str, Any]:
     """
     Full AUTO-PWN device pass (all modules from auto_pwn_main), non-interactive.
@@ -184,9 +174,6 @@ def run_full_device_engine(
     hints = hints or {}
 
     ports = _pick_web_ports(web_ports, profile)
-    if osint_ports:
-        ports = sorted(set(ports) | set(int(p) for p in osint_ports if p))
-
     scanner = Scanner()
     live = scanner.discover_ports(ip)
     ports = sorted(set(ports) | set(live))

@@ -69,7 +69,7 @@ router/
 
 ## Environment
 
-Copy `.env.example` to `.env` for Telegram / AI / Shodan keys.
+Copy `.env.example` to `.env` for Telegram / AI keys.
 
 See **[docs/TOOLS.md](docs/TOOLS.md)** for the full tools catalog.
 

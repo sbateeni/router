@@ -116,9 +116,8 @@ def run_all_classic_tools(ip, target_dir, selection=1):
         print(f"[*] Target hints: {hints.get('raw') or hints.get('seed_url')}")
         transcript_event(f"[*] Target hints: {hints.get('raw') or hints.get('seed_url')}")
 
-    osint_ports: list[int] = []
     if deep:
-        print("\n>>> PHASE 0: Deep OSINT & recon (Shodan, Social, domain tools)")
+        print("\n>>> PHASE 0: Deep OSINT & recon (Social, domain tools)")
         print("[*] Deep mode: ALL tools will run — results feed the next phase")
         transcript_phase("PHASE 0: Deep OSINT & recon")
         from core.phase_progress import track_phase
@@ -129,15 +128,10 @@ def run_all_classic_tools(ip, target_dir, selection=1):
                 timeout=get_scan_profile().get("phase0_main_timeout", 900),
                 target_dir=target_dir,
             ) as prog:
-                prog.set_status("Shodan + social + domain recon")
+                prog.set_status("social + domain recon")
                 from engines.deep_scan_extras import run_deep_domain_recon, run_deep_osint_phase
 
-                osint_data = run_deep_osint_phase(ip, target_dir, hints)
-                for p in osint_data.get("shodan", {}).get("ports") or []:
-                    try:
-                        osint_ports.append(int(p))
-                    except (TypeError, ValueError):
-                        pass
+                run_deep_osint_phase(ip, target_dir, hints)
                 prog.set_status("domain recon")
                 run_deep_domain_recon(ip, target_dir, hints)
         except Exception as exc:
@@ -266,7 +260,6 @@ def run_all_classic_tools(ip, target_dir, selection=1):
                         web_ports=profile.get("web_ports") or context.web_ports,
                         profile=profile,
                         hints=hints,
-                        osint_ports=osint_ports,
                     )
                     if engine_result.get("exploited"):
                         context.exploited = True
