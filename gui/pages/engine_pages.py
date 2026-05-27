@@ -23,28 +23,62 @@ from PyQt6.QtWidgets import (
 from core.paths import project_root
 from core.scan_cancel import cancel_job
 from gui.session import GuiSession
-from gui.widgets.tool_page import ToolPage
 from gui.workers.scan_worker import ScanJob, ScanWorker
 
 
-class EngineAutoPwnPage(ToolPage):
+class EngineAutoPwnPage(QWidget):
+    run_requested = pyqtSignal(object)
+
     def __init__(self, session: GuiSession, parent=None):
-        super().__init__(
-            session,
-            title="Device AUTO-PWN",
-            description="Full device engine: cameras, routers, OSINT, PoCs.",
-            kind="engine",
-            parent=parent,
-        )
-        row = self.layout().itemAt(3).layout()
+        super().__init__(parent)
+        self._session = session
+        self._worker: ScanWorker | None = None
+        layout = QVBoxLayout(self)
+        layout.addWidget(QLabel("<h2>Device AUTO-PWN</h2>"))
+        layout.addWidget(QLabel("Full device engine: cameras, routers, OSINT, PoCs."))
+        mode_row = QHBoxLayout()
+        mode_row.addWidget(QLabel("Mode:"))
         self._mode = QComboBox()
         self._mode.addItems(["Full auto", "Expert manual"])
-        row.insertWidget(0, QLabel("Mode:"))
-        row.insertWidget(1, self._mode)
+        mode_row.addWidget(self._mode)
+        layout.addLayout(mode_row)
+        btn_row = QHBoxLayout()
+        self._run_btn = QPushButton("Run")
+        self._run_btn.clicked.connect(self._start)
+        self._cancel_btn = QPushButton("Cancel")
+        self._cancel_btn.setEnabled(False)
+        self._cancel_btn.clicked.connect(self._cancel)
+        btn_row.addWidget(self._run_btn)
+        btn_row.addWidget(self._cancel_btn)
+        layout.addLayout(btn_row)
+        layout.addStretch()
 
     def _start(self) -> None:
-        self._manual_mode = self._mode.currentIndex() == 1
-        super()._start()
+        if not self._session.target.strip():
+            QMessageBox.warning(self, "Target required", "Enter a target in the bar above.")
+            return
+        manual = self._mode.currentIndex() == 1
+        job = ScanJob(kind="engine", label="device-engine", manual_mode=manual)
+        self._worker = ScanWorker(self._session, job, self)
+        self._run_btn.setEnabled(False)
+        self._cancel_btn.setEnabled(True)
+        self.run_requested.emit(self._worker)
+        self._worker.finished_ok.connect(self._on_done)
+        self._worker.error.connect(self._on_error)
+        self._worker.start()
+
+    def _cancel(self) -> None:
+        if self._worker:
+            cancel_job(self._worker.job_id)
+
+    def _on_done(self, *_args) -> None:
+        self._run_btn.setEnabled(True)
+        self._cancel_btn.setEnabled(False)
+
+    def _on_error(self, msg: str) -> None:
+        QMessageBox.critical(self, "Error", msg)
+        self._run_btn.setEnabled(True)
+        self._cancel_btn.setEnabled(False)
 
 
 class LanScanPage(QWidget):
@@ -175,6 +209,7 @@ class OsintPage(QWidget):
 
     def __init__(self, session: GuiSession, parent=None):
         super().__init__(parent)
+        self._session = session
         layout = QVBoxLayout(self)
         layout.addWidget(QLabel("<h2>Social OSINT</h2>"))
         self._mode = QComboBox()
@@ -207,10 +242,10 @@ class OsintPage(QWidget):
                 osint.check_email(value)
                 osint.hunt_username(value.split("@")[0])
             out = os.path.join(project_root(), "logs", "osint_report.json")
-            osint.save_report(out)
+            osint.save_results(out)
 
         job = ScanJob(kind="custom", label="osint", custom_fn=task)
-        worker = ScanWorker(self._session if hasattr(self, "_session") else GuiSession(), job)
+        worker = ScanWorker(self._session, job, self)
         self.run_requested.emit(worker)
         worker.start()
 
@@ -285,9 +320,9 @@ class PocScraperPage(QWidget):
 
     def _run(self) -> None:
         def task():
-            from engines.zero_day_scraper import run_scraper
+            from engines.zero_day_scraper import ZeroDayScraper
 
-            run_scraper()
+            ZeroDayScraper().search_and_download()
 
         job = ScanJob(kind="custom", label="poc-scraper", custom_fn=task)
         worker = ScanWorker(self._session, job, self)

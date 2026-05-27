@@ -24,11 +24,17 @@ echo   [4] Test Hikvision          tests\test_hikvision_target.py
 echo   [5] CVE report              tests\test_device_cve.py
 echo   [8] Interactive menu        bin\master_pwn.py
 echo   [9] Update from GitHub      scripts\update_tools.py
+echo   [G] PyQt6 GUI               bin\gui_app.py
 echo   [0] Exit
 echo.
-set /p choice="Select [0-9]: "
+set /p choice="Select [0-9,G]: "
 
 if "%choice%"=="0" exit /b 0
+if /I "%choice%"=="G" (
+  %PY% bin\gui_app.py
+  pause
+  exit /b 0
+)
 if "%choice%"=="9" (
   %PY% scripts\update_tools.py
   pause

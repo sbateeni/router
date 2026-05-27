@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 from urllib.parse import urlparse
 
 from engines.auto_pwn.session import AttackSession
@@ -29,6 +30,10 @@ def check_previous_pwn(ip: str) -> bool:
         print(f"   [>] Found {svc['service']}: {svc['creds']}")
     print("!" * 50 + "\n")
 
+    if os.environ.get("AUTOPWN_GUI") == "1":
+        from gui.bridge.input_bridge import install_gui_bridge
+
+        install_gui_bridge()
     choice = input("[?] Try existing credentials to log in? (y/n): ").strip().lower()
     if choice != "y":
         log("Skipping validation. Starting rescan...", "INFO")

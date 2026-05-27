@@ -23,7 +23,8 @@ bash scripts/install_tools.sh    # clones tools/ + merges tool-specific pins
 
 | Command | Purpose |
 |---------|---------|
-| `./run.sh` | Unified menu (options 1–9) |
+| `./run.sh` | Unified menu (options 1–9, **G** = GUI) |
+| `python3 bin/gui_app.py` | PyQt6 desktop GUI (see [`docs/GUI.md`](docs/GUI.md)) |
 | `python3 bin/master_pwn.py -t IP --auto` | Full 4-phase scan (Nmap → Web → **Engine** → Hydra) |
 | `python3 bin/auto_pwn.py` | Device engine only (cameras + routers) |
 | `python3 tests/test_router_target.py -H IP` | Netis/router credential test |
@@ -37,6 +38,7 @@ router/
 ├── run.sh / run.bat       ← launch menu (stay at root)
 ├── bin/                   ← Python entry points
 │   ├── master_pwn.py      ← main orchestrator
+│   ├── gui_app.py         ← PyQt6 desktop GUI
 │   ├── auto_pwn.py        ← device engine menu
 │   ├── lan_pwn.py
 │   └── telegram_pwn.py

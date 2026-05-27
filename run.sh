@@ -67,11 +67,14 @@ echo "  [1] Full auto scan     [2] Device engine"
 echo "  [3] Router test        [4] Hikvision test"
 echo "  [5] CVE report         [6] Camera snapshots"
 echo "  [7] LAN scan           [8] Interactive menu"
-echo "  [9] Update GitHub      [0] Exit"
+echo "  [9] Update GitHub      [G] PyQt6 GUI"
+echo "  [0] Exit"
 echo
-read -rp "Select [0-9]: " choice
+read -rp "Select [0-9,G]: " choice
 
 case "$choice" in
+  [gG]) export NUCLEI_SKIP_UPDATE=1 AUTOPWN_LIVE_WINDOW=0
+     "$PY" "$ROOT/bin/gui_app.py" ;;
   1) read -rp "Target IP: " target_ip
      export NUCLEI_SKIP_UPDATE=1
      "$PY" "$ROOT/bin/master_pwn.py" "${TG_ARGS[@]}" -t "$target_ip" --auto ;;

@@ -65,6 +65,12 @@ def finalize_attack(session: AttackSession) -> None:
 
 
 def _offer_pivot(session: AttackSession) -> None:
+    import os
+
+    if os.environ.get("AUTOPWN_GUI") == "1":
+        from gui.bridge.input_bridge import install_gui_bridge
+
+        install_gui_bridge()
     if session.manual_mode:
         return
     if not (session.router_pwned or session.camera_handled or any(e.has_credentials for e in session.loot.entries)):

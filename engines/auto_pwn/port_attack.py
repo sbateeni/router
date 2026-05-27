@@ -34,6 +34,10 @@ def _target_url(ip: str, port: int) -> str:
 
 def _run_manual_menu(session: AttackSession, port: int, target_url: str, ext_tools) -> str | None:
     """Returns 'auto' to switch to full auto, 'skip' to skip port, None when done manual."""
+    if os.environ.get("AUTOPWN_GUI") == "1":
+        from gui.bridge.input_bridge import install_gui_bridge
+
+        install_gui_bridge()
     ip = session.ip
     print("\n" + "-" * 45)
     print(f"  EXPERT MANUAL MENU for {ip}:{port}")
