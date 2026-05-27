@@ -14,6 +14,7 @@ CRITICAL_MODULES = (
 )
 
 ROUTERSPLOIT_PACKAGES = (
+    "setuptools>=65.0.0",
     "pycryptodome",
     "paramiko==2.12.0",
 )
@@ -73,6 +74,7 @@ def missing_python_modules():
 
 def routersploit_python_ready():
     try:
+        import pkg_resources  # noqa: F401  # setuptools — required by routersploit wordlists
         from Crypto.Cipher import AES  # noqa: F401
         import paramiko
         return hasattr(paramiko, "DSSKey")
@@ -95,7 +97,7 @@ def install_python_packages(packages):
 def ensure_routersploit_deps():
     if routersploit_python_ready():
         return True
-    print("[*] RouterSploit needs pycryptodome + paramiko==2.12.0 (DSSKey)...")
+    print("[*] RouterSploit needs setuptools + pycryptodome + paramiko==2.12.0...")
     rsf_req = os.path.join(TOOLS_DIR, "routersploit", "requirements.txt")
     if os.path.isfile(rsf_req):
         cmd = [PYTHON, "-m", "pip", "install", "-q", "-r", rsf_req]
