@@ -83,12 +83,10 @@ def routersploit_python_ready():
 def install_python_packages(packages):
     if not packages:
         return True
-    command = [
-        PYTHON, "-m", "pip", "install",
-        *packages,
-        "--break-system-packages",
-        "--ignore-installed",
-    ]
+    command = [PYTHON, "-m", "pip", "install", "-q", *packages]
+    in_venv = getattr(sys, "prefix", "") != getattr(sys, "base_prefix", "")
+    if not in_venv:
+        command.extend(["--break-system-packages", "--ignore-installed"])
     print(f"[*] Installing Python packages: {', '.join(packages)}")
     result = subprocess.run(command)
     return result.returncode == 0
@@ -97,14 +95,20 @@ def install_python_packages(packages):
 def ensure_routersploit_deps():
     if routersploit_python_ready():
         return True
-    print("[*] RouterSploit needs pycryptodome (Crypto module)...")
+    print("[*] RouterSploit needs pycryptodome + paramiko==2.12.0 (DSSKey)...")
+    rsf_req = os.path.join(TOOLS_DIR, "routersploit", "requirements.txt")
+    if os.path.isfile(rsf_req):
+        cmd = [PYTHON, "-m", "pip", "install", "-q", "-r", rsf_req]
+        if getattr(sys, "prefix", "") == getattr(sys, "base_prefix", ""):
+            cmd.extend(["--break-system-packages"])
+        subprocess.run(cmd, check=False)
     if not install_python_packages(list(ROUTERSPLOIT_PACKAGES)):
         print("[!] Failed to install RouterSploit Python dependencies.")
         return False
     if routersploit_python_ready():
         print("[+] RouterSploit Python dependencies are ready.")
         return True
-    print("[!] pycryptodome is still missing after install.")
+    print("[!] RouterSploit deps missing. Run: bash scripts/fix_routersploit_kali.sh")
     return False
 
 
@@ -136,7 +140,7 @@ def sanitize_routersploit_modules(modules):
     return cleaned
 
 
-def run_cmd(command, capture=False, log_file=None, timeout=None):
+def run_cmd(command, capture=False, log_file=None, timeout=None, cwd=None):
     """
     Run a shell command. When log_file is set, stdout/stderr are saved there.
     Returns (success, combined_output) where success reflects the process exit code.
@@ -161,7 +165,7 @@ def run_cmd(command, capture=False, log_file=None, timeout=None):
         if capture or log_file:
             try:
                 result = subprocess.run(
-                    command, capture_output=True, text=True, timeout=timeout,
+                    command, capture_output=True, text=True, timeout=timeout, cwd=cwd,
                 )
             except subprocess.TimeoutExpired as exc:
                 msg = f"Command timed out after {timeout}s"
@@ -217,7 +221,7 @@ def run_cmd(command, capture=False, log_file=None, timeout=None):
                 print(output)
             return ok, ""
 
-        result = subprocess.run(command, timeout=timeout)
+        result = subprocess.run(command, timeout=timeout, cwd=cwd)
         return result.returncode == 0, ""
     except Exception as e:
         print(f"[-] Failed to execute command: {e}")

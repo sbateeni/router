@@ -182,13 +182,21 @@ def run_upnp_discovery(ip: str, target_dir: str) -> list[dict]:
 
 
 def _run_cred_scanner(name: str, script_rel: str, ip: str, target_dir: str, protocols: list[str]) -> list[dict]:
+    from core.recon.cred_deps import ensure_changeme_deps, output_failed
+
+    if not ensure_changeme_deps():
+        raise RuntimeError(f"{name}: missing Python deps (cerberus). Run: bash scripts/fix_iot_creds_kali.sh")
+
     script = os.path.join(TOOLS_DIR, script_rel)
     if not os.path.isfile(script):
-        return []
+        raise RuntimeError(f"{name}: not found at {script}")
     print(f"\n[+] {name} — default/backdoor credentials...")
     log_file = os.path.join(target_dir, f"{name.replace(' ', '_')}_scan.txt")
+    changeme_dir = os.path.dirname(script)
     cmd = [PYTHON, script, ip, "--timeout", "8", "--protocols", ",".join(protocols)]
-    ok, output = run_cmd(cmd, capture=True, log_file=log_file)
+    ok, output = run_cmd(cmd, capture=True, log_file=log_file, timeout=360, cwd=changeme_dir)
+    if not ok or output_failed(output):
+        raise RuntimeError(f"{name} failed — see {log_file}")
     hits = _parse_cred_output(output, name)
     if hits:
         print(f"[+] {name}: {len(hits)} hit(s)")
@@ -199,6 +207,11 @@ def _run_cred_scanner(name: str, script_rel: str, ip: str, target_dir: str, prot
 
 def _run_default_hunter(ip: str, target_dir: str, protocols: list[str]) -> list[dict]:
     """SySS Default-Hunter (modern changeme fork) — CLI or python -m."""
+    from core.recon.cred_deps import ensure_default_hunter, output_failed
+
+    if not ensure_default_hunter():
+        raise RuntimeError("Default-Hunter not installed. Run: bash scripts/fix_iot_creds_kali.sh")
+
     print("\n[+] Default-Hunter — extended default/backdoor creds...")
     log_file = os.path.join(target_dir, "default-hunter_scan.txt")
     proto = ",".join(protocols)
@@ -212,16 +225,20 @@ def _run_default_hunter(ip: str, target_dir: str, protocols: list[str]) -> list[
         attempts.append([PYTHON, dh_main, ip, "--timeout", "8", "--protocols", proto])
 
     output = ""
+    ok = False
     for cmd in attempts:
-        ok, output = run_cmd(cmd, capture=True, log_file=log_file)
-        if output and "no module named" not in output.lower():
+        ok, output = run_cmd(cmd, capture=True, log_file=log_file, timeout=360)
+        if ok and output and not output_failed(output):
             break
+
+    if not ok or output_failed(output):
+        raise RuntimeError(f"Default-Hunter failed — see {log_file}")
 
     hits = _parse_cred_output(output, "default-hunter")
     if hits:
         print(f"[+] Default-Hunter: {len(hits)} hit(s)")
     else:
-        print("[*] Default-Hunter: no hits (install via install_tools.sh)")
+        print("[*] Default-Hunter: no hits")
     return hits
 
 
@@ -428,6 +445,12 @@ def run_phase1_iot_recon(ip: str, target_dir: str, open_ports: list | None = Non
     from core.scan_config import get_scan_profile
 
     runner = PhaseRunner(target_dir, "1-iot", "Phase 1 — IoT toolkit", max_workers=5)
+
+    from core.recon.cred_deps import ensure_cred_scanner_deps
+
+    if not ensure_cred_scanner_deps():
+        print("[!] changeme/Default-Hunter deps missing — run: bash scripts/fix_iot_creds_kali.sh")
+
     runner.add(
         "nuclei-templates",
         lambda: run_nuclei_template_refresh(target_dir),

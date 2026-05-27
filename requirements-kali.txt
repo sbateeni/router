@@ -14,6 +14,12 @@
 #   pip install -r requirements-kali.txt
 #   bash scripts/install_tools.sh
 
+# --- IoT default cred scanners (changeme + Default-Hunter) ---
+cerberus>=1.3.0
+pymysql>=1.0.0
+psycopg2-binary>=2.9.0
+python-nmap>=0.7.0
+
 # --- RouterSploit (exact) ---
 requests==2.32.2
 paramiko==2.12.0

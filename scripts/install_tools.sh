@@ -104,15 +104,23 @@ install_python_deps() {
   "$PY" -m pip install -q "git+https://github.com/EntySec/CamRaptor.git" 2>/dev/null \
     || echo "  [i] CamRaptor pip skipped (optional)"
 
-  if [[ -d "$ROOT/tools/changeme" ]] && [[ -f "$ROOT/tools/changeme/requirements.txt" ]]; then
-    echo "  [*] changeme requirements..."
-    "$PY" -m pip install -q -r "$ROOT/tools/changeme/requirements.txt" 2>/dev/null || true
+  if [[ -d "$ROOT/tools/changeme" ]]; then
+    echo "  [*] changeme + Default-Hunter credential scanners..."
+    "$PY" -m pip install -q \
+      "cerberus>=1.3.0" "PyYAML>=6.0" "pymysql>=1.0.0" \
+      "psycopg2-binary>=2.9.0" "shodan>=1.0.0" "python-nmap>=0.7.0" \
+      || echo "  [i] changeme base deps pip warning"
+    if [[ -f "$ROOT/tools/changeme/requirements.txt" ]]; then
+      "$PY" -m pip install -q -r "$ROOT/tools/changeme/requirements.txt" || true
+    fi
   fi
 
   if [[ -d "$ROOT/tools/default-hunter" ]] && [[ -f "$ROOT/tools/default-hunter/pyproject.toml" ]]; then
-    echo "  [*] Default-Hunter (pip editable)..."
-    "$PY" -m pip install -q -e "$ROOT/tools/default-hunter" 2>/dev/null \
-      || echo "  [i] Default-Hunter pip skipped (optional)"
+    echo "  [*] Default-Hunter (pip editable — required)..."
+    if ! "$PY" -m pip install -q -e "$ROOT/tools/default-hunter"; then
+      echo "  [!] Default-Hunter install FAILED — run: bash scripts/fix_iot_creds_kali.sh"
+      failed=1
+    fi
   fi
 
   if [[ -d "$ROOT/tools/iotscan" ]] && [[ -f "$ROOT/tools/iotscan/pyproject.toml" ]]; then
