@@ -174,7 +174,7 @@ class MainWindow(QMainWindow):
         dc.run_requested.connect(self._on_worker)
         self._register("util_direct_cam", dc)
 
-        ut = build_update_tools_page(session)
+        ut = build_update_tools_page(session)()
         ut.run_requested.connect(self._on_worker)
         self._register("util_update", ut)
 
@@ -183,7 +183,7 @@ class MainWindow(QMainWindow):
             (build_test_hikvision_page, "util_hik_test"),
             (build_test_cve_page, "util_cve_test"),
         ):
-            p = build_fn(session)
+            p = build_fn(session)()
             p.run_requested.connect(self._on_worker)
             self._register(pid, p)
 
