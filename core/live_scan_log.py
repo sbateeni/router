@@ -99,6 +99,51 @@ def is_active():
     return _logging_enabled()
 
 
+def discover_incomplete_logs(chat_id=None, max_age_seconds: int = 7200) -> list[dict]:
+    """Find LIVE_SCAN logs that started but have no Finished footer (orphan / desync)."""
+    import glob
+    import time
+
+    chat_prefix = f"{chat_id}-" if chat_id is not None else None
+    results: list[dict] = []
+    pattern = os.path.join(logs_dir(), "LIVE_SCAN*.log")
+    now = time.time()
+
+    for log_path in glob.glob(pattern):
+        try:
+            if now - os.path.getmtime(log_path) > max_age_seconds:
+                continue
+            with open(log_path, encoding="utf-8", errors="ignore") as fh:
+                content = fh.read()
+            if "Finished:" in content[-800:]:
+                continue
+
+            job_id = ""
+            target = "?"
+            source = "?"
+            for line in content.splitlines()[:12]:
+                if line.startswith("Job ID :"):
+                    job_id = line.split(":", 1)[1].strip()
+                elif line.startswith("Target :"):
+                    target = line.split(":", 1)[1].strip()
+                elif line.startswith("Source :"):
+                    source = line.split(":", 1)[1].strip()
+
+            if chat_prefix and job_id and not str(job_id).startswith(chat_prefix):
+                continue
+
+            results.append({
+                "job_id": job_id or os.path.basename(log_path),
+                "target": target,
+                "source": source,
+                "log_path": log_path,
+            })
+        except OSError:
+            continue
+
+    return results
+
+
 class _StdoutTee:
     """Mirror stdout writes to LIVE_SCAN.log while preserving the real terminal."""
 

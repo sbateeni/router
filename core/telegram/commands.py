@@ -17,8 +17,16 @@ from core.telegram.targets import job_from_target, parse_target
 
 
 def run_async_task(chat_id, label, fn, *args, **kwargs):
+    from core.telegram.sessions import finish_background_task, register_background_task
+
+    task_id = register_background_task(chat_id, label)
     send_to_chat(chat_id, f"⏳ {label}...")
-    run_task_async(fn, lambda text: send_to_chat(chat_id, text), *args, **kwargs)
+
+    def on_done(text):
+        finish_background_task(chat_id, task_id)
+        send_to_chat(chat_id, text)
+
+    run_task_async(fn, on_done, *args, **kwargs)
 
 
 def handle_slash_command(chat_id, text, base_dir):
@@ -61,7 +69,12 @@ def handle_slash_command(chat_id, text, base_dir):
                 send_to_chat(chat_id, "❌ Invalid device number. Run /lan first.")
             return True
 
+        from core.telegram.sessions import finish_background_task, register_background_task
+
+        task_id = register_background_task(chat_id, "LAN scan")
+
         def _lan_done(result):
+            finish_background_task(chat_id, task_id)
             if isinstance(result, tuple):
                 msg, devices = result
                 get_session(chat_id)["lan_devices"] = devices

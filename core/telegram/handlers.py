@@ -38,7 +38,7 @@ def handle_callback(callback, base_dir):
             chat_id,
             "✓ تم إلغاء اختيار نوع المسح.\n"
             "(المسوحات الجارية لم تتوقف — استخدم /stopscan لإيقافها)\n"
-            f"{format_status(sess)}",
+            f"{format_status(sess, chat_id)}",
         )
         return
 
@@ -130,11 +130,11 @@ def handle_message(message, base_dir):
         return
 
     if text == "/status":
-        send_to_chat(chat_id, format_status(sess))
+        send_to_chat(chat_id, format_status(sess, chat_id))
         return
 
     if text == "/queue":
-        send_to_chat(chat_id, format_status(sess))
+        send_to_chat(chat_id, format_status(sess, chat_id))
         return
 
     if text == "/clearqueue":
@@ -147,7 +147,7 @@ def handle_message(message, base_dir):
         send_to_chat(
             chat_id,
             f"✓ تم مسح {cleared} IP من قائمة الانتظار.\n"
-            f"(المسوحات الجارية لم تتوقف)\n{format_status(sess)}",
+            f"(المسوحات الجارية لم تتوقف)\n{format_status(sess, chat_id)}",
         )
         return
 
@@ -157,7 +157,7 @@ def handle_message(message, base_dir):
         send_to_chat(
             chat_id,
             "✓ تم إلغاء اختيار نوع المسح.\n"
-            f"{format_status(sess)}",
+            f"{format_status(sess, chat_id)}",
         )
         return
 
@@ -167,7 +167,7 @@ def handle_message(message, base_dir):
             chat_id,
             f"🛑 تم إيقاف {stopped} مسح جاري\n"
             f"🗑 تم مسح {queued} من قائمة الانتظار\n"
-            f"{format_status(sess)}",
+            f"{format_status(sess, chat_id)}",
         )
         return
 

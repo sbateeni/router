@@ -13,7 +13,7 @@ from core.utils import reset_target_workspace
 
 from core.telegram.api import send_to_chat
 from core.telegram.constants import MAX_CONCURRENT_SCANS, MAX_QUEUE_SIZE
-from core.telegram.sessions import chat_lock, get_session, mode_keyboard, queue_full, sync_session_flags
+from core.telegram.sessions import chat_lock, get_session, mode_keyboard, queue_full, reconcile_session, sync_session_flags
 from core.telegram.targets import job_from_target, target_prompt_text
 
 
@@ -38,6 +38,7 @@ def cancel_all_scans(chat_id, sess, *, clear_queue: bool = True) -> tuple[int, i
     if clear_queue:
         sess["queue"] = []
     stopped = cancel_jobs_for_chat(chat_id)
+    sess["active_jobs"] = {}
     cancel_mode_selection(sess)
     if sess.get("state") == "choose_mode_queued":
         sess["state"] = "idle"
@@ -102,6 +103,18 @@ def run_scan_job(chat_id, job, base_dir, job_id=None):
     return confirmed
 
 
+def _register_active_job(chat_id, job_id, job):
+    meta = {
+        "ip": job["ip"],
+        "mode_label": job.get("mode_label"),
+        "profile": job.get("profile"),
+    }
+    start_job(job_id, chat_id=chat_id, meta=meta)
+    sess = get_session(chat_id)
+    sess.setdefault("active_jobs", {})[job_id] = meta
+    sync_session_flags(sess)
+
+
 def _try_start_queued(chat_id, base_dir) -> None:
     """Start queued jobs while worker slots are free."""
     sess = get_session(chat_id)
@@ -112,11 +125,7 @@ def _try_start_queued(chat_id, base_dir) -> None:
         while sess.get("queue") and _active_count(sess) < MAX_CONCURRENT_SCANS:
             job = sess["queue"].pop(0)
             job_id = _new_job_id(chat_id)
-            sess.setdefault("active_jobs", {})[job_id] = {
-                "ip": job["ip"],
-                "mode_label": job.get("mode_label"),
-                "profile": job.get("profile"),
-            }
+            _register_active_job(chat_id, job_id, job)
             sync_session_flags(sess)
             started.append((job, job_id))
 
@@ -136,7 +145,15 @@ def _try_start_queued(chat_id, base_dir) -> None:
 
 def _scan_worker(chat_id, job, base_dir, job_id):
     sess = get_session(chat_id)
-    start_job(job_id, chat_id=chat_id)
+    start_job(
+        job_id,
+        chat_id=chat_id,
+        meta={
+            "ip": job["ip"],
+            "mode_label": job.get("mode_label"),
+            "profile": job.get("profile"),
+        },
+    )
     cancelled = False
 
     try:
@@ -191,11 +208,7 @@ def start_scan(chat_id, job, base_dir):
             return
 
         job_id = _new_job_id(chat_id)
-        sess.setdefault("active_jobs", {})[job_id] = {
-            "ip": job["ip"],
-            "mode_label": job.get("mode_label"),
-            "profile": job.get("profile"),
-        }
+        _register_active_job(chat_id, job_id, job)
         sync_session_flags(sess)
 
     active_n = _active_count(get_session(chat_id))
@@ -220,6 +233,7 @@ def start_scan(chat_id, job, base_dir):
 def enqueue_or_prompt(chat_id, target, base_dir):
     """New IP → mode keyboard; queue only when all parallel slots are full."""
     sess = get_session(chat_id)
+    reconcile_session(chat_id, sess)
 
     if _active_count(sess) >= MAX_CONCURRENT_SCANS:
         if queue_full(sess):
