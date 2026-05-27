@@ -3,7 +3,6 @@
 
 import argparse
 import re
-import sys
 
 import bootstrap  # noqa: F401
 import requests
@@ -123,4 +122,4 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    raise SystemExit(main())
