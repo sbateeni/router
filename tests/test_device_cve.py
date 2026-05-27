@@ -2,6 +2,7 @@
 """CVE intelligence test — camera or router (authorized use only)."""
 
 import argparse
+import sys
 
 import bootstrap  # noqa: F401
 import requests

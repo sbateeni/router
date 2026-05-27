@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# Opens a new terminal window: tail -f logs/LIVE_SCAN.log (called when scan starts)
+# Opens a new terminal window: tail -f a live scan log (per-job when path passed)
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-LIVE_LOG="$ROOT/logs/LIVE_SCAN.log"
 TITLE="${1:-AUTO-PWN Scan}"
+LIVE_LOG="${2:-$ROOT/logs/LIVE_SCAN.log}"
 
-mkdir -p "$ROOT/logs"
+mkdir -p "$(dirname "$LIVE_LOG")"
 touch "$LIVE_LOG"
 
 _watch="cd '$ROOT' && echo '=== $TITLE ===' && echo '$LIVE_LOG' && echo && tail -n 20 -f '$LIVE_LOG'"

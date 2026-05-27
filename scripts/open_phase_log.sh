@@ -1,14 +1,13 @@
 #!/usr/bin/env bash
-# Opens a dedicated terminal: tail -f logs/PHASE_N.log (auto on Kali GUI via AUTOPWN_PHASE_WINDOWS)
+# Opens a dedicated terminal: tail -f a phase log (per-job path when arg 3 passed)
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PHASE="${1:-1}"
 TITLE="${2:-AUTO-PWN Phase $PHASE}"
-SAFE="${PHASE//\//_}"
-LIVE_LOG="$ROOT/logs/PHASE_${SAFE}.log"
+LIVE_LOG="${3:-$ROOT/logs/PHASE_${PHASE//\//_}.log}"
 
-mkdir -p "$ROOT/logs"
+mkdir -p "$(dirname "$LIVE_LOG")"
 touch "$LIVE_LOG"
 
 _watch="cd '$ROOT' && clear && echo '╔══════════════════════════════════════════════════════╗' && echo '║  AUTO-PWN — ${TITLE}' && echo '╚══════════════════════════════════════════════════════╝' && echo && echo 'Log: $LIVE_LOG' && echo 'Close this window when phase finishes.' && echo && tail -n 40 -f '$LIVE_LOG'"

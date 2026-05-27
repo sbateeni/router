@@ -11,19 +11,31 @@ _active = False
 _log_path = None
 
 
+def _job_safe(job_id: str) -> str:
+    return "".join(c if c.isalnum() or c in "-_" else "_" for c in job_id)
+
+
 def path():
+    job_id = os.environ.get("AUTOPWN_JOB_ID", "").strip()
+    if job_id:
+        return os.path.join(logs_dir(), f"LIVE_SCAN_{_job_safe(job_id)}.log")
     return os.path.join(logs_dir(), "LIVE_SCAN.log")
 
 
-def _open_tail_window(title: str):
+def _logging_enabled() -> bool:
+    return _active or bool(os.environ.get("AUTOPWN_JOB_ID")) or bool(os.environ.get("AUTOPWN_SCAN_SOURCE"))
+
+
+def _open_tail_window(title: str, log_path: str | None = None):
     if os.environ.get("AUTOPWN_LIVE_WINDOW", "1").strip() == "0":
         return
     script = os.path.join(project_root(), "scripts", "open_live_log.sh")
     if not os.path.isfile(script):
         return
+    log_path = log_path or path()
     try:
         subprocess.Popen(
-            ["bash", script, title[:80]],
+            ["bash", script, title[:80], log_path],
             cwd=project_root(),
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
@@ -36,20 +48,23 @@ def _open_tail_window(title: str):
 def begin(target_label, source="scan"):
     global _active, _log_path
     _log_path = path()
-    _active = True
+    if not os.environ.get("AUTOPWN_JOB_ID"):
+        _active = True
     os.makedirs(os.path.dirname(_log_path), exist_ok=True)
     with open(_log_path, "w", encoding="utf-8") as fh:
         fh.write("=" * 60 + "\n")
         fh.write(f"LIVE SCAN — {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
         fh.write(f"Source : {source}\n")
         fh.write(f"Target : {target_label}\n")
+        if os.environ.get("AUTOPWN_JOB_ID"):
+            fh.write(f"Job ID : {os.environ['AUTOPWN_JOB_ID']}\n")
         fh.write("=" * 60 + "\n\n")
-    _open_tail_window(f"Scan: {target_label}")
+    _open_tail_window(f"Scan: {target_label}", _log_path)
 
 
 def write(text):
     log = _log_path or path()
-    if not _active and not os.environ.get("AUTOPWN_SCAN_SOURCE"):
+    if not _logging_enabled():
         return
     try:
         os.makedirs(os.path.dirname(log), exist_ok=True)
@@ -64,18 +79,24 @@ def write(text):
 
 def end(note=None):
     global _active
-    if not _active:
+    log = _log_path or path()
+    if not _logging_enabled():
         return
-    write("\n" + "=" * 60)
-    write(f"Finished: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-    if note:
-        write(note)
-    write("=" * 60 + "\n")
-    _active = False
+    try:
+        with open(log, "a", encoding="utf-8") as fh:
+            fh.write("\n" + "=" * 60 + "\n")
+            fh.write(f"Finished: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+            if note:
+                fh.write(f"{note}\n")
+            fh.write("=" * 60 + "\n")
+    except OSError:
+        pass
+    if not os.environ.get("AUTOPWN_JOB_ID"):
+        _active = False
 
 
 def is_active():
-    return _active
+    return _logging_enabled()
 
 
 class _StdoutTee:
@@ -117,7 +138,7 @@ class _StdoutTee:
 @contextmanager
 def mirror_stdout():
     """Tee sys.stdout to LIVE_SCAN.log for the duration of a scan."""
-    if not _active:
+    if not _logging_enabled():
         yield
         return
     original = sys.stdout

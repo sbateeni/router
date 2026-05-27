@@ -4,9 +4,19 @@ from core.telegram_extras import detect_osint_message, run_osint_action
 
 from core.telegram.api import allowed_chat, answer_callback, send_to_chat
 from core.telegram.commands import handle_slash_command, run_async_task
-from core.telegram.scans import enqueue_or_prompt, force_idle, start_scan
-from core.telegram.sessions import format_status, get_session, mode_keyboard
+from core.telegram.constants import MAX_CONCURRENT_SCANS
+from core.telegram.scans import (
+    cancel_all_scans,
+    cancel_mode_selection,
+    enqueue_or_prompt,
+    start_scan,
+)
+from core.telegram.sessions import format_status, get_session, mode_keyboard, sync_session_flags
 from core.telegram.targets import job_from_target, parse_target
+
+
+def _start_or_queue(chat_id, job, base_dir):
+    start_scan(chat_id, job, base_dir)
 
 
 def handle_callback(callback, base_dir):
@@ -22,20 +32,31 @@ def handle_callback(callback, base_dir):
     sess = get_session(chat_id)
 
     if data == "cancel":
-        sess["state"] = "idle"
-        sess["ip"] = None
-        sess["pending_ip"] = None
-        send_to_chat(chat_id, "تم الإلغاء (المسح الجاري والانتظار يستمران).")
+        cancel_mode_selection(sess)
+        sync_session_flags(sess)
+        send_to_chat(
+            chat_id,
+            "✓ تم إلغاء اختيار نوع المسح.\n"
+            "(المسوحات الجارية لم تتوقف — استخدم /stopscan لإيقافها)\n"
+            f"{format_status(sess)}",
+        )
         return
 
     if not data.startswith("m:"):
+        send_to_chat(chat_id, f"⚠ زر غير معروف: {data!r}")
         return
 
     parts = data.split(":")
     if len(parts) != 3:
+        send_to_chat(chat_id, "⚠ بيانات الزر غير صالحة.")
         return
 
-    selection = int(parts[1])
+    try:
+        selection = int(parts[1])
+    except ValueError:
+        send_to_chat(chat_id, "⚠ رقم الأداة غير صالح.")
+        return
+
     scan_profile = "deep" if parts[2] == "d" else "normal"
 
     if sess.get("state") == "choose_mode_queued":
@@ -51,15 +72,7 @@ def handle_callback(callback, base_dir):
         job = job_from_target(target, selection, scan_profile)
         sess["pending_ip"] = None
         sess["state"] = "idle"
-        if sess.get("scanning") or sess.get("queue"):
-            sess["queue"].append(job)
-            send_to_chat(
-                chat_id,
-                f"✓ أُضيف {job['ip']} للانتظار (الموقع {len(sess['queue'])})\n"
-                f"النوع: {job.get('mode_label')}",
-            )
-        else:
-            start_scan(chat_id, job, base_dir)
+        _start_or_queue(chat_id, job, base_dir)
         return
 
     target = sess.get("ip")
@@ -69,7 +82,8 @@ def handle_callback(callback, base_dir):
 
     job = job_from_target(target, selection, scan_profile)
     sess["ip"] = None
-    start_scan(chat_id, job, base_dir)
+    sess["state"] = "idle"
+    _start_or_queue(chat_id, job, base_dir)
 
 
 def handle_message(message, base_dir):
@@ -93,14 +107,16 @@ def handle_message(message, base_dir):
             "Router Auto-Pwn — Telegram\n\n"
             "📋 اضغط / في الشات لعرض قائمة الأوامر\n\n"
             "▶ مسح شبكي: أرسل IP / domain / URL ثم اختر نوع المسح\n"
-            "  188.225.134.26 | router.com/login.html | http://site.com?id=1\n\n"
+            f"  يمكنك تشغيل حتى {MAX_CONCURRENT_SCANS} مسح متزامن — أرسل عدة أهداف\n"
+            "  192.168.1.21 | router.com/login.html | http://site.com?id=1\n\n"
             "▶ Device Engine: /engine http://IP\n"
             "▶ Social OSINT:\n"
             "  /osint email user@mail.com | /osint phone +966... | /osint user name\n"
             "  أو أرسل email/phone مباشرة\n\n"
             "▶ /lan — LAN scan | /lan attack 1 — AUTO-PWN\n"
             "▶ /history | /poc | /update | /decepticon http://IP\n\n"
-            "/status /queue /clearqueue /cancel /stopscan",
+            "/status — الحالة | /stopscan — إيقاف فعلي | /cancel — إلغاء الاختيار\n"
+            "/clearqueue — مسح الانتظار فقط",
         )
         return
 
@@ -127,15 +143,30 @@ def handle_message(message, base_dir):
         sess["pending_ip"] = None
         if sess.get("state") == "choose_mode_queued":
             sess["state"] = "idle"
-        send_to_chat(chat_id, f"✓ تم مسح {cleared} IP من قائمة الانتظار.\n{format_status(sess)}")
-        return
-
-    if text in ("/cancel", "/stopscan", "/stop"):
-        force_idle(sess)
+        sync_session_flags(sess)
         send_to_chat(
             chat_id,
-            "✓ تم إلغاء حالة «مسح جاري» واختيار الهدف.\n"
-            "(عملية المسح في الخلفية قد تستمر — /clearqueue لمسح الانتظار)\n"
+            f"✓ تم مسح {cleared} IP من قائمة الانتظار.\n"
+            f"(المسوحات الجارية لم تتوقف)\n{format_status(sess)}",
+        )
+        return
+
+    if text == "/cancel":
+        cancel_mode_selection(sess)
+        sync_session_flags(sess)
+        send_to_chat(
+            chat_id,
+            "✓ تم إلغاء اختيار نوع المسح.\n"
+            f"{format_status(sess)}",
+        )
+        return
+
+    if text in ("/stopscan", "/stop"):
+        stopped, queued = cancel_all_scans(chat_id, sess, clear_queue=True)
+        send_to_chat(
+            chat_id,
+            f"🛑 تم إيقاف {stopped} مسح جاري\n"
+            f"🗑 تم مسح {queued} من قائمة الانتظار\n"
             f"{format_status(sess)}",
         )
         return

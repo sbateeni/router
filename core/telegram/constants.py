@@ -1,6 +1,9 @@
 """Telegram bot constants — commands menu and attack modes."""
 
+import os
+
 MAX_QUEUE_SIZE = 10
+MAX_CONCURRENT_SCANS = max(1, int(os.environ.get("AUTOPWN_TELEGRAM_MAX_PARALLEL", "3")))
 
 BOT_COMMANDS = [
     ("start", "بدء — ترحيب ومساعدة"),
@@ -14,8 +17,8 @@ BOT_COMMANDS = [
     ("decepticon", "سلسلة Decepticon"),
     ("status", "حالة المسح الحالي"),
     ("queue", "قائمة الانتظار"),
-    ("cancel", "إلغاء الاختيار"),
-    ("stopscan", "إلغاء حالة مسح جاري عالقة"),
+    ("cancel", "إلغاء اختيار نوع المسح"),
+    ("stopscan", "إيقاف المسوحات الجارية فعلياً"),
     ("clearqueue", "مسح قائمة الانتظار"),
 ]
 

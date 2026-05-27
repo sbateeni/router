@@ -17,7 +17,18 @@ _thread_phase = threading.local()
 
 def phase_log_path(phase_id: str) -> str:
     safe = str(phase_id).replace("/", "_").replace(" ", "_")
+    job_id = os.environ.get("AUTOPWN_JOB_ID", "").strip()
+    if job_id:
+        job_safe = "".join(c if c.isalnum() or c in "-_" else "_" for c in job_id)
+        return os.path.join(logs_dir(), f"PHASE_{job_safe}_{safe}.log")
     return os.path.join(logs_dir(), f"PHASE_{safe}.log")
+
+
+def _window_key(phase_id: str) -> str:
+    job_id = os.environ.get("AUTOPWN_JOB_ID", "").strip()
+    if job_id:
+        return f"{job_id}:{phase_id}"
+    return str(phase_id)
 
 
 def current_phase() -> str | None:
@@ -66,22 +77,23 @@ def _should_open_window(phase_id: str) -> bool:
     return str(phase_id) in ("0", "1", "2", "3", "4")
 
 
-def _open_phase_window(phase_id: str, title: str) -> None:
+def _open_phase_window(phase_id: str, title: str, log_path: str) -> None:
     if not _should_open_window(phase_id):
         return
+    window_key = _window_key(phase_id)
     with _lock:
-        if phase_id in _opened_windows:
+        if window_key in _opened_windows:
             return
         if len(_opened_windows) >= _max_phase_windows():
             return
-        _opened_windows.add(phase_id)
+        _opened_windows.add(window_key)
 
     script = os.path.join(project_root(), "scripts", "open_phase_log.sh")
     if not os.path.isfile(script):
         return
     try:
         subprocess.Popen(
-            ["bash", script, str(phase_id), title[:80]],
+            ["bash", script, str(phase_id), title[:80], log_path],
             cwd=project_root(),
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
@@ -89,19 +101,27 @@ def _open_phase_window(phase_id: str, title: str) -> None:
         )
     except OSError:
         with _lock:
-            _opened_windows.discard(phase_id)
+            _opened_windows.discard(window_key)
 
 
 def reset_phase_windows() -> None:
-    """Call at scan start so re-scans can open fresh terminals."""
+    """Reset terminal tracking for this job only (safe for parallel scans)."""
+    job_id = os.environ.get("AUTOPWN_JOB_ID", "").strip()
     with _lock:
-        _opened_windows.clear()
+        if job_id:
+            prefix = f"{job_id}:"
+            for key in list(_opened_windows):
+                if key.startswith(prefix):
+                    _opened_windows.discard(key)
+        else:
+            _opened_windows.clear()
 
 
 def begin_phase(phase_id: str, title: str, target_dir: str | None = None) -> None:
     path = phase_log_path(phase_id)
+    key = _window_key(phase_id)
     with _lock:
-        _active[phase_id] = path
+        _active[key] = path
     os.makedirs(os.path.dirname(path), exist_ok=True)
     header = [
         "=" * 60,
@@ -119,16 +139,17 @@ def begin_phase(phase_id: str, title: str, target_dir: str | None = None) -> Non
     try:
         from core.live_scan_log import write as live_write
 
-        live_write(f"\n>>> PHASE {phase_id}: {title} (see logs/PHASE_{phase_id}.log)\n")
+        live_write(f"\n>>> PHASE {phase_id}: {title} (see {os.path.basename(path)})\n")
     except Exception:
         pass
-    _open_phase_window(phase_id, f"PHASE {phase_id}: {title}")
+    _open_phase_window(phase_id, f"PHASE {phase_id}: {title}", path)
 
 
 def write_phase(phase_id: str, text: str) -> None:
     if not text:
         return
-    path = _active.get(phase_id) or phase_log_path(phase_id)
+    key = _window_key(phase_id)
+    path = _active.get(key) or phase_log_path(phase_id)
     line = text if text.endswith("\n") else text + "\n"
     with _lock:
         try:
@@ -153,4 +174,4 @@ def end_phase(phase_id: str, summary: str = "") -> None:
         write_phase(phase_id, summary)
     write_phase(phase_id, "=" * 60)
     with _lock:
-        _active.pop(phase_id, None)
+        _active.pop(_window_key(phase_id), None)

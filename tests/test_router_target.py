@@ -3,6 +3,7 @@
 
 import argparse
 import re
+import sys
 
 import bootstrap  # noqa: F401
 import requests

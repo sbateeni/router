@@ -50,9 +50,13 @@ def run_device_engine_only(ip, target_dir, manual_mode=False):
 def run_selected_tool(selection, ip, target_dir, profile="normal", subnet=None):
     import os
 
+    from core.scan_cancel import ScanCancelled, check_cancelled
+
     set_scan_profile(profile)
     source = os.environ.get("AUTOPWN_SCAN_SOURCE", "cli")
     os.environ["AUTOPWN_SCAN_SOURCE"] = source
+
+    check_cancelled()
 
     from core.live_scan_log import begin as live_begin, end as live_end, mirror_stdout
     from core.phase_log import reset_phase_windows
@@ -68,6 +72,7 @@ def run_selected_tool(selection, ip, target_dir, profile="normal", subnet=None):
         )
     try:
         with mirror_stdout():
+            check_cancelled()
             if selection in ENGINE_CHOICES:
                 return run_device_engine_only(ip, target_dir)
             if selection in CLASSIC_CHOICES:
@@ -78,6 +83,9 @@ def run_selected_tool(selection, ip, target_dir, profile="normal", subnet=None):
                 return _run_recon(selection, ip, target_dir, subnet=subnet)
             print(f"[-] Unknown selection: {selection}")
             return False
+    except ScanCancelled:
+        print("[!] Scan cancelled by user")
+        raise
     finally:
         if selection != 1:
             transcript_end()

@@ -2,6 +2,8 @@ import subprocess
 import os
 import shutil
 import sys
+import signal
+import time
 
 TOOLS_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "tools")
 PYTHON = sys.executable
@@ -194,6 +196,67 @@ def sanitize_routersploit_modules(modules):
     return cleaned
 
 
+def sanitize_routersploit_modules(modules):
+    cleaned = []
+    for entry in modules or []:
+        module = normalize_routersploit_module(entry)
+        if module and module not in cleaned:
+            cleaned.append(module)
+    return cleaned
+
+
+def _popen_kwargs(cwd=None):
+    kwargs = {"cwd": cwd}
+    if os.name != "nt":
+        kwargs["start_new_session"] = True
+    return kwargs
+
+
+def _terminate_process(proc):
+    if proc is None or proc.poll() is not None:
+        return
+    try:
+        if os.name != "nt":
+            os.killpg(os.getpgid(proc.pid), signal.SIGTERM)
+        else:
+            proc.terminate()
+    except (ProcessLookupError, PermissionError, OSError):
+        try:
+            proc.kill()
+        except OSError:
+            pass
+
+
+def _communicate_process(proc, timeout=None):
+    from core.scan_cancel import is_cancelled, register_pid, unregister_pid
+
+    register_pid(proc.pid)
+    try:
+        if timeout is None:
+            while proc.poll() is None:
+                if is_cancelled():
+                    _terminate_process(proc)
+                    try:
+                        proc.communicate(timeout=5)
+                    except Exception:
+                        pass
+                    return None, None, True
+                time.sleep(0.4)
+            stdout, stderr = proc.communicate()
+            return stdout, stderr, is_cancelled()
+        try:
+            stdout, stderr = proc.communicate(timeout=timeout)
+            return stdout, stderr, is_cancelled()
+        except subprocess.TimeoutExpired:
+            _terminate_process(proc)
+            partial_out, partial_err = proc.communicate()
+            raise subprocess.TimeoutExpired(proc.args, timeout, output=partial_out, stderr=partial_err)
+    finally:
+        unregister_pid(proc.pid)
+        if proc.poll() is None:
+            _terminate_process(proc)
+
+
 def run_cmd(command, capture=False, log_file=None, timeout=None, cwd=None):
     """
     Run a shell command. When log_file is set, stdout/stderr are saved there.
@@ -217,10 +280,18 @@ def run_cmd(command, capture=False, log_file=None, timeout=None, cwd=None):
             pass
 
         if capture or log_file:
+            from core.scan_cancel import ScanCancelled, check_cancelled
+
+            check_cancelled()
             try:
-                result = subprocess.run(
-                    command, capture_output=True, text=True, timeout=timeout, cwd=cwd,
+                proc = subprocess.Popen(
+                    command,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    text=True,
+                    **_popen_kwargs(cwd),
                 )
+                stdout, stderr, cancelled = _communicate_process(proc, timeout=timeout)
             except subprocess.TimeoutExpired as exc:
                 msg = f"Command timed out after {timeout}s"
                 print(f"[-] {msg}")
@@ -244,9 +315,21 @@ def run_cmd(command, capture=False, log_file=None, timeout=None, cwd=None):
                     pass
                 return False, msg if not partial else f"{msg}\n{partial}"
 
-            output = (result.stdout or "") + ("\n" + result.stderr if result.stderr else "")
+            if cancelled:
+                msg = "Scan cancelled by user"
+                print(f"[-] {msg}")
+                if log_file:
+                    try:
+                        ensure_parent_dir(log_file)
+                        with open(log_file, "w", encoding="utf-8") as f:
+                            f.write(msg)
+                    except OSError:
+                        pass
+                raise ScanCancelled(msg)
+
+            output = (stdout or "") + ("\n" + stderr if stderr else "")
             output = output.strip()
-            ok = result.returncode == 0
+            ok = proc.returncode == 0
 
             if log_file:
                 try:
@@ -275,9 +358,20 @@ def run_cmd(command, capture=False, log_file=None, timeout=None, cwd=None):
                 print(output)
             return ok, ""
 
-        result = subprocess.run(command, timeout=timeout, cwd=cwd)
-        return result.returncode == 0, ""
+        from core.scan_cancel import check_cancelled
+
+        check_cancelled()
+        proc = subprocess.Popen(command, **_popen_kwargs(cwd))
+        _, _, cancelled = _communicate_process(proc, timeout=timeout)
+        if cancelled:
+            from core.scan_cancel import ScanCancelled
+            raise ScanCancelled("Scan cancelled by user")
+        return proc.returncode == 0, ""
     except Exception as e:
+        from core.scan_cancel import ScanCancelled
+
+        if isinstance(e, ScanCancelled):
+            raise
         print(f"[-] Failed to execute command: {e}")
         try:
             from core.scan_transcript import event as transcript_event

@@ -26,6 +26,11 @@ from core.recon.target_profile import (
 
 
 def _phase_delay():
+    try:
+        from core.scan_cancel import check_cancelled
+        check_cancelled()
+    except Exception:
+        pass
     time.sleep(get_scan_profile().get("phase_delay_seconds", 5))
 
 
