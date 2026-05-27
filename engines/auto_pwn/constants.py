@@ -1,0 +1,6 @@
+"""Device type groupings for AUTO-PWN routing."""
+
+CAMERA_DEVICE_TYPES = ("HIKVISION", "DAHUA", "GENERIC_DVR")
+ROUTER_DEVICE_TYPES = (
+    "NETIS", "TPLINK", "DLINK", "ZTE", "MIKROTIK", "OPENWRT", "CISCO", "UBIQUITI", "SYNOLOGY",
+)
