@@ -50,7 +50,12 @@ install_python_deps() {
   # Remove packages that break RouterSploit / theHarvester pins
   "$PY" -m pip uninstall -y netexec certipy-ad 2>/dev/null || true
 
-  "$PY" -m pip install -q -U pip setuptools wheel
+  "$PY" -m pip install -q -U pip wheel
+  if is_kali && [[ -f "$ROOT/requirements-kali.txt" ]]; then
+    "$PY" -m pip install -q "setuptools>=65,<81"
+  else
+    "$PY" -m pip install -q -U setuptools wheel
+  fi
 
   local req="$ROOT/requirements.txt"
   if is_kali && [[ -f "$ROOT/requirements-kali.txt" ]]; then
@@ -162,6 +167,8 @@ sync_tool() {
 
 echo "[1/10] RouterSploit..."
 sync_tool routersploit https://github.com/threat9/routersploit.git
+ensure_project_venv
+"$PY" "$ROOT/scripts/patch_routersploit_wordlists.py" 2>/dev/null || true
 
 echo "[2/10] Ingram..."
 sync_tool ingram https://github.com/jorhelp/Ingram.git

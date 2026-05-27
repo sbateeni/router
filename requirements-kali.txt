@@ -35,7 +35,7 @@ colorama==0.4.6
 ntlm-auth==1.5.0
 defusedcsv==3.0.0
 requests-toolbelt==1.0.0
-setuptools==82.0.1
+setuptools>=65.0.0,<81
 httpx==0.28.1
 httpx-ntlm==1.4.0
 defusedxml

@@ -14,7 +14,7 @@ CRITICAL_MODULES = (
 )
 
 ROUTERSPLOIT_PACKAGES = (
-    "setuptools>=65.0.0",
+    "setuptools>=65.0.0,<81",
     "pycryptodome",
     "paramiko==2.12.0",
 )
@@ -74,7 +74,6 @@ def missing_python_modules():
 
 def routersploit_python_ready():
     try:
-        import pkg_resources  # noqa: F401  # setuptools — required by routersploit wordlists
         from Crypto.Cipher import AES  # noqa: F401
         import paramiko
         return hasattr(paramiko, "DSSKey")
@@ -124,6 +123,12 @@ def install_python_packages(packages):
 
 
 def ensure_routersploit_deps():
+    try:
+        from core.routersploit_patch import patch_routersploit_wordlists
+        patch_routersploit_wordlists()
+    except Exception:
+        pass
+
     ok, err = routersploit_rsf_import_ready()
     if ok:
         return True
@@ -141,6 +146,12 @@ def ensure_routersploit_deps():
     if not install_python_packages(list(ROUTERSPLOIT_PACKAGES)):
         print("[!] Failed to install RouterSploit Python dependencies.")
         return False
+
+    try:
+        from core.routersploit_patch import patch_routersploit_wordlists
+        patch_routersploit_wordlists()
+    except Exception:
+        pass
 
     ok, err = routersploit_rsf_import_ready()
     if ok:

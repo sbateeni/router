@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Fix RouterSploit deps in project .venv (setuptools/pkg_resources + paramiko 2.12 + pycryptodome)
+# Fix RouterSploit deps in project .venv (paramiko 2.12 + pycryptodome + wordlists patch)
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -13,27 +13,31 @@ fi
 PY="$ROOT/.venv/bin/python"
 echo "[*] Fixing RouterSploit in .venv..."
 
-"$PY" -m pip install -q -U pip setuptools wheel
+"$PY" -m pip install -q -U pip wheel
+
+echo "[0/4] Patch wordlists (setuptools 82+ removed pkg_resources)..."
+"$PY" "$ROOT/scripts/patch_routersploit_wordlists.py"
+
+echo "[1/4] setuptools<81 (pkg_resources) — optional fallback..."
+"$PY" -m pip install -q "setuptools>=65,<81" || true
 
 if [[ -f "$ROOT/tools/routersploit/requirements.txt" ]]; then
-  echo "[1/3] RouterSploit requirements.txt..."
+  echo "[2/4] RouterSploit requirements.txt..."
   "$PY" -m pip install -q -r "$ROOT/tools/routersploit/requirements.txt"
 fi
 
-echo "[2/3] Pin paramiko 2.12 + pycryptodome..."
+echo "[3/4] Pin paramiko 2.12 + pycryptodome..."
 if [[ -f "$ROOT/constraints-kali.txt" ]]; then
   "$PY" -m pip install -q -c "$ROOT/constraints-kali.txt" paramiko pycryptodome pysnmp requests
 else
   "$PY" -m pip install -q "paramiko==2.12.0" pycryptodome pysnmp "requests==2.32.2"
 fi
 
-echo "[3/3] Verify pkg_resources + paramiko + rsf import..."
+echo "[4/4] Verify paramiko + rsf import..."
 "$PY" -c "
-import pkg_resources
 from Crypto.Cipher import AES
 import paramiko
 assert hasattr(paramiko, 'DSSKey'), 'paramiko too new — need 2.12.0'
-print('  [+] setuptools/pkg_resources OK')
 print('  [+] paramiko + pycryptodome OK')
 "
 
