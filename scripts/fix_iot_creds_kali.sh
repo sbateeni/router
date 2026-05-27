@@ -15,14 +15,12 @@ echo "[*] Fixing IoT credential scanners in .venv..."
 
 "$PY" -m pip install -q -U pip
 
-echo "[1/3] changeme deps (cerberus, pymysql, …)..."
+echo "[1/3] changeme deps (cerberus, pymysql, psycopg2-binary)..."
+# Do NOT pip install tools/changeme/requirements.txt — it pulls psycopg2 (source)
+# which fails on Kali without libpq-dev. psycopg2-binary is enough for router scans.
 "$PY" -m pip install -q \
   "cerberus>=1.3.0" "PyYAML>=6.0" "pymysql>=1.0.0" \
   "psycopg2-binary>=2.9.0" "shodan>=1.0.0" "python-nmap>=0.7.0"
-
-if [[ -d "$ROOT/tools/changeme" ]] && [[ -f "$ROOT/tools/changeme/requirements.txt" ]]; then
-  "$PY" -m pip install -q -r "$ROOT/tools/changeme/requirements.txt" || true
-fi
 
 echo "[2/3] Default-Hunter (editable)..."
 if [[ -d "$ROOT/tools/default-hunter" ]]; then
@@ -35,6 +33,10 @@ echo "[3/3] Verify..."
 "$PY" -c "import cerberus; print('  [+] cerberus OK')"
 "$PY" -c "import default_hunter; print('  [+] default_hunter OK')" \
   || echo "  [!] default_hunter still missing"
+if [[ -f "$ROOT/tools/changeme/changeme.py" ]]; then
+  (cd "$ROOT/tools/changeme" && "$PY" -c "from changeme import core; print('  [+] changeme import OK')") \
+    || echo "  [!] changeme import failed"
+fi
 
 echo
 echo "[+] Done. Re-run scan or: bash run.sh"

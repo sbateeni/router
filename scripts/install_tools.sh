@@ -105,14 +105,11 @@ install_python_deps() {
     || echo "  [i] CamRaptor pip skipped (optional)"
 
   if [[ -d "$ROOT/tools/changeme" ]]; then
-    echo "  [*] changeme + Default-Hunter credential scanners..."
+    echo "  [*] changeme deps (use psycopg2-binary — NOT changeme/requirements.txt)..."
     "$PY" -m pip install -q \
       "cerberus>=1.3.0" "PyYAML>=6.0" "pymysql>=1.0.0" \
       "psycopg2-binary>=2.9.0" "shodan>=1.0.0" "python-nmap>=0.7.0" \
       || echo "  [i] changeme base deps pip warning"
-    if [[ -f "$ROOT/tools/changeme/requirements.txt" ]]; then
-      "$PY" -m pip install -q -r "$ROOT/tools/changeme/requirements.txt" || true
-    fi
   fi
 
   if [[ -d "$ROOT/tools/default-hunter" ]] && [[ -f "$ROOT/tools/default-hunter/pyproject.toml" ]]; then
