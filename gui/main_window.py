@@ -12,6 +12,7 @@ from PyQt6.QtWidgets import (
     QMessageBox,
     QSplitter,
     QStackedWidget,
+    QTabWidget,
     QTreeWidget,
     QTreeWidgetItem,
     QVBoxLayout,
@@ -43,6 +44,7 @@ from gui.pages.utilities_pages import (
 from gui.session import GuiSession
 from gui.widgets.artifact_panel import ArtifactPanel
 from gui.widgets.log_panel import LogPanel
+from gui.widgets.terminal_panel import TerminalPanel
 from gui.widgets.target_bar import TargetBar
 from gui.widgets.tool_page import ToolPage
 from gui.workers.scan_worker import ScanWorker
@@ -82,17 +84,14 @@ class MainWindow(QMainWindow):
         self._stack = QStackedWidget()
         right_layout.addWidget(self._stack, stretch=2)
 
-        log_split = QSplitter(Qt.Orientation.Vertical)
+        self._bottom_tabs = QTabWidget()
         self._log = LogPanel()
         self._artifacts = ArtifactPanel()
-        log_split.addWidget(self._log)
-        self._artifact_wrap = QWidget()
-        aw = QVBoxLayout(self._artifact_wrap)
-        aw.setContentsMargins(0, 0, 0, 0)
-        aw.addWidget(self._artifacts)
-        log_split.addWidget(self._artifact_wrap)
-        log_split.setSizes([560, 120])
-        right_layout.addWidget(log_split, stretch=1)
+        self._terminal = TerminalPanel()
+        self._bottom_tabs.addTab(self._log, "Live Log")
+        self._bottom_tabs.addTab(self._artifacts, "Artifacts")
+        self._bottom_tabs.addTab(self._terminal, "Terminal")
+        right_layout.addWidget(self._bottom_tabs, stretch=1)
         split.addWidget(right)
         split.setSizes([240, 960])
 

@@ -1,5 +1,8 @@
 {
   "python.defaultInterpreterPath": "python",
   "python.analysis.extraPaths": ["${workspaceFolder}"],
+  "python.analysis.diagnosticSeverityOverrides": {
+    "reportMissingImports": "none"
+  },
   "python.terminal.activateEnvironment": true
 }

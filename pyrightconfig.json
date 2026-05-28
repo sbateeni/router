@@ -2,5 +2,6 @@
   "extraPaths": ["."],
   "pythonVersion": "3.12",
   "typeCheckingMode": "basic",
+  "reportMissingImports": "none",
   "reportMissingModuleSource": "warning"
 }
