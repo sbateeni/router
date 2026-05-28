@@ -45,12 +45,7 @@ def end(note=None):
         if note:
             fh.write(f"{note}\n")
         fh.write("============================================================\n")
-    try:
-        from core.live_scan_log import end as live_end
-
-        live_end(note)
-    except Exception:
-        pass
+    # LIVE_SCAN footer is closed once by core.runner / live_scan_log.end — not here (avoids duplicate "Finished").
     _active_path = None
 
 
@@ -61,12 +56,6 @@ def _append(text):
         fh.write(text)
         if not text.endswith("\n"):
             fh.write("\n")
-    try:
-        from core.live_scan_log import write as live_write
-
-        live_write(text if text.endswith("\n") else text + "\n")
-    except Exception:
-        pass
 
 
 def phase(title):

@@ -20,12 +20,14 @@ def main() -> int:
         print("[*] Install with: pip install -r requirements.txt")
         return 1
 
-    from gui.main_window import MainWindow
-
     from PyQt6.QtCore import Qt
+
+    from gui.main_window import MainWindow
+    from gui.theme import apply_theme
 
     app = QApplication(sys.argv)
     app.setApplicationName("AUTO-PWN UNIFIED")
+    apply_theme(app)
     window = MainWindow()
     window.setWindowFlag(Qt.WindowType.Window, True)
     window.showNormal()

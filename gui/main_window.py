@@ -1,4 +1,4 @@
-"""Main PyQt6 window — navigation tree + stacked pages."""
+"""Main PyQt6 window — docked layout: nav | tools | workspace | console."""
 
 from __future__ import annotations
 
@@ -7,9 +7,11 @@ import os
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QAction, QGuiApplication
 from PyQt6.QtWidgets import (
+    QDockWidget,
     QHBoxLayout,
     QMainWindow,
     QMessageBox,
+    QScrollArea,
     QSizePolicy,
     QSplitter,
     QStackedWidget,
@@ -48,12 +50,16 @@ from gui.widgets.log_panel import LogPanel
 from gui.widgets.terminal_panel import TerminalPanel
 from gui.widgets.target_bar import TargetBar
 from gui.widgets.tool_page import ToolPage
+from gui.widgets.workspace_panel import WorkspacePanel
 from gui.workers.scan_worker import ScanWorker
+
+# Pages that use the full center area without the bottom console dock (no overlap).
+_FULL_PAGE_IDS = frozenset({"settings", "dashboard", "engine_history"})
 
 
 def _tune_splitter(splitter: QSplitter) -> None:
     splitter.setChildrenCollapsible(False)
-    splitter.setHandleWidth(10)
+    splitter.setHandleWidth(8)
     splitter.setOpaqueResize(True)
 
 
@@ -67,106 +73,92 @@ class MainWindow(QMainWindow):
 
         self._session = GuiSession()
         self._telegram_thread = None
-        self._split_sizes_applied = False
+        self._current_page_id = "dashboard"
         self.setWindowTitle("AUTO-PWN UNIFIED")
-        self.setMinimumSize(720, 520)
-        self.resize(1280, 860)
+        self.setMinimumSize(960, 600)
+        self.resize(1320, 880)
 
+        # --- Central: target bar + nav | tool pages | workspace ---
         central = QWidget()
-        central.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self.setCentralWidget(central)
-        root = QVBoxLayout(central)
-        root.setContentsMargins(6, 6, 6, 6)
-        root.setSpacing(6)
-
+        outer = QVBoxLayout(central)
+        outer.setContentsMargins(8, 8, 4, 4)
+        outer.setSpacing(6)
         self._target_bar = TargetBar(self._session)
-        root.addWidget(self._target_bar)
+        outer.addWidget(self._target_bar)
 
-        h_split = QSplitter(Qt.Orientation.Horizontal)
-        _tune_splitter(h_split)
-        root.addWidget(h_split, stretch=1)
+        body = QHBoxLayout()
+        body.setSpacing(8)
+        root = body
+        outer.addLayout(body, stretch=1)
 
         self._tree = QTreeWidget()
         self._tree.setHeaderHidden(True)
-        self._tree.setMinimumWidth(180)
-        self._tree.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Expanding)
+        self._tree.setMinimumWidth(200)
+        self._tree.setMaximumWidth(280)
         self._tree.currentItemChanged.connect(self._on_nav)
-        h_split.addWidget(self._tree)
+        root.addWidget(self._tree)
 
-        right = QWidget()
-        right.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
-        right_layout = QVBoxLayout(right)
-        right_layout.setContentsMargins(0, 0, 0, 0)
-        right_layout.setSpacing(0)
-
-        # Pages (top) vs console area (bottom) — drag handle between them
-        self._page_console_split = QSplitter(Qt.Orientation.Vertical)
-        _tune_splitter(self._page_console_split)
+        center_split = QSplitter(Qt.Orientation.Horizontal)
+        _tune_splitter(center_split)
 
         self._stack = QStackedWidget()
         self._stack.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
-        self._stack.setMinimumHeight(80)
-        self._page_console_split.addWidget(self._stack)
+        center_split.addWidget(self._stack)
 
-        # Bottom: Live Log / Artifacts tabs (small) + Terminal (large, always visible)
-        self._console_split = QSplitter(Qt.Orientation.Vertical)
-        _tune_splitter(self._console_split)
+        self._workspace = WorkspacePanel()
+        center_split.addWidget(self._workspace)
+        center_split.setStretchFactor(0, 1)
+        center_split.setStretchFactor(1, 0)
+        center_split.setSizes([900, 260])
 
+        root.addWidget(center_split, stretch=1)
+
+        # --- Bottom dock: Live Log | Artifacts | Terminal (separate from tool pages) ---
+        self._console_dock = QDockWidget("Console — Live Log · Artifacts · Terminal", self)
+        self._console_dock.setObjectName("ConsoleDock")
+        self._console_dock.setAllowedAreas(
+            Qt.DockWidgetArea.BottomDockWidgetArea | Qt.DockWidgetArea.TopDockWidgetArea
+        )
+
+        console = QWidget()
+        console_layout = QVBoxLayout(console)
+        console_layout.setContentsMargins(4, 4, 4, 4)
         self._bottom_tabs = QTabWidget()
-        self._bottom_tabs.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
-        self._bottom_tabs.setMinimumHeight(100)
         self._log = LogPanel()
         self._artifacts = ArtifactPanel()
+        self._terminal = TerminalPanel()
         self._bottom_tabs.addTab(self._log, "Live Log")
         self._bottom_tabs.addTab(self._artifacts, "Artifacts")
-        self._console_split.addWidget(self._bottom_tabs)
+        self._bottom_tabs.addTab(self._terminal, "Terminal")
+        console_layout.addWidget(self._bottom_tabs)
+        self._console_dock.setWidget(console)
+        self.addDockWidget(Qt.DockWidgetArea.BottomDockWidgetArea, self._console_dock)
 
-        self._terminal = TerminalPanel()
-        self._terminal.setMinimumHeight(160)
-        self._console_split.addWidget(self._terminal)
-        self._console_split.setStretchFactor(0, 1)
-        self._console_split.setStretchFactor(1, 3)
-
-        self._page_console_split.addWidget(self._console_split)
-        self._page_console_split.setStretchFactor(0, 1)
-        self._page_console_split.setStretchFactor(1, 2)
-
-        right_layout.addWidget(self._page_console_split)
-        h_split.addWidget(right)
-        h_split.setStretchFactor(0, 0)
-        h_split.setStretchFactor(1, 1)
-        h_split.setSizes([240, 1000])
-
-        self._h_split = h_split
         self._pages: dict[str, QWidget] = {}
         self._build_nav()
         self._build_pages()
 
         self._target_bar.target_changed.connect(self._on_target_changed)
         self._show_page("dashboard")
-        self._maybe_start_telegram_listener()
 
         quit_action = QAction("Quit", self)
         quit_action.setShortcut("Ctrl+Q")
         quit_action.triggered.connect(self.close)
         self.addAction(quit_action)
 
+        self._maybe_start_telegram_listener()
+
     def showEvent(self, event) -> None:
         super().showEvent(event)
-        if self._split_sizes_applied:
+        if getattr(self, "_dock_sized", False):
             return
-        self._split_sizes_applied = True
+        self._dock_sized = True
         screen = QGuiApplication.primaryScreen()
         if screen:
-            avail = screen.availableGeometry()
-            w = min(max(int(avail.width() * 0.88), 960), avail.width())
-            h = min(max(int(avail.height() * 0.88), 640), avail.height())
-            self.resize(w, h)
-        h_total = max(self.height(), 640)
-        bottom_h = int(h_total * 0.58)
-        top_h = h_total - bottom_h
-        self._page_console_split.setSizes([top_h, bottom_h])
-        self._console_split.setSizes([int(bottom_h * 0.28), int(bottom_h * 0.72)])
+            g = screen.availableGeometry()
+            self.resize(min(1320, g.width() - 40), min(880, g.height() - 60))
+        self.resizeDocks([self._console_dock], [int(self.height() * 0.38)], Qt.Orientation.Vertical)
 
     def _build_nav(self) -> None:
         self._tree.clear()
@@ -250,12 +242,21 @@ class MainWindow(QMainWindow):
             self._register(pid, p)
 
         settings = SettingsPage(session)
-        self._register("settings", settings)
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QScrollArea.Shape.NoFrame)
+        scroll.setWidget(settings)
+        self._register("settings", scroll)
 
     def _register(self, page_id: str, widget: QWidget) -> None:
         widget.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self._pages[page_id] = widget
         self._stack.addWidget(widget)
+
+    def _set_console_visible(self, visible: bool) -> None:
+        self._console_dock.setVisible(visible)
+        if visible and not self._console_dock.isFloating():
+            self.resizeDocks([self._console_dock], [max(220, int(self.height() * 0.35))], Qt.Orientation.Vertical)
 
     def _on_nav(self, current: QTreeWidgetItem | None, _prev) -> None:
         if not current:
@@ -268,17 +269,40 @@ class MainWindow(QMainWindow):
         w = self._pages.get(page_id)
         if not w:
             return
+        self._current_page_id = page_id
         self._stack.setCurrentWidget(w)
-        if isinstance(w, DashboardPage):
-            w.refresh()
-        elif isinstance(w, SettingsPage):
-            w.refresh()
-        elif isinstance(w, HistoryPage):
-            w.refresh()
+
+        # Settings / dashboard: full height — hide console dock (no overlap with terminal).
+        self._set_console_visible(page_id not in _FULL_PAGE_IDS)
+
+        inner = w.widget() if isinstance(w, QScrollArea) else w
+        if isinstance(inner, DashboardPage):
+            inner.refresh()
+        elif isinstance(inner, SettingsPage):
+            inner.refresh()
+        elif isinstance(inner, HistoryPage):
+            inner.refresh()
+        elif isinstance(inner, ToolPage):
+            inner.refresh_context()
+        else:
+            from gui.pages.comprehensive import ComprehensivePage
+
+            if isinstance(inner, ComprehensivePage):
+                inner._refresh_banner()
+
+        self._refresh_workspace_panel()
+
+    def _refresh_workspace_panel(self) -> None:
+        self._workspace.refresh(self._session.target, self._session.target_dir)
 
     def _on_target_changed(self) -> None:
         self._target_bar.sync_from_session()
         self._artifacts.set_workspace(self._session.target_dir)
+        self._refresh_workspace_panel()
+        for w in self._pages.values():
+            inner = w.widget() if isinstance(w, QScrollArea) else w
+            if isinstance(inner, ToolPage):
+                inner.refresh_context()
 
     def _on_lan_device(self, url: str, ports) -> None:
         from gui.workers.scan_worker import ScanJob
@@ -299,19 +323,23 @@ class MainWindow(QMainWindow):
         self._session.target = ip
         self._target_bar.sync_from_session()
         self._artifacts.set_workspace(self._session.target_dir)
+        self._refresh_workspace_panel()
 
     def _on_worker(self, worker: ScanWorker) -> None:
+        self._set_console_visible(True)
         self._log.start_tailing(worker.job_id)
         self._bottom_tabs.setCurrentWidget(self._log)
         worker.finished_ok.connect(lambda *_: self._after_scan())
-        worker.error.connect(
-            lambda msg: QMessageBox.critical(self, "Error", msg)
-        )
+        worker.error.connect(lambda msg: QMessageBox.critical(self, "Error", msg))
 
     def _after_scan(self) -> None:
         self._artifacts.set_workspace(self._session.target_dir)
-        if isinstance(self._pages.get("dashboard"), DashboardPage):
-            self._pages["dashboard"].refresh()
+        self._refresh_workspace_panel()
+        dash = self._pages.get("dashboard")
+        if dash:
+            inner = dash.widget() if isinstance(dash, QScrollArea) else dash
+            if isinstance(inner, DashboardPage):
+                inner.refresh()
 
     def _maybe_start_telegram_listener(self) -> None:
         if os.environ.get("NUCLEI_TELEGRAM_EXTERNAL", "").strip() == "1":

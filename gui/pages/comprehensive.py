@@ -26,6 +26,10 @@ class ComprehensivePage(QWidget):
         self._worker: ScanWorker | None = None
 
         layout = QVBoxLayout(self)
+        self._banner = QLabel()
+        self._banner.setObjectName("targetBanner")
+        self._banner.setWordWrap(True)
+        layout.addWidget(self._banner)
         layout.addWidget(QLabel("<h2>Comprehensive Scan</h2>"))
         layout.addWidget(
             QLabel(
@@ -54,11 +58,27 @@ class ComprehensivePage(QWidget):
         self._hint.setWordWrap(True)
         layout.addWidget(self._hint)
         layout.addStretch()
+        self._refresh_banner()
+
+    def _refresh_banner(self) -> None:
+        t = self._session.target.strip() or "(set target above)"
+        self._banner.setText(
+            f"<b>Target:</b> <code>{t}</code> — full pipeline writes to "
+            f"<code>{self._session.target_dir or '…'}</code>"
+        )
+
+    def showEvent(self, event) -> None:
+        super().showEvent(event)
+        self._refresh_banner()
 
     def _start(self, mode: str) -> None:
         if not self._session.target.strip():
             QMessageBox.warning(self, "Target required", "Enter a target and click Apply.")
             return
+        if not self._session.prepare():
+            QMessageBox.warning(self, "Workspace error", "Could not prepare target workspace.")
+            return
+        self._refresh_banner()
         if mode == "deep":
             self._session.set_profile("deep")
         elif mode == "normal":

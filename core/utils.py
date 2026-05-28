@@ -257,6 +257,10 @@ def _communicate_process(proc, timeout=None):
             _terminate_process(proc)
 
 
+def _stdout_is_live_tee() -> bool:
+    return type(sys.stdout).__name__ == "_StdoutTee"
+
+
 def run_cmd(command, capture=False, log_file=None, timeout=None, cwd=None):
     """
     Run a shell command. When log_file is set, stdout/stderr are saved there.
@@ -268,13 +272,16 @@ def run_cmd(command, capture=False, log_file=None, timeout=None, cwd=None):
         if timeout:
             exec_line += f" (timeout={timeout}s)"
         print(exec_line)
+        if not _stdout_is_live_tee():
+            try:
+                from core.live_scan_log import write as live_write
+
+                live_write(exec_line)
+            except Exception:
+                pass
         try:
-            from core.live_scan_log import write as live_write
-            live_write(exec_line)
-        except Exception:
-            pass
-        try:
-            from core.scan_transcript import command as transcript_command, output as transcript_output
+            from core.scan_transcript import command as transcript_command
+
             transcript_command(command)
         except Exception:
             pass
@@ -341,21 +348,16 @@ def run_cmd(command, capture=False, log_file=None, timeout=None, cwd=None):
 
             try:
                 from core.scan_transcript import output as transcript_output
+
                 transcript_output(output)
             except Exception:
                 pass
-            try:
-                from core.live_scan_log import write as live_write
-                if output:
-                    live_write(output)
-            except Exception:
-                pass
-
-            if capture:
-                return ok, output
 
             if output:
                 print(output)
+
+            if capture:
+                return ok, output
             return ok, ""
 
         from core.scan_cancel import check_cancelled

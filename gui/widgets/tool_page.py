@@ -1,4 +1,4 @@
-"""Reusable page: run a single master_pwn tool selection."""
+"""Reusable page: run a single master_pwn tool selection (target-aware + chaining)."""
 
 from __future__ import annotations
 
@@ -33,20 +33,34 @@ class ToolPage(QWidget):
     ):
         super().__init__(parent)
         self._session = session
+        self._title = title
         self._selection = selection
         self._kind = kind
         self._manual_mode = manual_mode
         self._worker: ScanWorker | None = None
 
         layout = QVBoxLayout(self)
-        layout.addWidget(QLabel(f"<h2>{title}</h2>"))
+        layout.setSpacing(10)
+
+        self._banner = QLabel()
+        self._banner.setObjectName("targetBanner")
+        self._banner.setWordWrap(True)
+        layout.addWidget(self._banner)
+
+        layout.addWidget(QLabel(f"<h2 style='margin:0'>{title}</h2>"))
         layout.addWidget(QLabel(description))
-        layout.addWidget(QLabel(f"<i>Uses workspace artifacts when available.</i>"))
+        self._chain_note = QLabel(
+            "<i>Uses the target from the top bar and reuses artifacts "
+            "(Nmap, Hydra wordlists, profiles) from the same workspace.</i>"
+        )
+        self._chain_note.setWordWrap(True)
+        layout.addWidget(self._chain_note)
 
         row = QHBoxLayout()
-        self._run_btn = QPushButton("Run")
+        self._run_btn = QPushButton("Run on target")
         self._run_btn.clicked.connect(self._start)
         self._cancel_btn = QPushButton("Cancel")
+        self._cancel_btn.setObjectName("secondaryBtn")
         self._cancel_btn.setEnabled(False)
         self._cancel_btn.clicked.connect(self._cancel)
         row.addWidget(self._run_btn)
@@ -54,14 +68,37 @@ class ToolPage(QWidget):
         row.addStretch()
         layout.addLayout(row)
         layout.addStretch()
+        self.refresh_context()
+
+    def refresh_context(self) -> None:
+        t = self._session.target.strip() or "(no target — set above and Apply)"
+        prof = self._session.profile
+        ws = self._session.target_dir or "workspace not created yet"
+        self._banner.setText(
+            f"<b>Active target:</b> <code>{t}</code> &nbsp;|&nbsp; "
+            f"<b>Profile:</b> {prof}<br>"
+            f"<span style='color:#8b95a5'>Workspace: {ws}</span>"
+        )
+
+    def showEvent(self, event) -> None:
+        super().showEvent(event)
+        self.refresh_context()
 
     def _start(self) -> None:
         if not self._session.target.strip():
-            QMessageBox.warning(self, "Target required", "Enter a target in the bar above and click Apply.")
+            QMessageBox.warning(
+                self,
+                "Target required",
+                "Enter the IP/URL in the top bar (e.g. 188.225.140.99) and click Apply target.",
+            )
             return
+        if not self._session.prepare():
+            QMessageBox.warning(self, "Workspace error", "Could not prepare target workspace.")
+            return
+        self.refresh_context()
         job = ScanJob(
             kind=self._kind,
-            label=self.windowTitle() or "scan",
+            label=self._title,
             selection=self._selection,
             manual_mode=self._manual_mode,
         )
@@ -80,6 +117,7 @@ class ToolPage(QWidget):
     def _on_done(self, _ok: bool, _msg: str) -> None:
         self._run_btn.setEnabled(True)
         self._cancel_btn.setEnabled(False)
+        self.refresh_context()
 
     def _on_error(self, msg: str) -> None:
         QMessageBox.critical(self, "Scan error", msg)

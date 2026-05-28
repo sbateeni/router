@@ -80,6 +80,8 @@ PROFILES = {
         "masscan_ports": "1-1000",
         "masscan_rate": 800,
         "masscan_timeout": 180,
+        "masscan_try_sudo": True,
+        "masscan_interface": None,
         "local_net_snapshot": True,
         "phase0_main_timeout": 1200,
         "phase1_main_timeout": 3600,
