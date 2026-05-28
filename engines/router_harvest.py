@@ -94,6 +94,31 @@ GENERIC_PATHS: tuple[str, ...] = (
     "cgi-bin/luci/admin/network/wireless",
 )
 
+# English menu labels (ZyXEL / rebranded Netis SPA)
+UI_MENU_HTM: tuple[str, ...] = (
+    "Device_info.htm",
+    "device_info.htm",
+    "Statistics.htm",
+    "statistics.htm",
+    "Maintenance.htm",
+    "Firewall.htm",
+    "Service.htm",
+    "Advanced.htm",
+    "Setup.htm",
+    "Quick_Start.htm",
+    "ADSL.htm",
+    "lan_clients.htm",
+    "client_list.htm",
+    "wl_ad.htm",
+)
+
+JUNK_FIELD_RE = re.compile(
+    r"\$\{|javascript|void\s*\(|submit\.htm|display\s*:|table-layout|word-wrap|"
+    r"^\s*GMT|GMT-\d|rel=|class=|refresh\s*:|connect_chg|phyType|autoDroute|"
+    r"pppConnect|pppDisconnect|^\s*(add|modify|delvc|reset|select)\s*$",
+    re.I,
+)
+
 MENU_KEYWORDS = re.compile(
     r"(device_info|deviceinfo|status|statistics|wireless|wlan|dhcp|lan|wan|"
     r"firewall|maintenance|backup|adsl|ppp|user|password|client|arp|nat|dmz|"
@@ -226,11 +251,61 @@ def establish_session(conn: dict[str, Any]) -> tuple[requests.Session, str]:
 
 def _vendor_paths(device_type: str, server: str, html_sample: str) -> list[str]:
     low = (html_sample or "").lower()
+    server_low = (server or "").lower()
+    paths: list[str] = []
+    seen: set[str] = set()
+
+    def add_many(items: tuple[str, ...] | list[str]) -> None:
+        for p in items:
+            if p not in seen:
+                seen.add(p)
+                paths.append(p)
+
+    # Virtual Web = ZyXEL stack; often still uses Netis login.cgi + .htm pages
+    if "virtual web" in server_low or "zyxel" in low:
+        add_many(ZYXEL_PATHS)
+        add_many(NETIS_PATHS)
+        add_many(UI_MENU_HTM)
+        add_many(GENERIC_PATHS)
+        return paths
+
     if device_type == "NETIS" or "netis" in low or "login.cgi" in low:
-        return list(NETIS_PATHS)
-    if "virtual web" in (server or "").lower() or "zyxel" in low:
-        return list(ZYXEL_PATHS)
-    return list(GENERIC_PATHS) + list(NETIS_PATHS)
+        add_many(NETIS_PATHS)
+        add_many(UI_MENU_HTM)
+        return paths
+
+    add_many(GENERIC_PATHS)
+    add_many(NETIS_PATHS)
+    return paths
+
+
+def _discover_htm_from_html(html: str) -> list[str]:
+    """Pull every *.htm referenced in JS/HTML (SPA menus)."""
+    found: list[str] = []
+    for m in re.finditer(r"""['"]([a-zA-Z0-9_./-]+\.htm(?:\?[^'"]*)?)['"]""", html, re.I):
+        name = m.group(1).split("?")[0]
+        if name not in found and "login" not in name.lower():
+            found.append(name)
+    for m in re.finditer(r"""sub:\s*['"]([^'"]+)['"]""", html, re.I):
+        sub = m.group(1)
+        if sub.endswith(".htm") and sub not in found:
+            found.append(sub)
+    return found
+
+
+def _is_meaningful_field(key: str, val: str) -> bool:
+    k, v = key.strip(), val.strip()
+    if not k or not v or v.lower() in JUNK_VALUES:
+        return False
+    if JUNK_FIELD_RE.search(k) or JUNK_FIELD_RE.search(v):
+        return False
+    if "${" in k or "${" in v or "item." in k:
+        return False
+    if len(k) > 55 or len(v) > 220:
+        return False
+    if re.match(r"^\d{1,2}/\d{1,2}$", v):  # 0/35 interface counters as lone value
+        return len(k) > 3 and not re.match(r"^WAN\d+$", k, re.I)
+    return True
 
 
 def _discover_embedded_urls(base: str, html: str) -> list[str]:
@@ -345,15 +420,47 @@ def _extract_key_values(html: str) -> dict[str, str]:
     for m in kv_re.finditer(html):
         key = re.sub(r"\s+", " ", m.group(1)).strip()
         val = re.sub(r"\s+", " ", unescape(m.group(2))).strip()
-        if len(key) < 3 or len(val) < 1 or val.lower() in JUNK_VALUES:
-            continue
-        if key.lower() in ("click", "button", "submit", "type"):
+        if not _is_meaningful_field(key, val):
             continue
         fields[key] = val[:300]
     for field in _parse_input_fields(html):
-        if field["value"] and field["value"].lower() not in JUNK_VALUES:
-            fields.setdefault(field["name"], field["value"][:300])
+        name, val = field["name"], field["value"]
+        if val and _is_meaningful_field(name, val):
+            fields.setdefault(name, val[:300])
     return fields
+
+
+def _extract_wan_status(html: str) -> dict[str, str]:
+    """Structured WAN/uptime from status.htm / wan.htm (Netis/ZyXEL)."""
+    info: dict[str, str] = {}
+    for m in re.finditer(r"\b(up\s+\d+\s+day[^<\n]{0,40})", html, re.I):
+        info["link_uptime"] = m.group(1).strip()
+    for m in re.finditer(r"\b(day\s+\d+:\s*\d+:\s*\d+)", html, re.I):
+        info["system_uptime"] = m.group(1).strip()
+    m = re.search(r"PPPoE[:\s]*(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})", html, re.I)
+    if m:
+        info["wan_ipv4"] = m.group(1)
+    m = re.search(r"(?:LLC|encap|Encapsulation)[:\s]*([A-Za-z0-9]+)", html, re.I)
+    if m:
+        info["wan_encap"] = m.group(1)
+    for m in re.finditer(r"\b(fe80:[0-9a-f:]+)", html, re.I):
+        info.setdefault("wan_ipv6_link_local", m.group(1))
+    for m in re.finditer(MAC_RE, html):
+        mac = m.group(1).lower()
+        if mac.startswith("04:8d:38") or "wan" in html[:500].lower():
+            info.setdefault("wan_mac", mac)
+            break
+    return info
+
+
+def _is_lan_client_entry(entry: dict[str, str], page: str) -> bool:
+    ip = entry.get("ip", "")
+    if ip and PRIVATE_IP_RE.match(ip):
+        return True
+    pl = page.lower()
+    if entry.get("mac") and any(x in pl for x in ("dhcp", "arp", "client", "wlan", "assoc", "statistic")):
+        return True
+    return False
 
 
 def _is_router_ip(ip: str, router_public: str, gateway: str | None) -> bool:
@@ -432,7 +539,17 @@ def _extract_clients(
             seen_ip.add(ip)
             clients.append({"ip": ip, "mac": mac, "source_page": page})
 
-    return clients
+    # Drop interface-only MACs (WAN, no LAN IP) unless from client tables
+    filtered: list[dict[str, str]] = []
+    for c in clients:
+        if c.get("ip"):
+            filtered.append(c)
+        elif c.get("mac") and _is_lan_client_entry(c, page):
+            filtered.append(c)
+        elif c.get("mac"):
+            c["role"] = "interface"
+            filtered.append(c)
+    return filtered
 
 
 def _merge_clients(existing: list[dict[str, str]], new: list[dict[str, str]]) -> None:
@@ -491,6 +608,8 @@ def run_router_harvest(
 
     session, auth_method = establish_session(conn)
     base = conn["base_url"]
+    # ZyXEL Forms/* often need HTTP auth alongside Netis cookie session
+    session.auth = (conn["username"], conn["password"])
 
     fp = Fingerprinter(conn.get("authenticated_url") or base)
     fp_info = fp.identify_details()
@@ -500,9 +619,11 @@ def run_router_harvest(
 
     index_html, _ = _fetch_page(session, urljoin(base + "/", "index.htm"))
     vendor_paths = _vendor_paths(device_type, server, index_html)
+    is_zyxel_web = "virtual web" in (server or "").lower()
 
     pages_dir = os.path.join(target_dir, "router_harvest_pages")
     os.makedirs(pages_dir, exist_ok=True)
+    fetch_failures: list[str] = []
 
     to_visit: list[str] = []
     for rel in vendor_paths:
@@ -510,36 +631,44 @@ def run_router_harvest(
     for u in _discover_embedded_urls(base, index_html):
         if u not in to_visit:
             to_visit.append(u)
+    for htm in _discover_htm_from_html(index_html):
+        u = urljoin(base + "/", htm)
+        if u not in to_visit:
+            to_visit.append(u)
 
     visited: set[str] = set()
     page_store: dict[str, dict[str, Any]] = {}
     raw_html_by_path: dict[str, str] = {}
     all_fields: dict[str, str] = {}
+    wan_status: dict[str, str] = {}
+    router_interfaces: list[dict[str, str]] = []
     all_clients: list[dict[str, str]] = []
     all_secrets: list[dict[str, str]] = []
     wireless_ssid, wireless_key = "", ""
     gateway: str | None = None
 
-    while to_visit and len(visited) < max_pages:
-        url = to_visit.pop(0)
+    def _harvest_page(url: str) -> None:
+        nonlocal gateway, wireless_ssid, wireless_key, wan_status
         norm = url.split("?", 1)[0]
         if norm in visited:
-            continue
+            return
         visited.add(norm)
         html, status = _fetch_page(session, url)
-        if status not in (200, 206) or len(html) < 40:
-            continue
+        rel = urlparse(norm).path or "/"
+        if status not in (200, 206) or len(html) < 80:
+            fetch_failures.append(f"{rel} -> HTTP {status} (len={len(html)})")
+            return
 
         page_path = _safe_page_path(pages_dir, norm)
         with open(page_path, "w", encoding="utf-8", errors="ignore") as fh:
             fh.write(html)
-
-        rel = urlparse(norm).path or "/"
         raw_html_by_path[rel] = html
 
         fields = _extract_key_values(html)
         for k, v in fields.items():
             all_fields.setdefault(k, v)
+
+        wan_status.update(_extract_wan_status(html))
 
         if not gateway:
             gateway = _guess_gateway({rel: html})
@@ -550,7 +679,13 @@ def run_router_harvest(
             gateway=gateway,
             page=rel,
         )
-        _merge_clients(all_clients, clients)
+        for c in clients:
+            if c.get("role") == "interface" or (c.get("mac") and not c.get("ip")):
+                if rel in ("/status.htm", "/wan.htm") or "status" in rel.lower():
+                    router_interfaces.append({**c, "source_page": rel})
+                    continue
+            if _is_lan_client_entry(c, rel):
+                _merge_clients(all_clients, [c])
 
         ssid, key = _extract_wireless(html)
         if ssid and ssid.lower() not in JUNK_VALUES:
@@ -559,7 +694,12 @@ def run_router_harvest(
             wireless_key = wireless_key or key
 
         for sec in _extract_secrets_from_inputs(html, rel):
-            if not any(s.get("field") == sec["field"] and s.get("value") == sec["value"] for s in all_secrets):
+            if IP_RE.fullmatch(sec.get("value", "").strip()):
+                continue
+            if not any(
+                s.get("field") == sec["field"] and s.get("value") == sec["value"]
+                for s in all_secrets
+            ):
                 all_secrets.append(sec)
 
         page_store[norm] = {
@@ -569,8 +709,7 @@ def run_router_harvest(
             "clients": clients,
         }
         log(
-            f"Harvested: {rel} ({len(fields)} fields, {len(clients)} clients, "
-            f"{len(all_secrets)} secrets total)",
+            f"Harvested: {rel} ({len(fields)} fields, {len(clients)} rows)",
             "INFO",
         )
 
@@ -578,17 +717,47 @@ def run_router_harvest(
             link_norm = link.split("?", 1)[0]
             if link_norm not in visited and link not in to_visit:
                 to_visit.append(link)
+        for htm in _discover_htm_from_html(html):
+            u = urljoin(base + "/", htm)
+            if u.split("?", 1)[0] not in visited and u not in to_visit:
+                to_visit.append(u)
+
+    while to_visit and len(visited) < max_pages:
+        _harvest_page(to_visit.pop(0))
+
+    # Second wave: mine every .htm name seen in saved HTML
+    if len(page_store) < 12:
+        wave2: list[str] = []
+        blob = "\n".join(raw_html_by_path.values())
+        for htm in _discover_htm_from_html(blob):
+            u = urljoin(base + "/", htm)
+            if u.split("?", 1)[0] not in visited:
+                wave2.append(u)
+        log(f"Second crawl wave: {len(wave2)} .htm link(s) from saved HTML", "INFO")
+        for u in wave2:
+            if len(visited) >= max_pages:
+                break
+            _harvest_page(u)
+
+    fail_path = os.path.join(target_dir, "ROUTER_HARVEST_FAILS.txt")
+    with open(fail_path, "w", encoding="utf-8") as fh:
+        fh.write("\n".join(fetch_failures[:200]) or "(all seed URLs returned 200)")
 
     if not gateway:
         gateway = _guess_gateway(raw_html_by_path)
 
-    # PPPoE / WAN from fields
+    # PPPoE credentials only (not WAN IP mislabeled as password)
     pppoe: dict[str, str] = {}
     for key, val in all_fields.items():
         kl = key.lower()
-        if "ppp" in kl or "adsl" in kl or "wan" in kl:
-            if PASS_INPUT.search(kl) or "user" in kl:
-                pppoe[key] = val
+        if IP_RE.fullmatch(val.strip()):
+            continue
+        if ("ppp" in kl or "adsl" in kl) and (
+            PASS_INPUT.search(kl) or "user" in kl or "name" in kl
+        ):
+            pppoe[key] = val
+    if wan_status.get("wan_ipv4"):
+        wan_status.setdefault("note", "wan_ipv4 is public IP, not a password")
 
     admin_passwords = [
         {"field": s["field"], "value": s["value"], "page": s["page"]}
@@ -635,8 +804,13 @@ def run_router_harvest(
         "model": model,
         "server": server,
         "lan_gateway": gateway,
+        "ui_stack": "ZyXEL Virtual Web + Netis login" if is_zyxel_web else device_type,
         "pages_fetched": len(page_store),
+        "pages_attempted": len(visited),
+        "fetch_failures_sample": fetch_failures[:30],
         "device_fields": all_fields,
+        "wan_status": wan_status,
+        "router_interfaces": router_interfaces,
         "connected_clients": all_clients,
         "wireless": {"ssid": wireless_ssid, "key": wireless_key},
         "secrets_in_html": [f"{s['page']}:{s['field']}={s['value']}" for s in all_secrets],
@@ -661,9 +835,11 @@ def run_router_harvest(
             for k, v in page_store.items()
         },
         "harvest_note": (
-            f"Fetched {len(page_store)} admin pages. "
-            f"LAN clients with MAC: {sum(1 for c in all_clients if c.get('mac'))}. "
-            "If clients are empty, open router_harvest_pages/arp.htm and dhcp_clients.htm manually."
+            f"Fetched {len(page_store)}/{len(visited)} URLs. "
+            f"LAN clients: {len(all_clients)}. "
+            f"Failures logged: ROUTER_HARVEST_FAILS.txt. "
+            "Guest often hides Wi‑Fi/DHCP — try admin. "
+            "CVE netis-info-leak may expose Wi‑Fi password on some firmware."
         ),
     }
 
@@ -681,28 +857,44 @@ def run_router_harvest(
         f"Login: {conn['username']}:{conn['password']} ({auth_method})",
         f"Device: {device_type} | {model} | Server: {server}",
         f"LAN gateway: {gateway or '—'}",
-        f"Pages saved: {len(page_store)} → {pages_dir}",
+        f"UI: {'ZyXEL Virtual Web + Netis' if is_zyxel_web else device_type}",
+        f"Pages saved: {len(page_store)} (tried {len(visited)}) → {pages_dir}",
+        f"Failed URLs: see ROUTER_HARVEST_FAILS.txt ({len(fetch_failures)} lines)",
         "=" * 60,
         "",
-        "— CVE / risk —",
+        "— WAN / link status —",
     ]
+    if wan_status:
+        for k, v in wan_status.items():
+            txt_lines.append(f"  {k}: {v}")
+    else:
+        txt_lines.append("  (see status.htm / wan.htm)")
+    txt_lines.extend(["", "— CVE / risk —"])
     for a in intel.assessments:
         txt_lines.append(f"  {a.cve_id} [{a.severity}] {a.status}: {a.title}")
     txt_lines.extend(
         [
             "",
             "— Wireless (Wi‑Fi) —",
-            f"  SSID : {wireless_ssid or '(not in HTML — check wl_security.htm)'}",
-            f"  Key  : {wireless_key or '(not in HTML — often hidden for guest account)'}",
+            f"  SSID : {wireless_ssid or '(hidden for guest — use admin or CVE netis-info-leak)'}",
+            f"  Key  : {wireless_key or '(hidden for guest)'}",
             "",
-            "— Router / WAN / PPPoE (from forms) —",
+            "— PPPoE credentials (not WAN IP) —",
         ]
     )
     if pppoe:
         for k, v in pppoe.items():
             txt_lines.append(f"  {k}: {v}")
     else:
-        txt_lines.append("  (none parsed — see wan.htm / adsl.htm in router_harvest_pages/)")
+        txt_lines.append("  (none — guest cannot read PPPoE password fields)")
+    txt_lines.extend(["", "— Router interfaces (WAN MAC / IPv6) —"])
+    if router_interfaces:
+        for iface in router_interfaces:
+            txt_lines.append(
+                f"  mac={iface.get('mac', '—')} role={iface.get('role', 'wan')} src={iface.get('source_page')}"
+            )
+    else:
+        txt_lines.append("  (see wan_status above)")
     txt_lines.extend(["", "— Passwords in admin forms —"])
     if all_secrets:
         for s in all_secrets[:25]:
@@ -721,9 +913,12 @@ def run_router_harvest(
             "  (none with MAC — open arp.htm / dhcp_clients.htm in saved pages; "
             "or run Nmap on LAN after harvest)"
         )
-    txt_lines.extend(["", "— Device info (fields) —"])
-    for k, v in list(all_fields.items())[:50]:
-        txt_lines.append(f"  {k}: {v}")
+    txt_lines.extend(["", "— Device info (filtered) —"])
+    if all_fields:
+        for k, v in list(all_fields.items())[:40]:
+            txt_lines.append(f"  {k}: {v}")
+    else:
+        txt_lines.append("  (SPA UI — open saved HTML or use admin account)")
 
     txt_path = os.path.join(target_dir, "ROUTER_HARVEST.txt")
     with open(txt_path, "w", encoding="utf-8") as fh:
