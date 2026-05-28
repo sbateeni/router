@@ -33,6 +33,7 @@ NAV_ITEMS: list[tuple[str, str, str | None]] = [
     ("util_direct_cam", "Direct Camera", "utilities"),
     ("util_update", "Update Tools", "utilities"),
     ("util_router_test", "Test Router", "utilities"),
+    ("util_router_harvest", "Router Deep Harvest", "utilities"),
     ("util_hik_test", "Test Hikvision", "utilities"),
     ("util_cve_test", "CVE Report", "utilities"),
     ("settings", "Settings", None),

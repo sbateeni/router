@@ -238,6 +238,12 @@ class MainWindow(QMainWindow):
         ut.run_requested.connect(self._on_worker)
         self._register("util_update", ut)
 
+        from gui.pages.utilities_pages import build_router_harvest_page
+
+        rh = build_router_harvest_page(session)()
+        rh.run_requested.connect(self._on_worker)
+        self._register("util_router_harvest", rh)
+
         for build_fn, pid in (
             (build_test_router_page, "util_router_test"),
             (build_test_hikvision_page, "util_hik_test"),

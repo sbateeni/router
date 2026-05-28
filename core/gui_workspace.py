@@ -41,21 +41,24 @@ def prepare_target_workspace(
         parsed.get("login_path")
         or parsed.get("seed_url")
         or parsed.get("query_string")
+        or parsed.get("auth_username")
     ):
-        save_target_hints(
-            target_dir,
-            {
-                "host": parsed.get("host"),
-                "login_path": parsed.get("login_path"),
-                "seed_url": parsed.get("seed_url"),
-                "query_string": parsed.get("query_string"),
-                "port": parsed.get("port"),
-                "scheme": parsed.get("scheme"),
-                "resolved_ip": parsed.get("resolved_ip"),
-                "is_domain": parsed.get("is_domain"),
-                "raw": parsed.get("raw"),
-            },
-        )
+        hints = {
+            "host": parsed.get("host"),
+            "login_path": parsed.get("login_path"),
+            "seed_url": parsed.get("seed_url"),
+            "query_string": parsed.get("query_string"),
+            "port": parsed.get("port"),
+            "scheme": parsed.get("scheme"),
+            "resolved_ip": parsed.get("resolved_ip"),
+            "is_domain": parsed.get("is_domain"),
+            "raw": parsed.get("raw"),
+        }
+        if parsed.get("auth_username"):
+            hints["auth_username"] = parsed["auth_username"]
+            hints["auth_password"] = parsed.get("auth_password", "")
+            hints["authenticated"] = True
+        save_target_hints(target_dir, hints)
 
     return {
         "parsed": parsed,

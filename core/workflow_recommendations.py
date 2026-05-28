@@ -40,6 +40,7 @@ TOOL_BY_SELECTION: dict[int, tuple[str, str]] = {
 }
 
 UTIL_LABELS: dict[str, tuple[str, str]] = {
+    "router-harvest": ("Router Deep Harvest", "Utilities → Router Deep Harvest"),
     "test-hikvision": ("Test Hikvision", "Utilities → Test Hikvision"),
     "test-router": ("Test Router", "Utilities → Test Router"),
     "test-cve": ("CVE Report", "Utilities → CVE Report"),
@@ -82,6 +83,8 @@ class WorkspaceProfile:
     snapshots: bool = False
     hydra_hits: bool = False
     target_class: str = "unknown"
+    router_auth_url: bool = False
+    router_harvest_done: bool = False
 
 
 def _tool_ref(gui_name: str, nav_hint: str) -> tuple[str, str]:
@@ -133,6 +136,16 @@ def _load_workspace_profile(target_dir: str, ip: str) -> WorkspaceProfile:
     snap_dir = os.path.join(target_dir, "snapshots")
     if os.path.isdir(snap_dir) and any(f.lower().endswith(".jpg") for f in os.listdir(snap_dir)):
         prof.snapshots = True
+
+    hints_path = os.path.join(target_dir, "target_hints.json")
+    if os.path.isfile(hints_path):
+        try:
+            with open(hints_path, encoding="utf-8") as fh:
+                hints = json.load(fh)
+            prof.router_auth_url = bool(hints.get("authenticated") or hints.get("auth_username"))
+        except (OSError, json.JSONDecodeError):
+            pass
+    prof.router_harvest_done = os.path.isfile(os.path.join(target_dir, "ROUTER_HARVEST.json"))
 
     for name in ("hydra_success.txt", "hydra_web_success.txt", "credentials.txt", "loot_summary.txt"):
         if os.path.isfile(os.path.join(target_dir, name)):
@@ -239,6 +252,12 @@ def build_tool_recommendations(
             )
 
     # --- Router path ---
+    if prof.router_auth_url and not prof.router_harvest_done:
+        _add(
+            steps, seen, "Router Deep Harvest", "Utilities → Router Deep Harvest",
+            "Target URL includes login — crawl admin pages for clients, Wi‑Fi, CVEs.",
+            skip_if_finished=fin_gui, finished_name=fin_gui,
+        )
     if prof.is_router_like and not prof.is_hikvision:
         _add(
             steps, seen, "Test Router", "Utilities → Test Router",

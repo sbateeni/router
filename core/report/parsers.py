@@ -271,7 +271,13 @@ def parse_target_input(text):
             return None
         port = parsed.port or (443 if parsed.scheme == "https" else 80)
         path = parsed.path or "/"
-        return _build_target_record(host, port, parsed.scheme, path, parsed.query, raw)
+        record = _build_target_record(host, port, parsed.scheme, path, parsed.query, raw)
+        if parsed.username:
+            from urllib.parse import unquote
+
+            record["auth_username"] = unquote(parsed.username)
+            record["auth_password"] = unquote(parsed.password or "")
+        return record
 
     if "/" in raw or "?" in raw:
         host_part = raw.split("/", 1)[0].split("?", 1)[0]

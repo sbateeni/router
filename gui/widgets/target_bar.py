@@ -27,7 +27,7 @@ class TargetBar(QWidget):
 
         layout.addWidget(QLabel("Target:"))
         self._target_edit = QLineEdit()
-        self._target_edit.setPlaceholderText("IP, URL, or domain/path")
+        self._target_edit.setPlaceholderText("IP or http://user:pass@IP/ for logged-in router")
         self._target_edit.returnPressed.connect(self._apply)
         layout.addWidget(self._target_edit, stretch=2)
 

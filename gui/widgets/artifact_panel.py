@@ -19,6 +19,9 @@ from PyQt6.QtWidgets import (
 )
 
 KEY_ARTIFACTS = (
+    "ROUTER_HARVEST.txt",
+    "ROUTER_HARVEST.json",
+    "ROUTER_ACCESS.txt",
     "nmap_scan.txt",
     "ingram_scan.txt",
     "workflow_recommendations.json",

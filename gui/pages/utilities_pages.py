@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import subprocess
 import sys
 
@@ -134,6 +135,74 @@ def _utility_test_page(
                 return runner(host)
 
             job = ScanJob(kind="custom", label=label, custom_fn=task)
+            w = ScanWorker(self._session, job, self)
+            self.run_requested.emit(w)
+            w.start()
+
+    return Page
+
+
+def build_router_harvest_page(session: GuiSession):
+    class Page(QWidget):
+        run_requested = pyqtSignal(object)
+
+        def __init__(self, parent=None):
+            super().__init__(parent)
+            self._session = session
+            lay = QVBoxLayout(self)
+            self._banner = TargetBanner(session)
+            lay.addWidget(self._banner)
+            lay.addWidget(QLabel("<h2>Router Deep Harvest</h2>"))
+            lay.addWidget(
+                QLabel(
+                    "For an <b>already logged-in</b> router: put credentials in the top bar, "
+                    "e.g. <code>http://guest:guest@188.225.140.99/</code>, click "
+                    "<b>Apply target</b>, then <b>Run harvest</b>.<br><br>"
+                    "Collects: device info, Wi‑Fi keys, DHCP/LAN clients, secrets in HTML, "
+                    "CVE assessment, saves <code>ROUTER_HARVEST.txt</code> and page snapshots."
+                )
+            )
+            btn = QPushButton("Run harvest on target")
+            btn.clicked.connect(self._go)
+            lay.addWidget(btn)
+            lay.addStretch()
+
+        def showEvent(self, event) -> None:
+            super().showEvent(event)
+            self._banner.refresh()
+
+        def _go(self) -> None:
+            raw = self._session.target.strip()
+            if not raw:
+                QMessageBox.warning(
+                    self,
+                    "Target",
+                    "Enter http://user:pass@IP/ in the top bar and click Apply target.",
+                )
+                return
+            from core.target_auth import parse_target_auth
+
+            if not parse_target_auth(raw):
+                QMessageBox.warning(
+                    self,
+                    "Credentials required",
+                    "URL must include username and password, e.g.\n"
+                    "http://guest:guest@188.225.140.99/",
+                )
+                return
+            if not self._session.prepare():
+                QMessageBox.warning(self, "Workspace", "Could not prepare workspace.")
+                return
+            self._banner.refresh()
+
+            def task():
+                from engines.router_harvest import run_router_harvest
+
+                print(f"[*] Router deep harvest — {raw}\n")
+                run_router_harvest(self._session.target_dir, raw)
+                return True
+
+            job = ScanJob(kind="custom", label="router-harvest", custom_fn=task)
             w = ScanWorker(self._session, job, self)
             self.run_requested.emit(w)
             w.start()

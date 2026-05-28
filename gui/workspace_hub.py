@@ -20,6 +20,7 @@ PAGE_ID_BY_TITLE.update({
     "Comprehensive Scan": "comprehensive",
     "Test Hikvision": "util_hik_test",
     "Test Router": "util_router_test",
+    "Router Deep Harvest": "util_router_harvest",
     "CVE Report": "util_cve_test",
     "Direct Camera": "util_direct_cam",
     "LAN Discovery": "recon_lan",
@@ -27,6 +28,9 @@ PAGE_ID_BY_TITLE.update({
 })
 
 IMPORTANT_FILES = (
+    ("ROUTER_HARVEST.txt", "Router harvest"),
+    ("ROUTER_HARVEST.json", "Router harvest (JSON)"),
+    ("ROUTER_ACCESS.txt", "Router login"),
     ("nmap_scan.txt", "Nmap"),
     ("ingram_scan.txt", "Ingram log"),
     ("workflow_recommendations.json", "Next tools"),
@@ -81,6 +85,18 @@ def _find_credentials(target_dir: str) -> list[str]:
             found.append(f"Hikvision (ISAPI): admin:{hik['digest_password']}")
         if hik.get("backdoor_confirmed"):
             found.append("Hikvision backdoor: admin:11 bypass (not real web password)")
+
+    harvest = _load_json(os.path.join(target_dir, "ROUTER_HARVEST.json"))
+    if isinstance(harvest, dict) and harvest.get("username"):
+        found.append(
+            f"Router web: {harvest['username']}:{harvest.get('password', '')} "
+            f"({harvest.get('auth_method', 'harvest')})"
+        )
+        w = harvest.get("wireless") or {}
+        if w.get("ssid") or w.get("key"):
+            found.append(f"Wi-Fi: SSID={w.get('ssid', '—')} key={w.get('key', '—')}")
+        for c in (harvest.get("connected_clients") or [])[:8]:
+            found.append(f"LAN client: {c.get('ip', '?')} mac={c.get('mac', '—')}")
 
     for name in ("hydra_success.txt", "hydra_web_success.txt", "credentials.txt", "loot_summary.txt"):
         text = _read_text(os.path.join(target_dir, name), 4000)
@@ -171,6 +187,7 @@ def collect_workspace_view(target_dir: str, host: str = "") -> dict[str, Any]:
 
     view["credentials"] = _find_credentials(target_dir)
     view["ingram_note"] = _ingram_result_note(target_dir)
+    view["router_harvest_note"] = _router_harvest_note(target_dir)
     view["files"] = _list_workspace_files(target_dir)
 
     for fname, label in IMPORTANT_FILES:
@@ -189,6 +206,19 @@ def collect_workspace_view(target_dir: str, host: str = "") -> dict[str, Any]:
             })
 
     return view
+
+
+def _router_harvest_note(target_dir: str) -> str:
+    data = _load_json(os.path.join(target_dir, "ROUTER_HARVEST.json"))
+    if not isinstance(data, dict):
+        return ""
+    clients = len(data.get("connected_clients") or [])
+    pages = data.get("pages_fetched", 0)
+    cves = len(data.get("cve_assessments") or [])
+    return (
+        f"{data.get('device_type', '?')} {data.get('model', '')} — "
+        f"{pages} pages, {clients} LAN clients, {cves} CVE notes"
+    )
 
 
 def _ingram_result_note(target_dir: str) -> str:
@@ -229,6 +259,10 @@ def format_results_summary(view: dict[str, Any], *, finished_tool: str = "") -> 
     ingram_note = view.get("ingram_note")
     if ingram_note:
         lines.append(f"— Ingram —\n  • {ingram_note}")
+
+    harvest_note = view.get("router_harvest_note")
+    if harvest_note:
+        lines.append(f"— Router harvest —\n  • {harvest_note}")
 
     tools = view.get("next_tools") or []
     if tools:
