@@ -66,21 +66,29 @@ class ScanWorker(QThread):
         from core.scan_cancel import ScanCancelled, finish_job, start_job
 
         start_job(self._job_id, meta={"label": self._job.label})
+        finish_error = ""
+        telegram_started = False
         try:
             if not self._session.prepare():
                 self.error.emit("No target configured.")
                 return
             os.environ["ENGINE_WORKSPACE"] = self._session.target_dir
             self._session.set_profile(self._session.profile)
+            self._notify_telegram_started()
+            telegram_started = True
             exploited = bool(self._execute())
             self.finished_ok.emit(exploited, self._job.label or "done")
         except ScanCancelled:
+            finish_error = "cancelled"
             self.log_line.emit("[!] Scan cancelled by user.\n")
             self.finished_ok.emit(False, "cancelled")
         except Exception as exc:
+            finish_error = str(exc)
             self.error.emit(str(exc))
             self.finished_ok.emit(False, str(exc))
         finally:
+            if telegram_started:
+                self._notify_telegram_finished(exploited, finish_error)
             self._emit_workflow_recommendations(exploited)
             try:
                 if self._session.target_dir and self._session.scan_host:
@@ -102,6 +110,45 @@ class ScanWorker(QThread):
             self._restore_env(previous_env)
             self._release_slot()
 
+    def _job_display_label(self) -> str:
+        job = self._job
+        if job.kind == "tool" and job.selection is not None:
+            from gui.navigation import PAGE_SPECS
+
+            for meta in PAGE_SPECS.values():
+                if meta.get("selection") == job.selection:
+                    return meta.get("title", job.label or str(job.selection))
+            return job.label or f"tool-{job.selection}"
+        return job.label or job.kind
+
+    def _notify_telegram_started(self) -> None:
+        try:
+            from core.telegram.gui_mirror import notify_gui_scan_started
+
+            notify_gui_scan_started(
+                job_id=self._job_id,
+                host=self._session.scan_host or self._session.target or "?",
+                label=self._job_display_label(),
+                profile=self._session.profile,
+            )
+        except Exception as exc:
+            print(f"[!] Telegram GUI mirror (start): {exc}")
+
+    def _notify_telegram_finished(self, exploited: bool, error: str) -> None:
+        try:
+            from core.telegram.gui_mirror import notify_gui_scan_finished
+
+            notify_gui_scan_finished(
+                job_id=self._job_id,
+                host=self._session.scan_host or self._session.target or "?",
+                label=self._job_display_label(),
+                ok=not error or error == "",
+                exploited=exploited,
+                error=error,
+            )
+        except Exception as exc:
+            print(f"[!] Telegram GUI mirror (finish): {exc}")
+
     def _emit_workflow_recommendations(self, exploited: bool) -> None:
         try:
             if not self._session.target_dir:
@@ -120,6 +167,7 @@ class ScanWorker(QThread):
                 finished_tool=finished,
                 job_kind=self._job.kind,
                 exploited=exploited,
+                quiet=False,
             )
         except Exception as exc:
             print(f"[!] Workflow recommendations skipped: {exc}")

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import os
+
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QLabel, QListWidget, QListWidgetItem, QVBoxLayout, QWidget
 
@@ -52,7 +54,13 @@ class WorkspacePanel(QWidget):
         self._chain.setText("<br>".join(hints) if hints else "Tools share this folder automatically.")
 
         ready = summary.get("ready_for") or []
+        wf = os.path.join(target_dir, "workflow_recommendations.json") if target_dir else ""
+        extra = ""
+        if os.path.isfile(wf):
+            extra = " · see <b>Results</b> tab for full list + Telegram"
         if ready:
-            self._ready.setText("<b>Suggested next:</b> " + ", ".join(ready))
+            self._ready.setText("<b>Suggested next:</b> " + ", ".join(ready) + extra)
+        elif extra:
+            self._ready.setText("<b>Results tab</b>" + extra)
         else:
-            self._ready.setText("")
+            self._ready.setText("After each tool: open <b>Results</b> tab (summary, files, Telegram).")

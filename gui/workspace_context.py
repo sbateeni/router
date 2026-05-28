@@ -18,6 +18,9 @@ CHAIN_FILES = (
     ("hydra_iot_passwords.txt", "Hydra IoT wordlist"),
     ("CHANGEME_HITS.json", "Default credentials"),
     ("nuclei_*.json", "Nuclei results"),
+    ("ingram_scan.txt", "Ingram scan"),
+    ("workflow_recommendations.json", "Next-tool hints"),
+    ("hikvision_test_report.json", "Hikvision test"),
 )
 
 

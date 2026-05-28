@@ -19,11 +19,17 @@ from PyQt6.QtWidgets import (
 )
 
 KEY_ARTIFACTS = (
+    "nmap_scan.txt",
+    "ingram_scan.txt",
+    "workflow_recommendations.json",
+    "hikvision_test_report.json",
+    "recon_summary.json",
+    "target_profile.json",
     "NMAP_OPEN_PORTS.json",
     "target_hints.json",
     "AI_ANALYSIS.txt",
     "hydra_iot_passwords.txt",
-    "TARGET_PROFILE.json",
+    "RESULTS_SUMMARY.txt",
 )
 
 
@@ -63,14 +69,22 @@ class ArtifactPanel(QWidget):
         self._list.clear()
         if not self._target_dir or not os.path.isdir(self._target_dir):
             return
-        names = sorted(os.listdir(self._target_dir))
-        for name in names:
-            path = os.path.join(self._target_dir, name)
+        root = self._target_dir
+        for name in sorted(os.listdir(root)):
+            path = os.path.join(root, name)
             if os.path.isfile(path):
                 prefix = "★ " if name in KEY_ARTIFACTS else ""
                 item = QListWidgetItem(f"{prefix}{name}")
                 item.setData(256, path)
                 self._list.addItem(item)
+            elif os.path.isdir(path) and name in ("snapshots", "ingram_results"):
+                for child in sorted(os.listdir(path))[:80]:
+                    cp = os.path.join(path, child)
+                    if os.path.isfile(cp):
+                        rel = f"{name}/{child}"
+                        item = QListWidgetItem(f"★ {rel}" if name == "snapshots" else rel)
+                        item.setData(256, cp)
+                        self._list.addItem(item)
 
     def _open_selected(self, item: QListWidgetItem) -> None:
         path = item.data(256)

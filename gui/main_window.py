@@ -46,6 +46,7 @@ from gui.pages.utilities_pages import (
 )
 from gui.session import GuiSession
 from gui.widgets.artifact_panel import ArtifactPanel
+from gui.widgets.results_panel import ResultsPanel
 from gui.widgets.log_panel import LogPanel
 from gui.widgets.terminal_panel import TerminalPanel
 from gui.widgets.target_bar import TargetBar
@@ -127,8 +128,11 @@ class MainWindow(QMainWindow):
         self._bottom_tabs = QTabWidget()
         self._log = LogPanel()
         self._artifacts = ArtifactPanel()
+        self._results = ResultsPanel()
+        self._results.navigate_requested.connect(self._navigate_to_page)
         self._terminal = TerminalPanel()
         self._bottom_tabs.addTab(self._log, "Live Log")
+        self._bottom_tabs.addTab(self._results, "Results")
         self._bottom_tabs.addTab(self._artifacts, "Artifacts")
         self._bottom_tabs.addTab(self._terminal, "Terminal")
         console_layout.addWidget(self._bottom_tabs)
@@ -293,9 +297,15 @@ class MainWindow(QMainWindow):
     def _refresh_workspace_panel(self) -> None:
         self._workspace.refresh(self._session.target, self._session.target_dir)
 
+    def _navigate_to_page(self, page_id: str) -> None:
+        if page_id in self._nav_items:
+            self._tree.setCurrentItem(self._nav_items[page_id])
+            self._show_page(page_id)
+
     def _on_target_changed(self) -> None:
         self._target_bar.sync_from_session()
         self._artifacts.set_workspace(self._session.target_dir)
+        self._results.set_context(self._session.target_dir, self._session.scan_host or self._session.target)
         self._refresh_workspace_panel()
         for w in self._pages.values():
             inner = w.widget() if isinstance(w, QScrollArea) else w
@@ -328,11 +338,12 @@ class MainWindow(QMainWindow):
         self._target_bar._keep_cb.setChecked(True)
         self._target_bar.sync_from_session()
         self._artifacts.set_workspace(self._session.target_dir)
-        self._refresh_workspace_panel()
+        self._results.set_context(self._session.target_dir, self._session.scan_host or self._session.target)
         self._refresh_workspace_panel()
 
     def _on_worker(self, worker: ScanWorker) -> None:
         self._set_console_visible(True)
+        self._results.set_context(self._session.target_dir, self._session.scan_host or self._session.target)
         self._log.start_tailing(worker.job_id)
         self._bottom_tabs.setCurrentWidget(self._log)
         worker.finished_ok.connect(lambda *_: self._after_scan())
@@ -340,7 +351,10 @@ class MainWindow(QMainWindow):
 
     def _after_scan(self) -> None:
         self._artifacts.set_workspace(self._session.target_dir)
+        self._results.set_context(self._session.target_dir, self._session.scan_host or self._session.target)
         self._refresh_workspace_panel()
+        self._set_console_visible(True)
+        self._bottom_tabs.setCurrentWidget(self._results)
         dash = self._pages.get("dashboard")
         if dash:
             inner = dash.widget() if isinstance(dash, QScrollArea) else dash
