@@ -93,10 +93,22 @@ def _find_credentials(target_dir: str) -> list[str]:
             f"({harvest.get('auth_method', 'harvest')})"
         )
         w = harvest.get("wireless") or {}
-        if w.get("ssid") or w.get("key"):
-            found.append(f"Wi-Fi: SSID={w.get('ssid', '—')} key={w.get('key', '—')}")
-        for c in (harvest.get("connected_clients") or [])[:8]:
-            found.append(f"LAN client: {c.get('ip', '?')} mac={c.get('mac', '—')}")
+        ssid, key = w.get("ssid", ""), w.get("key", "")
+        if ssid and ssid.lower() not in ("type", "type="):
+            found.append(f"Wi-Fi SSID: {ssid}")
+        if key and key.lower() not in ("type", "type=", "password") and len(key) > 3:
+            found.append(f"Wi-Fi key: {key}")
+        for s in (harvest.get("form_secrets") or [])[:6]:
+            found.append(f"Form [{s.get('page', '?')}]: {s.get('field')}={s.get('value')}")
+        for c in (harvest.get("connected_clients") or [])[:12]:
+            if not c.get("mac") and not c.get("ip"):
+                continue
+            if c.get("ip", "").endswith(".1") and not c.get("mac"):
+                continue
+            found.append(
+                f"LAN: ip={c.get('ip', '—')} mac={c.get('mac', '—')} "
+                f"name={c.get('hostname', '—')}"
+            )
 
     for name in ("hydra_success.txt", "hydra_web_success.txt", "credentials.txt", "loot_summary.txt"):
         text = _read_text(os.path.join(target_dir, name), 4000)
@@ -212,12 +224,16 @@ def _router_harvest_note(target_dir: str) -> str:
     data = _load_json(os.path.join(target_dir, "ROUTER_HARVEST.json"))
     if not isinstance(data, dict):
         return ""
-    clients = len(data.get("connected_clients") or [])
+    clients = data.get("connected_clients") or []
+    with_mac = sum(1 for c in clients if c.get("mac"))
     pages = data.get("pages_fetched", 0)
     cves = len(data.get("cve_assessments") or [])
+    w = data.get("wireless") or {}
+    wifi = f" SSID={w['ssid']}" if w.get("ssid") and w["ssid"] != "type" else ""
     return (
         f"{data.get('device_type', '?')} {data.get('model', '')} — "
-        f"{pages} pages, {clients} LAN clients, {cves} CVE notes"
+        f"{pages} pages, {with_mac} client(s) w/ MAC, {len(clients)} IP rows, "
+        f"{cves} CVE notes{wifi}"
     )
 
 

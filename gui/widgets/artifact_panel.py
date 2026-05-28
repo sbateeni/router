@@ -22,6 +22,7 @@ KEY_ARTIFACTS = (
     "ROUTER_HARVEST.txt",
     "ROUTER_HARVEST.json",
     "ROUTER_ACCESS.txt",
+    "ROUTER_LAN_CLIENTS.json",
     "nmap_scan.txt",
     "ingram_scan.txt",
     "workflow_recommendations.json",

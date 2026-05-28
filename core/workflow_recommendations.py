@@ -207,13 +207,25 @@ def build_tool_recommendations(
     fin_gui = TOOL_BY_SELECTION.get(fin_key, (fin_label, ""))[0] if fin_key else fin_label
 
     # --- Always useful when workspace is empty ---
-    if not prof.has_nmap and not prof.open_ports:
+    if not prof.has_nmap and not prof.open_ports and not prof.router_harvest_done:
         _add(
             steps, seen, "Nmap", "Master PWN — Classic → Nmap",
             "No port scan in workspace yet — run Nmap first.",
             skip_if_finished=fin_gui, finished_name=fin_gui,
         )
         return _dedupe_priority(steps)
+
+    if prof.router_harvest_done and not prof.has_nmap:
+        _add(
+            steps, seen, "Nuclei", "Master PWN — Classic → Nuclei",
+            "Router harvested — run CVE templates on HTTP port.",
+            skip_if_finished=fin_gui, finished_name=fin_gui,
+        )
+        _add(
+            steps, seen, "RouterSploit", "Master PWN — Classic → RouterSploit",
+            "Match exploit modules to harvested device type.",
+            skip_if_finished=fin_gui, finished_name=fin_gui,
+        )
 
     if prof.connectivity_issues:
         _add(
