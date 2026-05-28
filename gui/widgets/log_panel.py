@@ -22,7 +22,6 @@ class LogPanel(QWidget):
         self._copy_btn = QPushButton("Copy all")
         self._copy_btn.clicked.connect(self.copy_all)
         self._clear_btn = QPushButton("Clear view")
-        self._clear_btn.clicked.connect(self._text.clear)
         title_row.addWidget(self._title)
         title_row.addStretch()
         title_row.addWidget(self._copy_btn)
@@ -31,6 +30,7 @@ class LogPanel(QWidget):
         self._text = QTextEdit()
         self._text.setReadOnly(True)
         self._text.setFont(QFont("Consolas", 11))
+        self._clear_btn.clicked.connect(self._text.clear)
         layout.addWidget(self._text)
         self._path = live_log_path()
         self._offset = 0
