@@ -81,8 +81,9 @@ class MainWindow(QMainWindow):
 
         right = QWidget()
         right_layout = QVBoxLayout(right)
+        vertical_split = QSplitter(Qt.Orientation.Vertical)
         self._stack = QStackedWidget()
-        right_layout.addWidget(self._stack, stretch=2)
+        vertical_split.addWidget(self._stack)
 
         self._bottom_tabs = QTabWidget()
         self._log = LogPanel()
@@ -91,7 +92,9 @@ class MainWindow(QMainWindow):
         self._bottom_tabs.addTab(self._log, "Live Log")
         self._bottom_tabs.addTab(self._artifacts, "Artifacts")
         self._bottom_tabs.addTab(self._terminal, "Terminal")
-        right_layout.addWidget(self._bottom_tabs, stretch=1)
+        vertical_split.addWidget(self._bottom_tabs)
+        vertical_split.setSizes([380, 320])
+        right_layout.addWidget(vertical_split, stretch=1)
         split.addWidget(right)
         split.setSizes([240, 960])
 
