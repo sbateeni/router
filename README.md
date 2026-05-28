@@ -23,10 +23,8 @@ bash scripts/install_tools.sh    # clones tools/ + merges tool-specific pins
 
 | Command | Purpose |
 |---------|---------|
-| `./run.sh` | Unified menu (options 1–9, **G** = GUI) |
-| `python3 bin/gui_app.py` | PyQt6 desktop GUI (see [`docs/GUI.md`](docs/GUI.md)) |
-| `python3 bin/master_pwn.py -t IP --auto` | Full 4-phase scan (Nmap → Web → **Engine** → Hydra) |
-| `python3 bin/auto_pwn.py` | Device engine only (cameras + routers) |
+| `./run.sh` | GUI-only launcher |
+| `python3 bin/gui_app.py` | Primary entrypoint — PyQt6 desktop GUI (see [`docs/GUI.md`](docs/GUI.md)) |
 | `python3 tests/test_router_target.py -H IP` | Netis/router credential test |
 | `python3 tests/test_hikvision_target.py -H IP` | Hikvision backdoor + Digest test |
 | `python3 tests/test_device_cve.py -H IP` | CVE intelligence report |
@@ -37,11 +35,9 @@ bash scripts/install_tools.sh    # clones tools/ + merges tool-specific pins
 router/
 ├── run.sh / run.bat       ← launch menu (stay at root)
 ├── bin/                   ← Python entry points
-│   ├── master_pwn.py      ← main orchestrator
 │   ├── gui_app.py         ← PyQt6 desktop GUI
-│   ├── auto_pwn.py        ← device engine menu
-│   ├── lan_pwn.py
-│   └── telegram_pwn.py
+│   ├── telegram_daemon.py ← Telegram background listener
+│   └── _bootstrap.py
 ├── scripts/               ← install & maintenance
 │   ├── install_tools.sh
 │   └── update_tools.py
@@ -74,6 +70,12 @@ router/
 Copy `.env.example` to `.env` for Telegram / AI keys.
 
 See **[docs/TOOLS.md](docs/TOOLS.md)** for the full tools catalog.
+
+## GUI-first policy
+
+- Day-to-day operation should run from `python3 bin/gui_app.py`.
+- Launcher scripts (`run.sh`, `run.bat`) run GUI only.
+- Attack logic remains intact in `core/` and `engines/`; removed files were CLI wrappers only.
 
 ### Kali `.venv` (correct package versions)
 

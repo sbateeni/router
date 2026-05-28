@@ -55,38 +55,14 @@ else
 fi
 
 export NUCLEI_TELEGRAM_EXTERNAL=1
-TG_ARGS=(--no-telegram)
 
 echo
 echo "======================================================"
-echo "   AUTO-PWN UNIFIED"
+echo "   AUTO-PWN UNIFIED — GUI FIRST"
 echo "======================================================"
 [[ "$TG_OK" == "1" ]] && echo "  Telegram: ON (@H_the_box_bot)" || echo "  Telegram: OFF — logs/telegram.log"
 echo
-echo "  [1] Full auto scan     [2] Device engine"
-echo "  [3] Router test        [4] Hikvision test"
-echo "  [5] CVE report         [6] Camera snapshots"
-echo "  [7] LAN scan           [8] Interactive menu"
-echo "  [9] Update GitHub      [G] PyQt6 GUI"
-echo "  [0] Exit"
+echo "  Launching PyQt6 GUI..."
 echo
-read -rp "Select [0-9,G]: " choice
-
-case "$choice" in
-  [gG]) export NUCLEI_SKIP_UPDATE=1 AUTOPWN_LIVE_WINDOW=0
-     "$PY" "$ROOT/bin/gui_app.py" ;;
-  1) read -rp "Target IP: " target_ip
-     export NUCLEI_SKIP_UPDATE=1
-     "$PY" "$ROOT/bin/master_pwn.py" "${TG_ARGS[@]}" -t "$target_ip" --auto ;;
-  2) export NUCLEI_SKIP_UPDATE=1; "$PY" "$ROOT/bin/auto_pwn.py" ;;
-  3) read -rp "Target IP: " target_ip; "$PY" "$ROOT/tests/test_router_target.py" -H "$target_ip" ;;
-  4) read -rp "Target IP: " target_ip; "$PY" "$ROOT/tests/test_hikvision_target.py" -H "$target_ip" ;;
-  5) read -rp "Target IP: " target_ip; "$PY" "$ROOT/tests/test_device_cve.py" -H "$target_ip" ;;
-  6) read -rp "Camera IP (empty=default): " cam_ip
-     [[ -n "$cam_ip" ]] && "$PY" "$ROOT/tests/test.py" -H "$cam_ip" || "$PY" "$ROOT/tests/test.py" ;;
-  7) export NUCLEI_SKIP_UPDATE=1; "$PY" "$ROOT/bin/lan_pwn.py" ;;
-  8) export NUCLEI_SKIP_UPDATE=1; "$PY" "$ROOT/bin/master_pwn.py" "${TG_ARGS[@]}" ;;
-  9) "$PY" "$ROOT/scripts/update_tools.py" ;;
-  0) exit 0 ;;
-  *) echo "Invalid."; exit 1 ;;
-esac
+export NUCLEI_SKIP_UPDATE=1 AUTOPWN_LIVE_WINDOW=0
+"$PY" "$ROOT/bin/gui_app.py"

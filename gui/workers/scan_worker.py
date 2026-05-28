@@ -3,13 +3,14 @@
 from __future__ import annotations
 
 import os
+import threading
 import uuid
 from dataclasses import dataclass
 from typing import Any, Callable
 
 from PyQt6.QtCore import QThread, pyqtSignal
 
-from gui.bridge.input_bridge import install_gui_bridge
+from gui.bridge.input_bridge import install_gui_bridge, uninstall_gui_bridge
 from gui.session import GuiSession
 
 
@@ -24,6 +25,9 @@ class ScanJob:
 
 
 class ScanWorker(QThread):
+    _run_lock = threading.Lock()
+    _active_job_id: str | None = None
+
     log_line = pyqtSignal(str)
     finished_ok = pyqtSignal(bool, str)
     error = pyqtSignal(str)
@@ -39,6 +43,19 @@ class ScanWorker(QThread):
         return self._job_id
 
     def run(self) -> None:
+        previous_env = {
+            "AUTOPWN_GUI": os.environ.get("AUTOPWN_GUI"),
+            "AUTOPWN_LIVE_WINDOW": os.environ.get("AUTOPWN_LIVE_WINDOW"),
+            "AUTOPWN_JOB_ID": os.environ.get("AUTOPWN_JOB_ID"),
+            "AUTOPWN_SCAN_SOURCE": os.environ.get("AUTOPWN_SCAN_SOURCE"),
+            "ENGINE_WORKSPACE": os.environ.get("ENGINE_WORKSPACE"),
+        }
+
+        if not self._acquire_slot():
+            self.error.emit("Another scan is already running. Wait or cancel it first.")
+            self.finished_ok.emit(False, "busy")
+            return
+
         os.environ["AUTOPWN_GUI"] = "1"
         os.environ["AUTOPWN_LIVE_WINDOW"] = "0"
         os.environ["AUTOPWN_JOB_ID"] = self._job_id
@@ -64,7 +81,9 @@ class ScanWorker(QThread):
             self.finished_ok.emit(False, str(exc))
         finally:
             finish_job(self._job_id)
-            os.environ.pop("AUTOPWN_JOB_ID", None)
+            uninstall_gui_bridge()
+            self._restore_env(previous_env)
+            self._release_slot()
 
     def _execute(self) -> Any:
         job = self._job
@@ -128,3 +147,24 @@ class ScanWorker(QThread):
             )
 
         raise ValueError(f"Unknown job kind: {job.kind}")
+
+    @classmethod
+    def _acquire_slot(cls) -> bool:
+        with cls._run_lock:
+            if cls._active_job_id:
+                return False
+            cls._active_job_id = "locked"
+            return True
+
+    @classmethod
+    def _release_slot(cls) -> None:
+        with cls._run_lock:
+            cls._active_job_id = None
+
+    @staticmethod
+    def _restore_env(previous_env: dict[str, str | None]) -> None:
+        for key, value in previous_env.items():
+            if value is None:
+                os.environ.pop(key, None)
+            else:
+                os.environ[key] = value

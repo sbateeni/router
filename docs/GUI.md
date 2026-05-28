@@ -23,8 +23,8 @@ python bin/gui_app.py
 
 Or from the unified launcher:
 
-- **Windows:** `run.bat` → `[G]`
-- **Linux/Kali:** `run.sh` → `G`
+- **Windows:** `run.bat` (GUI-only)
+- **Linux/Kali:** `run.sh` (GUI-only)
 
 ## Layout
 
@@ -39,7 +39,7 @@ Or from the unified launcher:
 
 - **Run Full Scan** — `selection=1`, profile from target bar (usually `normal`)
 - **Run Deep Scan** — same pipeline with `deep` profile (IoT merge + extended timeouts)
-- **Run 4-Phase Auto** — full orchestrator equivalent to `bin/master_pwn.py -t TARGET --auto`
+- **Run 4-Phase Auto** — full orchestrator behavior is available from GUI Comprehensive page.
 
 ## Chaining tools
 
@@ -56,6 +56,21 @@ The GUI sets:
 - `AUTOPWN_LIVE_WINDOW=0` (no extra terminal tail on Windows)
 - `AUTOPWN_GUI=1` during scans (non-blocking `input()` defaults)
 - `ENGINE_WORKSPACE=<target_dir>` for the device engine
+
+## Telegram in GUI
+
+- Start/verify from **Settings**:
+  - `Telegram: Send test` validates outbound sending.
+  - `Telegram: Start listener` starts inbound polling in background.
+- When config is valid and auto mode is enabled, GUI also tries to start listener on app startup.
+
+## Preflight checks
+
+Settings now provides GUI preflight summary:
+
+- `.env` presence
+- critical binaries (`git`, `nmap`, `nuclei`)
+- Telegram readiness state
 
 ## External binaries
 

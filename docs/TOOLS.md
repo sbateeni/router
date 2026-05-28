@@ -4,18 +4,13 @@ Complete reference of every tool, module, and external dependency used in this p
 
 ---
 
-## Entry points (how you launch)
+## Entry points (GUI-first)
 
 | Script | Path | Purpose |
 |--------|------|---------|
-| Unified menu | `run.sh` / `run.bat` | Main launcher |
-| Full orchestrator | `bin/master_pwn.py` | 4-phase scan + Telegram + AI |
-| Device engine | `bin/auto_pwn.py` | Cameras, routers, OSINT, PoCs |
-| Telegram only | `bin/telegram_pwn.py` | Bot control |
-| LAN picker | `bin/lan_pwn.py` | Scan LAN → AUTO-PWN |
-| Direct camera | `bin/direct_camera.py` | VLC snapshot mode |
-| RouterSploit CLI | `bin/run_rsf_direct.py` | Expert RSF scanner |
-| VLC multi-cam | `bin/open_vlc_cameras.py` | Open RTSP in VLC |
+| Unified menu | `run.sh` / `run.bat` | GUI-only launcher |
+| Main GUI app | `bin/gui_app.py` | Desktop control center (tools, logs, artifacts, settings) |
+| Telegram daemon | `bin/telegram_daemon.py` | Background bot process (optional; GUI can manage listener) |
 | Install tools | `scripts/install_tools.sh` / `.bat` | Clone external repos |
 | Update all | `scripts/update_tools.py` | Git pull project + tools |
 
@@ -39,7 +34,7 @@ Complete reference of every tool, module, and external dependency used in this p
 
 ---
 
-## Core orchestrator (`core/`) — master_pwn scan tools
+## Core orchestrator (`core/`) — scan tools (used by GUI workers)
 
 | # | Tool | Module | External binary |
 |---|------|--------|-----------------|

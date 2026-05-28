@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 import builtins
+import threading
 from typing import Callable
 
 _original_input = builtins.input
 _handler: Callable[[str], str] | None = None
 _installed = False
+_lock = threading.Lock()
 
 
 def set_gui_input_handler(handler: Callable[[str], str] | None) -> None:
@@ -31,6 +33,14 @@ def _default_gui_input(prompt: str = "") -> str:
         return "y"
     if "choose tool id" in pl or "choose:" in pl:
         return "0"
+    if "select option" in pl and "[1]" in pl and "[0]" in pl:
+        return "0"
+    if "select mode" in pl:
+        return "1"
+    if "select device id" in pl or "select target id" in pl:
+        return "b"
+    if "(y/n)" in pl:
+        return "n"
     return ""
 
 
@@ -45,13 +55,15 @@ def gui_input(prompt: str = "") -> str:
 
 def install_gui_bridge() -> None:
     global _installed
-    if _installed:
-        return
-    builtins.input = gui_input
-    _installed = True
+    with _lock:
+        if _installed:
+            return
+        builtins.input = gui_input
+        _installed = True
 
 
 def uninstall_gui_bridge() -> None:
     global _installed
-    builtins.input = _original_input
-    _installed = False
+    with _lock:
+        builtins.input = _original_input
+        _installed = False
