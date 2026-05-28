@@ -6,7 +6,15 @@ import os
 
 from PyQt6.QtCore import QFileSystemWatcher, QTimer
 from PyQt6.QtGui import QFont
-from PyQt6.QtWidgets import QHBoxLayout, QLabel, QPushButton, QTextEdit, QVBoxLayout, QWidget
+from PyQt6.QtWidgets import (
+    QHBoxLayout,
+    QLabel,
+    QPushButton,
+    QSizePolicy,
+    QTextEdit,
+    QVBoxLayout,
+    QWidget,
+)
 
 from core.live_scan_log import path as live_log_path
 from core.paths import logs_dir
@@ -15,6 +23,7 @@ from core.paths import logs_dir
 class LogPanel(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         title_row = QHBoxLayout()
@@ -30,8 +39,9 @@ class LogPanel(QWidget):
         self._text = QTextEdit()
         self._text.setReadOnly(True)
         self._text.setFont(QFont("Consolas", 11))
+        self._text.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self._clear_btn.clicked.connect(self._text.clear)
-        layout.addWidget(self._text)
+        layout.addWidget(self._text, stretch=1)
         self._path = live_log_path()
         self._offset = 0
         self._watcher = QFileSystemWatcher(self)

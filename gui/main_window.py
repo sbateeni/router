@@ -5,11 +5,12 @@ from __future__ import annotations
 import os
 
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QAction
+from PyQt6.QtGui import QAction, QGuiApplication
 from PyQt6.QtWidgets import (
     QHBoxLayout,
     QMainWindow,
     QMessageBox,
+    QSizePolicy,
     QSplitter,
     QStackedWidget,
     QTabWidget,
@@ -50,6 +51,12 @@ from gui.widgets.tool_page import ToolPage
 from gui.workers.scan_worker import ScanWorker
 
 
+def _tune_splitter(splitter: QSplitter) -> None:
+    splitter.setChildrenCollapsible(False)
+    splitter.setHandleWidth(10)
+    splitter.setOpaqueResize(True)
+
+
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -60,48 +67,77 @@ class MainWindow(QMainWindow):
 
         self._session = GuiSession()
         self._telegram_thread = None
+        self._split_sizes_applied = False
         self.setWindowTitle("AUTO-PWN UNIFIED")
-        self.resize(1200, 800)
+        self.setMinimumSize(720, 520)
+        self.resize(1280, 860)
 
         central = QWidget()
+        central.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self.setCentralWidget(central)
         root = QVBoxLayout(central)
+        root.setContentsMargins(6, 6, 6, 6)
+        root.setSpacing(6)
 
         self._target_bar = TargetBar(self._session)
         root.addWidget(self._target_bar)
 
-        split = QSplitter(Qt.Orientation.Horizontal)
-        root.addWidget(split, stretch=1)
+        h_split = QSplitter(Qt.Orientation.Horizontal)
+        _tune_splitter(h_split)
+        root.addWidget(h_split, stretch=1)
 
         self._tree = QTreeWidget()
         self._tree.setHeaderHidden(True)
-        self._tree.setMinimumWidth(220)
+        self._tree.setMinimumWidth(180)
+        self._tree.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Expanding)
         self._tree.currentItemChanged.connect(self._on_nav)
-        split.addWidget(self._tree)
+        h_split.addWidget(self._tree)
 
         right = QWidget()
+        right.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         right_layout = QVBoxLayout(right)
-        vertical_split = QSplitter(Qt.Orientation.Vertical)
+        right_layout.setContentsMargins(0, 0, 0, 0)
+        right_layout.setSpacing(0)
+
+        # Pages (top) vs console area (bottom) — drag handle between them
+        self._page_console_split = QSplitter(Qt.Orientation.Vertical)
+        _tune_splitter(self._page_console_split)
+
         self._stack = QStackedWidget()
-        vertical_split.addWidget(self._stack)
+        self._stack.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        self._stack.setMinimumHeight(80)
+        self._page_console_split.addWidget(self._stack)
+
+        # Bottom: Live Log / Artifacts tabs (small) + Terminal (large, always visible)
+        self._console_split = QSplitter(Qt.Orientation.Vertical)
+        _tune_splitter(self._console_split)
 
         self._bottom_tabs = QTabWidget()
+        self._bottom_tabs.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        self._bottom_tabs.setMinimumHeight(100)
         self._log = LogPanel()
         self._artifacts = ArtifactPanel()
-        self._terminal = TerminalPanel()
         self._bottom_tabs.addTab(self._log, "Live Log")
         self._bottom_tabs.addTab(self._artifacts, "Artifacts")
-        self._bottom_tabs.addTab(self._terminal, "Terminal")
-        vertical_split.addWidget(self._bottom_tabs)
-        vertical_split.setChildrenCollapsible(False)
-        vertical_split.setStretchFactor(0, 1)
-        vertical_split.setStretchFactor(1, 2)
-        vertical_split.setSizes([280, 420])
-        self._bottom_tabs.setMinimumHeight(300)
-        right_layout.addWidget(vertical_split, stretch=1)
-        split.addWidget(right)
-        split.setSizes([240, 960])
+        self._console_split.addWidget(self._bottom_tabs)
 
+        self._terminal = TerminalPanel()
+        self._terminal.setMinimumHeight(160)
+        self._console_split.addWidget(self._terminal)
+        self._console_split.setStretchFactor(0, 1)
+        self._console_split.setStretchFactor(1, 3)
+
+        self._page_console_split.addWidget(self._console_split)
+        self._page_console_split.setStretchFactor(0, 1)
+        self._page_console_split.setStretchFactor(1, 2)
+
+        right_layout.addWidget(self._page_console_split)
+        h_split.addWidget(right)
+        h_split.setStretchFactor(0, 0)
+        h_split.setStretchFactor(1, 1)
+        h_split.setSizes([240, 1000])
+
+        self._h_split = h_split
         self._pages: dict[str, QWidget] = {}
         self._build_nav()
         self._build_pages()
@@ -114,6 +150,23 @@ class MainWindow(QMainWindow):
         quit_action.setShortcut("Ctrl+Q")
         quit_action.triggered.connect(self.close)
         self.addAction(quit_action)
+
+    def showEvent(self, event) -> None:
+        super().showEvent(event)
+        if self._split_sizes_applied:
+            return
+        self._split_sizes_applied = True
+        screen = QGuiApplication.primaryScreen()
+        if screen:
+            avail = screen.availableGeometry()
+            w = min(max(int(avail.width() * 0.88), 960), avail.width())
+            h = min(max(int(avail.height() * 0.88), 640), avail.height())
+            self.resize(w, h)
+        h_total = max(self.height(), 640)
+        bottom_h = int(h_total * 0.58)
+        top_h = h_total - bottom_h
+        self._page_console_split.setSizes([top_h, bottom_h])
+        self._console_split.setSizes([int(bottom_h * 0.28), int(bottom_h * 0.72)])
 
     def _build_nav(self) -> None:
         self._tree.clear()
@@ -200,6 +253,7 @@ class MainWindow(QMainWindow):
         self._register("settings", settings)
 
     def _register(self, page_id: str, widget: QWidget) -> None:
+        widget.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self._pages[page_id] = widget
         self._stack.addWidget(widget)
 
@@ -248,6 +302,7 @@ class MainWindow(QMainWindow):
 
     def _on_worker(self, worker: ScanWorker) -> None:
         self._log.start_tailing(worker.job_id)
+        self._bottom_tabs.setCurrentWidget(self._log)
         worker.finished_ok.connect(lambda *_: self._after_scan())
         worker.error.connect(
             lambda msg: QMessageBox.critical(self, "Error", msg)

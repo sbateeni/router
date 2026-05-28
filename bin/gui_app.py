@@ -22,10 +22,15 @@ def main() -> int:
 
     from gui.main_window import MainWindow
 
+    from PyQt6.QtCore import Qt
+
     app = QApplication(sys.argv)
     app.setApplicationName("AUTO-PWN UNIFIED")
     window = MainWindow()
-    window.show()
+    window.setWindowFlag(Qt.WindowType.Window, True)
+    window.showNormal()
+    window.raise_()
+    window.activateWindow()
     return app.exec()
 
 
