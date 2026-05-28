@@ -8,6 +8,7 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QLabel, QListWidget, QListWidgetItem, QVBoxLayout, QWidget
 
 from gui.workspace_context import summarize_workspace
+from gui.widgets.artifact_panel import ArtifactPanel
 
 
 class WorkspacePanel(QWidget):
@@ -26,14 +27,17 @@ class WorkspacePanel(QWidget):
         layout.addWidget(self._chain)
         layout.addWidget(QLabel("<b>Artifacts for chaining</b>"))
         self._list = QListWidget()
+        self._list.itemDoubleClicked.connect(self._open_artifact)
         layout.addWidget(self._list, stretch=1)
         self._ready = QLabel("")
         self._ready.setWordWrap(True)
         layout.addWidget(self._ready)
         self.setMinimumWidth(220)
         self.setMaximumWidth(320)
+        self._target_dir = ""
 
     def refresh(self, target: str, target_dir: str) -> None:
+        self._target_dir = target_dir or ""
         if target:
             self._target.setText(f"<code>{target}</code><br><span style='color:#8b95a5'>{target_dir or '—'}</span>")
         else:
@@ -64,3 +68,11 @@ class WorkspacePanel(QWidget):
             self._ready.setText("<b>Results tab</b>" + extra)
         else:
             self._ready.setText("After each tool: open <b>Results</b> tab (summary, files, Telegram).")
+
+    def _open_artifact(self, item: QListWidgetItem) -> None:
+        tip = item.toolTip()
+        if tip and os.path.isfile(tip):
+            ArtifactPanel._open_path(tip)
+            return
+        if self._target_dir and os.path.isdir(self._target_dir):
+            ArtifactPanel._open_path(self._target_dir)

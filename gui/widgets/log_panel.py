@@ -3,9 +3,14 @@
 from __future__ import annotations
 
 import os
+import re
 
 from PyQt6.QtCore import QFileSystemWatcher, QTimer
 from PyQt6.QtGui import QFont
+
+_ANSI_ESCAPE = re.compile(r"\x1b\[[0-9;]*m")
+# Ingram spinner lines (noisy in GUI after ANSI strip).
+_INGRAM_PROGRESS = re.compile(r"^\[[➩➫➬]\]")
 from PyQt6.QtWidgets import (
     QHBoxLayout,
     QLabel,
@@ -44,6 +49,7 @@ class LogPanel(QWidget):
         layout.addWidget(self._text, stretch=1)
         self._path = live_log_path()
         self._offset = 0
+        self._ingram_banner_seen = False
         self._watcher = QFileSystemWatcher(self)
         self._timer = QTimer(self)
         self._timer.setInterval(500)
@@ -57,6 +63,7 @@ class LogPanel(QWidget):
         else:
             self._path = live_log_path()
         self._offset = 0
+        self._ingram_banner_seen = False
         self._text.clear()
         self._title.setText(f"Live log — {os.path.basename(self._path)}")
         os.makedirs(os.path.dirname(self._path), exist_ok=True)
@@ -72,6 +79,20 @@ class LogPanel(QWidget):
         self._timer.stop()
         if self._watcher.files():
             self._watcher.removePaths(self._watcher.files())
+
+    def _clean_chunk(self, chunk: str) -> str:
+        text = _ANSI_ESCAPE.sub("", chunk)
+        if "Running Ingram" in text or "run_ingram.py" in text:
+            if self._ingram_banner_seen and "➩" in text and "██" in text:
+                return ""
+            if "██" in text and "Ingram" in text:
+                self._ingram_banner_seen = True
+        lines = []
+        for line in text.splitlines(keepends=True):
+            if _INGRAM_PROGRESS.match(line):
+                continue
+            lines.append(line)
+        return "".join(lines)
 
     def append(self, text: str) -> None:
         self._text.moveCursor(self._text.textCursor().MoveOperation.End)
@@ -104,6 +125,6 @@ class LogPanel(QWidget):
                 chunk = fh.read()
                 self._offset = fh.tell()
             if chunk:
-                self.append(chunk)
+                self.append(self._clean_chunk(chunk))
         except OSError:
             pass

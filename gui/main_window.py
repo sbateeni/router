@@ -135,6 +135,8 @@ class MainWindow(QMainWindow):
         self._bottom_tabs.addTab(self._results, "Results")
         self._bottom_tabs.addTab(self._artifacts, "Artifacts")
         self._bottom_tabs.addTab(self._terminal, "Terminal")
+        self._status = self.statusBar()
+        self._status.showMessage("Ready — apply target, run a tool, then open Results tab.")
         console_layout.addWidget(self._bottom_tabs)
         self._console_dock.setWidget(console)
         self.addDockWidget(Qt.DockWidgetArea.BottomDockWidgetArea, self._console_dock)
@@ -346,15 +348,37 @@ class MainWindow(QMainWindow):
         self._results.set_context(self._session.target_dir, self._session.scan_host or self._session.target)
         self._log.start_tailing(worker.job_id)
         self._bottom_tabs.setCurrentWidget(self._log)
-        worker.finished_ok.connect(lambda *_: self._after_scan())
-        worker.error.connect(lambda msg: QMessageBox.critical(self, "Error", msg))
+        self._status.showMessage(
+            f"Running {worker.job.label or 'scan'} on {self._session.scan_host or self._session.target}…"
+        )
+        # Worker thread → UI updates must be queued.
+        worker.finished_ok.connect(self._after_scan, Qt.ConnectionType.QueuedConnection)
+        worker.error.connect(self._on_worker_error, Qt.ConnectionType.QueuedConnection)
 
-    def _after_scan(self) -> None:
+    def _on_worker_error(self, msg: str) -> None:
+        QMessageBox.critical(self, "Error", msg)
+        self._status.showMessage(f"Error: {msg[:120]}", 8000)
+
+    def _after_scan(self, ok: bool = True, msg: str = "") -> None:
         self._artifacts.set_workspace(self._session.target_dir)
         self._results.set_context(self._session.target_dir, self._session.scan_host or self._session.target)
         self._refresh_workspace_panel()
         self._set_console_visible(True)
+        self._bottom_tabs.setCurrentIndex(1)  # Results tab
         self._bottom_tabs.setCurrentWidget(self._results)
+        host = self._session.scan_host or self._session.target or "?"
+        status = "completed" if ok else f"finished ({msg})"
+        banner = (
+            f"\n{'=' * 60}\n"
+            f">>> SCAN {status.upper()} — open the Results tab (next to Live Log)\n"
+            f">>> Summary, files, next tools, Telegram: Results → Send summary\n"
+            f"{'=' * 60}\n"
+        )
+        self._log.append(banner)
+        self._status.showMessage(
+            f"Done: {msg or 'scan'} on {host} — see Results tab",
+            15000,
+        )
         dash = self._pages.get("dashboard")
         if dash:
             inner = dash.widget() if isinstance(dash, QScrollArea) else dash

@@ -42,6 +42,10 @@ class ScanWorker(QThread):
     def job_id(self) -> str:
         return self._job_id
 
+    @property
+    def job(self) -> ScanJob:
+        return self._job
+
     def run(self) -> None:
         exploited = False
         previous_env = {

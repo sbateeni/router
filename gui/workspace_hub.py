@@ -170,6 +170,7 @@ def collect_workspace_view(target_dir: str, host: str = "") -> dict[str, Any]:
             pass
 
     view["credentials"] = _find_credentials(target_dir)
+    view["ingram_note"] = _ingram_result_note(target_dir)
     view["files"] = _list_workspace_files(target_dir)
 
     for fname, label in IMPORTANT_FILES:
@@ -188,6 +189,21 @@ def collect_workspace_view(target_dir: str, host: str = "") -> dict[str, Any]:
             })
 
     return view
+
+
+def _ingram_result_note(target_dir: str) -> str:
+    path = os.path.join(target_dir, "ingram_scan.txt")
+    text = _read_text(path, 12000).lower()
+    if not text:
+        return "Ingram: no ingram_scan.txt in workspace."
+    if "vulnerable" in text or "successfully exploited" in text:
+        return "Ingram: possible hit — read ingram_scan.txt and ingram_results/"
+    if "ingram results saved" in text or os.path.isdir(os.path.join(target_dir, "ingram_results")):
+        csv = os.path.join(target_dir, "ingram_results", "results.csv")
+        if os.path.isfile(csv):
+            return f"Ingram: finished — open ingram_results/results.csv (preview in Results tab)"
+        return "Ingram: finished — open ingram_results/ folder"
+    return "Ingram: finished quickly — likely no default camera creds on this IP (ZyXEL/hik-connect mix)."
 
 
 def format_results_summary(view: dict[str, Any], *, finished_tool: str = "") -> str:
@@ -209,6 +225,10 @@ def format_results_summary(view: dict[str, Any], *, finished_tool: str = "") -> 
         lines.extend(f"  • {c}" for c in creds)
     else:
         lines.append("— لا creds مؤكدة في workspace —")
+
+    ingram_note = view.get("ingram_note")
+    if ingram_note:
+        lines.append(f"— Ingram —\n  • {ingram_note}")
 
     tools = view.get("next_tools") or []
     if tools:
