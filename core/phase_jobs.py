@@ -199,18 +199,18 @@ class PhaseRunner:
             future_map = {pool.submit(self._run_one, job): job for job in self.jobs}
             pending = set(future_map.keys())
 
-        while pending:
-            try:
-                from core.scan_cancel import is_cancelled
-                if is_cancelled():
-                    _log(f"[!] Scan cancelled — stopping {len(pending)} pending job(s)", self.phase_id)
-                    for fut in pending:
-                        fut.cancel()
-                    break
-            except Exception:
-                pass
+            while pending:
+                try:
+                    from core.scan_cancel import is_cancelled
+                    if is_cancelled():
+                        _log(f"[!] Scan cancelled — stopping {len(pending)} pending job(s)", self.phase_id)
+                        for fut in pending:
+                            fut.cancel()
+                        break
+                except Exception:
+                    pass
 
-            wait_timeout = None
+                wait_timeout = None
                 if deadline:
                     remaining = deadline - time.time()
                     if remaining <= 0:
