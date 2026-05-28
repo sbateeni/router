@@ -232,7 +232,7 @@ def build_next_tool_steps(ctx: HikvisionRunContext) -> list[ToolRecommendation]:
         add(
             "Direct Camera",
             "Utilities → Direct Camera",
-            f"Set target bar to http://admin:{ctx.digest_password}@{ctx.host} then run Direct Camera.",
+            "ISAPI Digest worked — set target bar to http://USER:PASS@IP (only if you verified the password).",
         )
 
     cve_rows = ctx.intel_summary.get("cve_assessments") or []
