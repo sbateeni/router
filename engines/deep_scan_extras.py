@@ -49,6 +49,14 @@ def run_deep_osint_phase(ip: str, target_dir: str, hints: dict | None = None) ->
     out: dict[str, Any] = {"social": None}
     hints = hints or {}
 
+    if _is_ip(ip):
+        try:
+            from core.recon.spiderfoot import run_spiderfoot_passive
+
+            out["spiderfoot"] = run_spiderfoot_passive(ip, target_dir, is_ip=True)
+        except Exception as exc:
+            log(f"[Deep] SpiderFoot (IP) skipped: {exc}", "WARNING")
+
     raw = hints.get("raw") or hints.get("seed_url") or ""
     try:
         from core.telegram_extras import detect_osint_message
@@ -81,6 +89,13 @@ def run_deep_domain_recon(ip: str, target_dir: str, hints: dict | None = None) -
         agent = ReconAgent(host, target_dir)
         data = agent.execute()
         _save_json(os.path.join(target_dir, "DEEP_RECON.json"), data)
+        try:
+            from core.recon.spiderfoot import run_spiderfoot_passive
+
+            sf = run_spiderfoot_passive(host, target_dir, is_ip=False)
+            data["spiderfoot"] = sf
+        except Exception as exc:
+            log(f"[Deep] SpiderFoot skipped: {exc}", "WARNING")
         return data
     except Exception as exc:
         log(f"[Deep] Domain recon skipped: {exc}", "WARNING")

@@ -33,7 +33,9 @@ from core.telegram.runner import start_telegram_bot_background
 from core.utils import missing_python_modules
 from gui.session import GuiSession
 
-EXTERNAL_TOOLS = ("nmap", "nuclei", "hydra", "ffuf", "gau", "nikto", "whatweb", "git")
+EXTERNAL_TOOLS = (
+    "nmap", "masscan", "curl", "nuclei", "hydra", "ffuf", "gau", "nikto", "whatweb", "git",
+)
 CRITICAL_TOOLS = ("git", "nmap", "nuclei")
 GUI_ENV_KEYS = (
     "TELEGRAM_BOT_TOKEN",

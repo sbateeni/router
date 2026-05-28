@@ -166,12 +166,12 @@ def install_external_tool_dependencies():
         check=False,
     )
 
-    kali_req = os.path.join(ROOT_DIR, "requirements-kali.txt")
+    req = os.path.join(ROOT_DIR, "requirements.txt")
     constraints = os.path.join(ROOT_DIR, "constraints-kali.txt")
-    if os.path.isfile(kali_req):
-        log("Syncing Python deps from requirements-kali.txt...", "INFO")
+    if os.path.isfile(req):
+        log("Syncing Python deps from requirements.txt...", "INFO")
         subprocess.run(
-            [sys.executable, "-m", "pip", "install", "-q", "-r", kali_req],
+            [sys.executable, "-m", "pip", "install", "-q", "-r", req],
             check=False,
         )
     if os.path.isfile(constraints):

@@ -1,7 +1,107 @@
-# AUTO-PWN — default requirements (Windows / generic Linux)
-# On Kali Linux use requirements-kali.txt instead (exact upstream pins).
+# AUTO-PWN UNIFIED — single Python requirements (Kali / Windows / GUI)
+# Pins from upstream (verified May 2026):
+#   theHarvester: https://github.com/laramies/theHarvester/blob/master/pyproject.toml
+#   dirsearch:    https://github.com/maurosoria/dirsearch/blob/master/requirements.txt
+#   RouterSploit: https://github.com/threat9/routersploit/blob/master/requirements.txt
+#   Ingram:       https://github.com/jorhelp/Ingram/blob/master/requirements.txt
 #
-#   Kali:  pip install -r requirements-kali.txt
-#   Other: pip install -r requirements.txt
+# Do NOT pip install tools/spiderfoot/requirements.txt (lxml<5 needs libxml2 build)
+# Do NOT pip install tools/netexec into .venv — use: sudo apt install netexec
+#
+# Install:
+#   python3 -m venv .venv && source .venv/bin/activate
+#   pip install -U pip setuptools wheel
+#   pip install -r requirements.txt
+#   bash scripts/install_tools.sh
+#
+# System binaries (apt — NOT pip; must be on PATH):
+#   sudo apt install -y nmap curl masscan hydra nuclei nikto whatweb netexec
+#   spiderfoot: sudo apt install spiderfoot  OR  tools/spiderfoot from install_tools.sh
 
--r requirements-kali.txt
+# --- Desktop GUI (PyQt6) ---
+PyQt6>=6.6.0
+
+# --- IoT default cred scanners (changeme + Default-Hunter) ---
+cerberus>=1.3.0
+pymysql>=1.0.0
+psycopg2-binary>=2.9.0
+python-nmap>=0.7.0
+
+# --- RouterSploit (exact) ---
+requests==2.32.2
+paramiko==2.12.0
+pysnmp
+pycryptodome
+
+# --- Dirsearch (exact, 2026-04-29) ---
+PySocks==1.7.1
+Jinja2==3.1.6
+pyopenssl==26.1.0
+requests-ntlm==1.3.0
+colorama==0.4.6
+ntlm-auth==1.5.0
+defusedcsv==3.0.0
+requests-toolbelt==1.0.0
+setuptools>=65.0.0,<81
+httpx==0.28.1
+httpx-ntlm==1.4.0
+defusedxml
+
+# --- theHarvester (exact from pyproject.toml) ---
+beautifulsoup4==4.14.3
+dnspython==2.8.0
+lxml==6.1.1
+aiohttp==3.13.5
+aiohttp-socks==0.11.0
+aiomultiprocess==0.9.1
+aiosqlite==0.22.1
+aiodns==4.0.4
+aiofiles==25.1.0
+certifi==2026.5.20
+netaddr==1.3.0
+PyYAML==6.0.3
+python-dateutil==2.9.0.post0
+retrying==1.4.2
+shodan==1.31.0
+ujson==5.12.1
+censys==2.2.19
+
+# --- Ingram ---
+gevent
+IPy
+loguru
+ndjson
+tzlocal
+pwntools; platform_system == "Linux" and platform_machine == "x86_64"
+
+# --- Project core / engines ---
+certifi
+urllib3
+python-dotenv
+selenium
+webdriver-manager
+telnetlib3
+mysql-connector-python
+psycopg[binary]
+Mako
+holehe
+sherlock-project
+
+# --- SpiderFoot (use modern lxml wheel; NOT tools/spiderfoot/requirements.txt) ---
+adblockparser
+CherryPy
+cherrypy-cors
+ExifRead
+ipwhois
+phonenumbers
+pygexf
+PyPDF2
+python-whois
+python-docx
+python-pptx
+networkx
+cryptography
+publicsuffixlist
+openpyxl
+
+wheel

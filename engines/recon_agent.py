@@ -83,7 +83,15 @@ class ReconAgent:
         if not is_ip:
             self.run_amass()
             self.run_the_harvester()
-            
+        else:
+            try:
+                from core.recon.spiderfoot import run_spiderfoot_passive
+
+                sf = run_spiderfoot_passive(self.target, self.output_dir, is_ip=True)
+                self.results["osint_data"]["spiderfoot"] = sf
+            except Exception as e:
+                log(f"[ReconAgent] SpiderFoot error: {e}", "WARNING")
+
         # Deduplicate
         self.results["subdomains"] = list(set(self.results["subdomains"]))
         self.results["emails"] = list(set(self.results["emails"]))

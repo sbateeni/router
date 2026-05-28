@@ -23,6 +23,12 @@ install_kali_apt_deps() {
     else
       echo "  [+] nxc on system: $(command -v nxc)"
     fi
+    for pkg in masscan curl; do
+      if ! command -v "$pkg" &>/dev/null; then
+        sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq "$pkg" 2>/dev/null || \
+          echo "  [i] Install optional: sudo apt install -y $pkg"
+      fi
+    done
   else
     echo "  [i] Run as root/sudo: apt install python3-venv python3-lxml libxml2-dev libxslt1-dev netexec"
   fi
@@ -51,25 +57,22 @@ install_python_deps() {
   "$PY" -m pip uninstall -y netexec certipy-ad 2>/dev/null || true
 
   "$PY" -m pip install -q -U pip wheel
-  if is_kali && [[ -f "$ROOT/requirements-kali.txt" ]]; then
+  if is_kali; then
     "$PY" -m pip install -q "setuptools>=65,<81"
   else
     "$PY" -m pip install -q -U setuptools wheel
   fi
 
   local req="$ROOT/requirements.txt"
-  if is_kali && [[ -f "$ROOT/requirements-kali.txt" ]]; then
-    req="$ROOT/requirements-kali.txt"
-    echo "  [*] Kali detected — using requirements-kali.txt (upstream pins)"
-  fi
+  echo "  [*] Installing Python deps from requirements.txt"
 
   local failed=0
   if ! "$PY" -m pip install -q -r "$req"; then
-    echo "  [!] pip install -r $(basename "$req") failed"
+    echo "  [!] pip install -r requirements.txt failed"
     failed=1
   fi
 
-  # theHarvester: CLI only; deps already in requirements-kali.txt
+  # theHarvester: CLI only; deps already in requirements.txt
   if [[ -d "$ROOT/tools/theHarvester" ]] && [[ -f "$ROOT/tools/theHarvester/pyproject.toml" ]]; then
     echo "  [*] theHarvester (--no-deps)"
     "$PY" -m pip install -q --no-deps "$ROOT/tools/theHarvester" || failed=1
@@ -90,7 +93,7 @@ install_python_deps() {
   fi
 
   echo "  [i] SpiderFoot: do NOT pip tools/spiderfoot/requirements.txt on Kali"
-  echo "      Use: sudo apt install spiderfoot  OR deps in requirements-kali.txt"
+  echo "      Use: sudo apt install spiderfoot  OR deps in requirements.txt"
 
   if [[ "$failed" -eq 1 ]]; then
     echo

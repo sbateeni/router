@@ -5,14 +5,14 @@ English LTR desktop interface for AUTO-PWN UNIFIED. Mirrors the CLI tool catalog
 ## Install
 
 ```bash
-pip install -r requirements-gui.txt
+pip install -r requirements.txt
 ```
 
 On Kali, use the project venv:
 
 ```bash
 source .venv/bin/activate
-pip install -r requirements-gui.txt
+pip install -r requirements.txt
 ```
 
 ## Launch

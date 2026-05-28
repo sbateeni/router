@@ -17,7 +17,7 @@ def main() -> int:
         from PyQt6.QtWidgets import QApplication
     except ImportError:
         print("[!] PyQt6 is not installed.")
-        print("[*] Install with: pip install -r requirements-gui.txt")
+        print("[*] Install with: pip install -r requirements.txt")
         return 1
 
     from gui.main_window import MainWindow

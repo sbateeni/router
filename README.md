@@ -12,7 +12,7 @@ cd router
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -U pip setuptools wheel
-pip install -r requirements-kali.txt   # Kali: exact pins from upstream tools
+pip install -r requirements.txt
 chmod +x run.sh scripts/install_tools.sh scripts/fix_venv_kali.sh
 bash scripts/install_tools.sh    # clones tools/ + merges tool-specific pins
 ./run.sh
@@ -91,7 +91,7 @@ Pins match official tool repos ([theHarvester](https://github.com/laramies/theHa
 
 **NetExec (`nxc`)**: never in `.venv` — Kali package: `sudo apt install netexec` ([kali.org/tools/netexec](https://www.kali.org/tools/netexec/))
 
-**SpiderFoot**: never `pip install -r tools/spiderfoot/requirements.txt` — use `requirements-kali.txt` or `sudo apt install spiderfoot`
+**SpiderFoot**: never `pip install -r tools/spiderfoot/requirements.txt` — use `requirements.txt` or `sudo apt install spiderfoot`
 
 Repair a broken venv:
 
@@ -108,7 +108,7 @@ If `fix_venv_kali.sh` is missing after pull, run manually:
 ```bash
 source .venv/bin/activate
 pip uninstall -y netexec certipy-ad
-pip install -r requirements-kali.txt
+pip install -r requirements.txt
 pip install -c constraints-kali.txt paramiko beautifulsoup4 dnspython lxml requests
 sudo apt install -y netexec
 ```
@@ -117,7 +117,7 @@ Clean reinstall:
 
 ```bash
 rm -rf .venv && python3 -m venv .venv && source .venv/bin/activate
-pip install -r requirements-kali.txt
+pip install -r requirements.txt
 bash scripts/install_tools.sh
 ```
 

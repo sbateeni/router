@@ -17,7 +17,7 @@ echo "[*] Removing NetExec/certipy from .venv (use system: sudo apt install nete
 
 echo "[*] Reinstalling Kali-pinned packages..."
 "$PY" -m pip install -q -U pip setuptools wheel
-"$PY" -m pip install -r "$ROOT/requirements-kali.txt"
+"$PY" -m pip install -r "$ROOT/requirements.txt"
 "$PY" -m pip install -q -c "$ROOT/constraints-kali.txt" \
   paramiko beautifulsoup4 dnspython lxml requests
 

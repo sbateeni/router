@@ -116,6 +116,14 @@ def run_all_classic_tools(ip, target_dir, selection=1):
         print(f"[*] Target hints: {hints.get('raw') or hints.get('seed_url')}")
         transcript_event(f"[*] Target hints: {hints.get('raw') or hints.get('seed_url')}")
 
+    if get_scan_profile().get("preflight_enabled", True):
+        try:
+            from core.recon.preflight import run_connectivity_preflight
+
+            run_connectivity_preflight(ip, target_dir, hints)
+        except Exception as exc:
+            print(f"[!] Connectivity preflight error: {exc}")
+
     if deep:
         print("\n>>> PHASE 0: Deep OSINT & recon (Social, domain tools)")
         print("[*] Deep mode: ALL tools will run — results feed the next phase")
@@ -149,6 +157,15 @@ def run_all_classic_tools(ip, target_dir, selection=1):
             timeout=get_scan_profile().get("phase1_main_timeout", 2400),
             target_dir=target_dir,
         ) as prog:
+            if get_scan_profile().get("local_net_snapshot"):
+                try:
+                    from core.recon.local_net import snapshot_local_connections
+
+                    prog.set_status("local connection snapshot (ss/netstat)")
+                    snapshot_local_connections(target_dir)
+                except Exception as exc:
+                    print(f"[!] Local net snapshot: {exc}")
+
             prog.set_status("Nmap port scan")
             try:
                 context.open_ports = run_nmap(ip, target_dir)

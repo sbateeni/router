@@ -57,6 +57,10 @@ Complete reference of every tool, module, and external dependency used in this p
 | 17 | Nikto | `core/recon_tools.py` | `nikto` |
 | 18 | WhatWeb | `core/recon_tools.py` | `whatweb` |
 | 19 | Nmap vuln scripts | `core/recon_tools.py` | `nmap --script vuln` |
+| — | **Curl preflight** | `core/recon/preflight.py` | `curl` — connectivity + external IP (`CONNECTIVITY.json`) |
+| — | **Masscan** (deep only) | `core/recon/masscan.py` | `masscan` → feeds focused Nmap |
+| — | **SpiderFoot** (deep Phase 0) | `core/recon/spiderfoot.py` | `tools/spiderfoot/sf.py` or `apt install spiderfoot` |
+| — | **Local ss/netstat** (deep Phase 1) | `core/recon/local_net.py` | workstation socket snapshot |
 | 21 | Device Engine | `engines/auto_pwn_main.py` | See engines section |
 
 ---
@@ -288,6 +292,8 @@ export AUTOPWN_HEARTBEAT_TELEGRAM=0       # disable Telegram heartbeats
 |--------|------|---------|--------|
 | python3 | yes | yes | yes |
 | nmap | yes | install | pkg |
+| masscan | deep only | install | `sudo apt install masscan` |
+| curl | preflight | usually preinstalled | connectivity checks |
 | nuclei | yes | .exe | ARM bin |
 | hydra | yes | no | pkg |
 | john | yes | no | pkg |

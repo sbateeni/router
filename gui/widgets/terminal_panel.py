@@ -39,9 +39,9 @@ class TerminalPanel(QWidget):
         )
         quick.addWidget(self._btn_update_all)
 
-        self._btn_install_gui = QPushButton("Install GUI deps")
+        self._btn_install_gui = QPushButton("Install Python deps")
         self._btn_install_gui.clicked.connect(
-            lambda: self.run_preset_command(f"\"{sys.executable}\" -m pip install -r requirements-gui.txt")
+            lambda: self.run_preset_command(f"\"{sys.executable}\" -m pip install -r requirements.txt")
         )
         quick.addWidget(self._btn_install_gui)
 

@@ -71,13 +71,26 @@ def _phase0_lines(target_dir):
             lines.append(f"• Domain recon: {len(subs)} host/subdomain")
         elif recon:
             lines.append("• Domain recon: تم")
+    sf = _load_json(os.path.join(target_dir, "SPIDERFOOT.json"))
+    if sf and sf.get("ok"):
+        lines.append("• SpiderFoot: تم")
+    elif sf and not sf.get("error") == "not_installed":
+        lines.append("• SpiderFoot: جزئي")
     if not lines:
         lines.append("• OSINT: لا نتائج ملحوظة")
     return lines
 
 
-def _phase1_lines(profile, context):
+def _phase1_lines(profile, context, target_dir=None):
     lines = []
+    if target_dir:
+        conn = _load_json(os.path.join(target_dir, "CONNECTIVITY.json"))
+        mass = _load_json(os.path.join(target_dir, "MASSCAN_PORTS.json"))
+        if conn:
+            flag = "متاح" if conn.get("reachable") else "لا استجابة HTTP"
+            lines.append(f"• Curl preflight: {flag}")
+        if mass and mass.get("count"):
+            lines.append(f"• Masscan: {mass['count']} منفذ")
     ports = getattr(context, "open_ports", None) or []
     if ports:
         port_nums = []
@@ -219,7 +232,7 @@ def _build_body(phase_id, title, ip, target_dir, profile, context, skipped=False
     elif phase_id == "0":
         lines.extend(_phase0_lines(target_dir))
     elif phase_id == "1":
-        lines.extend(_phase1_lines(profile or {}, context))
+        lines.extend(_phase1_lines(profile or {}, context, target_dir))
     elif phase_id == "2":
         lines.extend(_phase2_lines(target_dir, context))
     elif phase_id == "3":

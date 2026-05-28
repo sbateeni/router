@@ -10,8 +10,22 @@ def run_nmap(ip, target_dir):
     profile = get_scan_profile()
     print(f"\n[*] Starting Nmap scan on {ip} [{profile['label']}]...")
 
+    masscan_ports: list[int] = []
+    if profile.get("masscan_enabled"):
+        try:
+            from core.recon.masscan import run_masscan_discovery
+
+            masscan_ports = run_masscan_discovery(ip, target_dir)
+        except Exception as exc:
+            print(f"[!] Masscan skipped: {exc}")
+
     quick_log = os.path.join(target_dir, "nmap_scan.txt")
-    quick_cmd = ["nmap"] + profile["nmap_quick_args"] + [ip]
+    quick_args = list(profile["nmap_quick_args"])
+    if masscan_ports:
+        port_str = ",".join(str(p) for p in masscan_ports[:300])
+        quick_args = ["-sS", "-sV", "-T4", "--open", "-p", port_str]
+        print(f"[*] Nmap focused on {len(masscan_ports)} Masscan port(s)")
+    quick_cmd = ["nmap"] + quick_args + [ip]
     success, output = run_cmd(quick_cmd, capture=True, log_file=quick_log)
     if not success and not output:
         print("[-] Nmap scan failed or Nmap is not installed.")
