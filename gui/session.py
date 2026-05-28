@@ -37,6 +37,19 @@ class GuiSession:
         set_scan_profile(self.profile)
         os.environ["AUTOPWN_SCAN_SOURCE"] = "gui"
         os.environ["ENGINE_WORKSPACE"] = self.target_dir
+        try:
+            from core.target_history import record_session
+
+            record_session(
+                target=self.target,
+                scan_host=self.scan_host,
+                workspace_name=self.workspace_name,
+                target_dir=self.target_dir,
+                profile=self.profile,
+                status=None,
+            )
+        except Exception:
+            pass
         return True
 
     def set_profile(self, profile: str) -> None:

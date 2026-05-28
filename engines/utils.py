@@ -76,6 +76,13 @@ def save_success(ip, service, credentials):
     data["status"] = "PWNED"
     data.setdefault("pwned_services", []).append({"service": service, "creds": credentials})
     update_target_data(ip, data)
+
+    try:
+        from core.target_history import mark_pwned
+
+        mark_pwned(ip, service, credentials)
+    except Exception:
+        pass
     
     log(f"Target {ip} saved to database", "SUCCESS")
 

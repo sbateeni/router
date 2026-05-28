@@ -32,11 +32,11 @@ from gui.pages.engine_pages import (
     DecepticonPage,
     EngineAutoPwnPage,
     FrameworkUpdatePage,
-    HistoryPage,
     LanScanPage,
     OsintPage,
     PocScraperPage,
 )
+from gui.pages.history_page import HistoryPage
 from gui.pages.settings import SettingsPage
 from gui.pages.utilities_pages import (
     build_test_cve_page,
@@ -282,6 +282,7 @@ class MainWindow(QMainWindow):
             inner.refresh()
         elif isinstance(inner, HistoryPage):
             inner.refresh()
+            inner._banner.refresh()
         elif isinstance(inner, ToolPage):
             inner._banner.refresh()
         elif isinstance(inner, ComprehensivePage):
@@ -318,8 +319,16 @@ class MainWindow(QMainWindow):
 
     def _on_history_target(self, ip: str) -> None:
         self._session.target = ip
+        self._session.keep_artifacts = True
+        self._target_bar._target_edit.setText(ip)
+        prof = self._session.profile
+        idx = self._target_bar._profile_combo.findText(prof)
+        if idx >= 0:
+            self._target_bar._profile_combo.setCurrentIndex(idx)
+        self._target_bar._keep_cb.setChecked(True)
         self._target_bar.sync_from_session()
         self._artifacts.set_workspace(self._session.target_dir)
+        self._refresh_workspace_panel()
         self._refresh_workspace_panel()
 
     def _on_worker(self, worker: ScanWorker) -> None:

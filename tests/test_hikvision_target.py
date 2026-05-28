@@ -16,8 +16,12 @@ from __future__ import annotations
 
 import argparse
 import base64
+import sys
 
-import bootstrap  # noqa: F401
+try:
+    import bootstrap  # noqa: F401 — when run as tests/test_hikvision_target.py
+except ModuleNotFoundError:
+    from tests import bootstrap  # noqa: F401 — when imported from GUI package
 import requests
 import urllib3
 from requests.auth import HTTPDigestAuth

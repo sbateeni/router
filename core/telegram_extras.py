@@ -142,26 +142,21 @@ def format_lan_scan() -> tuple[str, list[dict]]:
 
 
 def format_history() -> tuple[str, list[str]]:
-    db_dir = os.path.join(project_root(), "db")
-    if not os.path.isdir(db_dir):
-        return "No previous targets (db/ empty).", []
+    from core.target_history import list_sessions
+
+    sessions = list_sessions(merge_workspaces=True)
+    if not sessions:
+        return "No previous targets — Apply target or run a scan in the GUI.", []
 
     ips: list[str] = []
-    lines = ["📂 Previous targets:", ""]
-    for i, name in enumerate(sorted(f for f in os.listdir(db_dir) if f.endswith(".json")), 1):
-        path = os.path.join(db_dir, name)
-        try:
-            with open(path, encoding="utf-8") as fh:
-                data = json.load(fh)
-            ip = data.get("ip", name.replace(".json", ""))
-            status = data.get("status", "UNKNOWN")
-            ips.append(ip)
-            lines.append(f"  [{i}] {ip:<15} | {status}")
-        except OSError:
-            continue
+    lines = ["📂 Target history:", ""]
+    for i, s in enumerate(sessions[:30], 1):
+        ip = s.get("scan_host") or s.get("target", "?")
+        status = s.get("status", "?")
+        arts = s.get("artifact_count", 0)
+        ips.append(ip)
+        lines.append(f"  [{i}] {ip:<15} | {status} | {arts} files")
 
-    if not ips:
-        return "No valid history entries.", []
     lines.append("\nSend IP/URL or use scan modes on any listed target.")
     return "\n".join(lines), ips
 

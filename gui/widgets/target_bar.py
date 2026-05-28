@@ -13,6 +13,7 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
+from gui.app_restart import restart_application
 from gui.session import GuiSession
 
 
@@ -51,8 +52,15 @@ class TargetBar(QWidget):
         layout.addWidget(self._apply_btn)
 
         self._reset_btn = QPushButton("New workspace")
+        self._reset_btn.setObjectName("secondaryBtn")
         self._reset_btn.clicked.connect(self._reset_workspace)
         layout.addWidget(self._reset_btn)
+
+        self._restart_btn = QPushButton("Restart app")
+        self._restart_btn.setObjectName("secondaryBtn")
+        self._restart_btn.setToolTip("Close and relaunch the GUI (bin/gui_app.py)")
+        self._restart_btn.clicked.connect(lambda: restart_application(self.window()))
+        layout.addWidget(self._restart_btn)
 
         self._ws_label = QLabel("")
         layout.addWidget(self._ws_label, stretch=1)

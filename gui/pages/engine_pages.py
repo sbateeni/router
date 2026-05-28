@@ -147,63 +147,6 @@ class LanScanPage(QWidget):
         self.device_selected.emit(url, ports)
 
 
-class HistoryPage(QWidget):
-    target_selected = pyqtSignal(str)
-
-    def __init__(self, session: GuiSession, parent=None):
-        super().__init__(parent)
-        self._session = session
-        layout = QVBoxLayout(self)
-        layout.addWidget(QLabel("<h2>Target History</h2>"))
-        self._refresh_btn = QPushButton("Refresh")
-        self._refresh_btn.clicked.connect(self.refresh)
-        self._use_btn = QPushButton("Use selected target")
-        self._use_btn.clicked.connect(self._use_selected)
-        row = QHBoxLayout()
-        row.addWidget(self._refresh_btn)
-        row.addWidget(self._use_btn)
-        layout.addLayout(row)
-        self._table = QTableWidget(0, 3)
-        self._table.setHorizontalHeaderLabels(["IP", "Status", "File"])
-        self._table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
-        layout.addWidget(self._table)
-        self._files: list[str] = []
-
-    def refresh(self) -> None:
-        db_dir = os.path.join(project_root(), "db")
-        self._table.setRowCount(0)
-        self._files = []
-        if not os.path.isdir(db_dir):
-            return
-        for name in sorted(os.listdir(db_dir)):
-            if not name.endswith(".json"):
-                continue
-            path = os.path.join(db_dir, name)
-            ip = name.replace(".json", "")
-            status = "?"
-            try:
-                with open(path, encoding="utf-8") as fh:
-                    data = json.load(fh)
-                status = data.get("status", "?")
-            except (OSError, json.JSONDecodeError):
-                pass
-            row = self._table.rowCount()
-            self._table.insertRow(row)
-            self._table.setItem(row, 0, QTableWidgetItem(ip))
-            self._table.setItem(row, 1, QTableWidgetItem(str(status)))
-            self._table.setItem(row, 2, QTableWidgetItem(name))
-            self._files.append(ip)
-
-    def _use_selected(self) -> None:
-        rows = self._table.selectionModel().selectedRows()
-        if not rows:
-            return
-        ip = self._table.item(rows[0].row(), 0).text()
-        self._session.target = ip
-        self._session.prepare(force_reset=False)
-        self.target_selected.emit(ip)
-
-
 class OsintPage(QWidget):
     run_requested = pyqtSignal(object)
 

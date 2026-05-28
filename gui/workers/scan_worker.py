@@ -80,6 +80,21 @@ class ScanWorker(QThread):
             self.error.emit(str(exc))
             self.finished_ok.emit(False, str(exc))
         finally:
+            try:
+                if self._session.target_dir and self._session.scan_host:
+                    from core.target_history import record_session
+
+                    record_session(
+                        target=self._session.target,
+                        scan_host=self._session.scan_host,
+                        workspace_name=self._session.workspace_name,
+                        target_dir=self._session.target_dir,
+                        profile=self._session.profile,
+                        status="SCANNED",
+                        note=self._job.label or "",
+                    )
+            except Exception:
+                pass
             finish_job(self._job_id)
             uninstall_gui_bridge()
             self._restore_env(previous_env)

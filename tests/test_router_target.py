@@ -4,7 +4,10 @@
 import argparse
 import re
 
-import bootstrap  # noqa: F401
+try:
+    import bootstrap  # noqa: F401
+except ModuleNotFoundError:
+    from tests import bootstrap  # noqa: F401
 import requests
 
 from engines.credential_hunter import (
