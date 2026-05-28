@@ -70,19 +70,21 @@ def run_selected_tool(selection, ip, target_dir, profile="normal", subnet=None):
             header=f"Selection: {selection} | profile: {profile}",
             live_source=source,
         )
+    exploited = False
     try:
         with mirror_stdout():
             check_cancelled()
             if selection in ENGINE_CHOICES:
-                return run_device_engine_only(ip, target_dir)
-            if selection in CLASSIC_CHOICES:
-                return _run_classic(selection, ip, target_dir)
-            if selection in AI_CHOICES:
-                return _run_ai(selection, ip, target_dir)
-            if selection in RECON_CHOICES:
-                return _run_recon(selection, ip, target_dir, subnet=subnet)
-            print(f"[-] Unknown selection: {selection}")
-            return False
+                exploited = bool(run_device_engine_only(ip, target_dir))
+            elif selection in CLASSIC_CHOICES:
+                exploited = bool(_run_classic(selection, ip, target_dir))
+            elif selection in AI_CHOICES:
+                exploited = bool(_run_ai(selection, ip, target_dir))
+            elif selection in RECON_CHOICES:
+                exploited = bool(_run_recon(selection, ip, target_dir, subnet=subnet))
+            else:
+                print(f"[-] Unknown selection: {selection}")
+                exploited = False
     except ScanCancelled:
         print("[!] Scan cancelled by user")
         raise
@@ -90,6 +92,20 @@ def run_selected_tool(selection, ip, target_dir, profile="normal", subnet=None):
         if selection != 1:
             transcript_end()
         live_end()
+        if os.environ.get("AUTOPWN_GUI") != "1":
+            try:
+                from core.workflow_recommendations import emit_post_tool_recommendations
+
+                emit_post_tool_recommendations(
+                    target_dir,
+                    ip,
+                    finished_tool=selection,
+                    job_kind="tool",
+                    exploited=exploited,
+                )
+            except Exception as exc:
+                print(f"[!] Workflow recommendations skipped: {exc}")
+    return exploited
 
 
 def _run_classic(selection, ip, target_dir):

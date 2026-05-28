@@ -43,6 +43,7 @@ class ScanWorker(QThread):
         return self._job_id
 
     def run(self) -> None:
+        exploited = False
         previous_env = {
             "AUTOPWN_GUI": os.environ.get("AUTOPWN_GUI"),
             "AUTOPWN_LIVE_WINDOW": os.environ.get("AUTOPWN_LIVE_WINDOW"),
@@ -71,8 +72,8 @@ class ScanWorker(QThread):
                 return
             os.environ["ENGINE_WORKSPACE"] = self._session.target_dir
             self._session.set_profile(self._session.profile)
-            result = self._execute()
-            self.finished_ok.emit(bool(result), self._job.label or "done")
+            exploited = bool(self._execute())
+            self.finished_ok.emit(exploited, self._job.label or "done")
         except ScanCancelled:
             self.log_line.emit("[!] Scan cancelled by user.\n")
             self.finished_ok.emit(False, "cancelled")
@@ -80,6 +81,7 @@ class ScanWorker(QThread):
             self.error.emit(str(exc))
             self.finished_ok.emit(False, str(exc))
         finally:
+            self._emit_workflow_recommendations(exploited)
             try:
                 if self._session.target_dir and self._session.scan_host:
                     from core.target_history import record_session
@@ -99,6 +101,28 @@ class ScanWorker(QThread):
             uninstall_gui_bridge()
             self._restore_env(previous_env)
             self._release_slot()
+
+    def _emit_workflow_recommendations(self, exploited: bool) -> None:
+        try:
+            if not self._session.target_dir:
+                return
+            from core.workflow_recommendations import emit_post_tool_recommendations
+
+            finished: str | int | None
+            if self._job.kind == "tool" and self._job.selection is not None:
+                finished = self._job.selection
+            else:
+                finished = self._job.label or self._job.kind
+
+            emit_post_tool_recommendations(
+                self._session.target_dir,
+                self._session.scan_host or self._session.target or "",
+                finished_tool=finished,
+                job_kind=self._job.kind,
+                exploited=exploited,
+            )
+        except Exception as exc:
+            print(f"[!] Workflow recommendations skipped: {exc}")
 
     def _execute(self) -> Any:
         job = self._job

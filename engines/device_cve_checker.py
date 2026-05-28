@@ -290,6 +290,10 @@ def fetch_hikvision_device_info(host: str, port: int = 80, auth: tuple[str, str]
                 r = session.get(f"{url}?auth=YWRtaW46MTEK", timeout=10)
         if r.status_code != 200:
             return {}
+        from engines.hikvision_snapshots import is_isapi_xml
+
+        if not is_isapi_xml(r.content):
+            return {}
         text = r.text
         info: dict[str, str] = {}
         for tag in ("model", "firmwareVersion", "firmwareReleasedDate", "deviceName", "serialNumber", "macAddress", "deviceType"):

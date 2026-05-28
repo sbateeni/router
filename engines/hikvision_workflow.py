@@ -10,16 +10,10 @@ from typing import Any
 
 import requests
 
+from core.workflow_recommendations import ToolRecommendation
+
 BACKDOOR_B64 = "YWRtaW46MTEK"
 MIN_SNAPSHOT_BYTES = 1000
-
-
-@dataclass
-class NextToolStep:
-    priority: int
-    gui_name: str
-    nav_hint: str
-    reason: str
 
 
 @dataclass
@@ -205,14 +199,14 @@ def capture_snapshots(
     return saved
 
 
-def build_next_tool_steps(ctx: HikvisionRunContext) -> list[NextToolStep]:
+def build_next_tool_steps(ctx: HikvisionRunContext) -> list[ToolRecommendation]:
     """Map findings → sidebar tool names (GUI navigation labels)."""
-    steps: list[NextToolStep] = []
+    steps: list[ToolRecommendation] = []
     p = 1
 
     def add(gui_name: str, nav_hint: str, reason: str) -> None:
         nonlocal p
-        steps.append(NextToolStep(p, gui_name, nav_hint, reason))
+        steps.append(ToolRecommendation(p, gui_name, nav_hint, reason))
         p += 1
 
     if ctx.snapshot_paths:
@@ -301,7 +295,7 @@ def build_next_tool_steps(ctx: HikvisionRunContext) -> list[NextToolStep]:
 
     # De-duplicate by gui_name keeping first (highest priority)
     seen: set[str] = set()
-    unique: list[NextToolStep] = []
+    unique: list[ToolRecommendation] = []
     for s in sorted(steps, key=lambda x: x.priority):
         if s.gui_name in seen:
             continue
@@ -310,21 +304,6 @@ def build_next_tool_steps(ctx: HikvisionRunContext) -> list[NextToolStep]:
     for i, s in enumerate(unique, start=1):
         s.priority = i
     return unique[:8]
-
-
-def print_next_tool_steps(steps: list[NextToolStep]) -> None:
-    print("\n" + "=" * 70)
-    print("  NEXT TOOLS — اذهب إلى الأداة التالية في الواجهة")
-    print("=" * 70)
-    if not steps:
-        print("  (لا توجد توصيات — راجع Artifacts في الـ workspace)")
-        print("=" * 70 + "\n")
-        return
-    for s in steps:
-        print(f"\n  [{s.priority}] {s.gui_name}")
-        print(f"      المسار: {s.nav_hint}")
-        print(f"      السبب: {s.reason}")
-    print("\n" + "=" * 70 + "\n")
 
 
 def save_run_report(target_dir: str, payload: dict[str, Any]) -> str:
@@ -345,13 +324,17 @@ def run_post_test_workflow(
     import os as _os
 
     from core.paths import project_root
-    from core.workspace_ports import load_open_ports_from_workspace, open_port_numbers
+    from core.workspace_ports import load_open_ports_from_workspace, open_port_numbers, prefer_hikvision_http_ports
 
     td = target_dir or _os.environ.get("ENGINE_WORKSPACE") or _os.path.join(
         project_root(), "targets", ctx.host
     )
     cached = load_open_ports_from_workspace(td)
     ctx.open_ports = open_port_numbers(cached)
+    if cached:
+        ranked = prefer_hikvision_http_ports(cached)
+        if ranked and ranked[0] != ctx.http_port and ctx.digest_valid:
+            print(f"[*] Using Digest-confirmed HTTP port {ctx.http_port} (ranked: {ranked})")
 
     auth = ("admin", ctx.digest_password) if ctx.digest_password else None
     use_backdoor = ctx.backdoor_confirmed and not auth
@@ -414,7 +397,6 @@ def run_post_test_workflow(
         print("\n[6] SCREENSHOTS — skipped (no working backdoor or Digest password)")
 
     steps = build_next_tool_steps(ctx)
-    print_next_tool_steps(steps)
 
     report = {
         "host": ctx.host,
@@ -430,5 +412,17 @@ def run_post_test_workflow(
         "next_tools": [asdict(s) for s in steps],
     }
     path = save_run_report(td, report)
-    print(f"[*] Full report: {path}")
+    print(f"[*] Hikvision report: {path}")
+
+    if os.environ.get("AUTOPWN_GUI") != "1":
+        from core.workflow_recommendations import emit_post_tool_recommendations
+
+        emit_post_tool_recommendations(
+            td,
+            ctx.host,
+            finished_tool="test-hikvision",
+            job_kind="custom",
+            exploited=ctx.backdoor_confirmed or ctx.digest_valid,
+            extra_steps=steps,
+        )
     return ctx
