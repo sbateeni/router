@@ -94,7 +94,19 @@ class ScanWorker(QThread):
         subnet = session.subnet or None
 
         if job.kind == "custom" and job.custom_fn:
-            return job.custom_fn()
+            from core.live_scan_log import begin as live_begin, end as live_end, mirror_stdout
+
+            label = job.label or "custom"
+            host = session.scan_host or session.target or "?"
+            live_begin(f"{host} | {label}", source="gui")
+            try:
+                with mirror_stdout():
+                    result = job.custom_fn()
+                if result is None:
+                    return True
+                return bool(result)
+            finally:
+                live_end()
 
         if job.kind == "engine":
             from engines.auto_pwn_main import main as engine_main

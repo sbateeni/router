@@ -14,6 +14,7 @@ from PyQt6.QtWidgets import (
 
 from core.scan_cancel import cancel_job
 from gui.session import GuiSession
+from gui.widgets.target_banner import TargetBanner
 from gui.workers.scan_worker import ScanJob, ScanWorker
 
 
@@ -26,9 +27,7 @@ class ComprehensivePage(QWidget):
         self._worker: ScanWorker | None = None
 
         layout = QVBoxLayout(self)
-        self._banner = QLabel()
-        self._banner.setObjectName("targetBanner")
-        self._banner.setWordWrap(True)
+        self._banner = TargetBanner(session)
         layout.addWidget(self._banner)
         layout.addWidget(QLabel("<h2>Comprehensive Scan</h2>"))
         layout.addWidget(
@@ -58,18 +57,9 @@ class ComprehensivePage(QWidget):
         self._hint.setWordWrap(True)
         layout.addWidget(self._hint)
         layout.addStretch()
-        self._refresh_banner()
-
-    def _refresh_banner(self) -> None:
-        t = self._session.target.strip() or "(set target above)"
-        self._banner.setText(
-            f"<b>Target:</b> <code>{t}</code> — full pipeline writes to "
-            f"<code>{self._session.target_dir or '…'}</code>"
-        )
-
     def showEvent(self, event) -> None:
         super().showEvent(event)
-        self._refresh_banner()
+        self._banner.refresh()
 
     def _start(self, mode: str) -> None:
         if not self._session.target.strip():
@@ -78,7 +68,7 @@ class ComprehensivePage(QWidget):
         if not self._session.prepare():
             QMessageBox.warning(self, "Workspace error", "Could not prepare target workspace.")
             return
-        self._refresh_banner()
+        self._banner.refresh()
         if mode == "deep":
             self._session.set_profile("deep")
         elif mode == "normal":

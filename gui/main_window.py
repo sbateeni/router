@@ -283,12 +283,9 @@ class MainWindow(QMainWindow):
         elif isinstance(inner, HistoryPage):
             inner.refresh()
         elif isinstance(inner, ToolPage):
-            inner.refresh_context()
-        else:
-            from gui.pages.comprehensive import ComprehensivePage
-
-            if isinstance(inner, ComprehensivePage):
-                inner._refresh_banner()
+            inner._banner.refresh()
+        elif isinstance(inner, ComprehensivePage):
+            inner._banner.refresh()
 
         self._refresh_workspace_panel()
 
@@ -302,7 +299,7 @@ class MainWindow(QMainWindow):
         for w in self._pages.values():
             inner = w.widget() if isinstance(w, QScrollArea) else w
             if isinstance(inner, ToolPage):
-                inner.refresh_context()
+                inner._banner.refresh()
 
     def _on_lan_device(self, url: str, ports) -> None:
         from gui.workers.scan_worker import ScanJob

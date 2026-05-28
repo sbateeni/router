@@ -14,6 +14,7 @@ from PyQt6.QtWidgets import (
 
 from core.scan_cancel import cancel_job
 from gui.session import GuiSession
+from gui.widgets.target_banner import TargetBanner
 from gui.workers.scan_worker import ScanJob, ScanWorker
 
 
@@ -42,9 +43,7 @@ class ToolPage(QWidget):
         layout = QVBoxLayout(self)
         layout.setSpacing(10)
 
-        self._banner = QLabel()
-        self._banner.setObjectName("targetBanner")
-        self._banner.setWordWrap(True)
+        self._banner = TargetBanner(session)
         layout.addWidget(self._banner)
 
         layout.addWidget(QLabel(f"<h2 style='margin:0'>{title}</h2>"))
@@ -68,21 +67,10 @@ class ToolPage(QWidget):
         row.addStretch()
         layout.addLayout(row)
         layout.addStretch()
-        self.refresh_context()
-
-    def refresh_context(self) -> None:
-        t = self._session.target.strip() or "(no target — set above and Apply)"
-        prof = self._session.profile
-        ws = self._session.target_dir or "workspace not created yet"
-        self._banner.setText(
-            f"<b>Active target:</b> <code>{t}</code> &nbsp;|&nbsp; "
-            f"<b>Profile:</b> {prof}<br>"
-            f"<span style='color:#8b95a5'>Workspace: {ws}</span>"
-        )
 
     def showEvent(self, event) -> None:
         super().showEvent(event)
-        self.refresh_context()
+        self._banner.refresh()
 
     def _start(self) -> None:
         if not self._session.target.strip():
@@ -95,7 +83,7 @@ class ToolPage(QWidget):
         if not self._session.prepare():
             QMessageBox.warning(self, "Workspace error", "Could not prepare target workspace.")
             return
-        self.refresh_context()
+        self._banner.refresh()
         job = ScanJob(
             kind=self._kind,
             label=self._title,
@@ -117,7 +105,7 @@ class ToolPage(QWidget):
     def _on_done(self, _ok: bool, _msg: str) -> None:
         self._run_btn.setEnabled(True)
         self._cancel_btn.setEnabled(False)
-        self.refresh_context()
+        self._banner.refresh()
 
     def _on_error(self, msg: str) -> None:
         QMessageBox.critical(self, "Scan error", msg)
