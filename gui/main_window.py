@@ -20,6 +20,7 @@ from PyQt6.QtWidgets import (
 
 from core.notify import load_dotenv
 from core.paths import project_root, setup_project_env
+from core.telegram.runner import start_telegram_bot_background
 from gui.navigation import CATEGORIES, NAV_ITEMS, PAGE_SPECS
 from gui.pages.comprehensive import ComprehensivePage
 from gui.pages.dashboard import DashboardPage
@@ -56,6 +57,7 @@ class MainWindow(QMainWindow):
         os.environ["AUTOPWN_SCAN_SOURCE"] = "gui"
 
         self._session = GuiSession()
+        self._telegram_thread = None
         self.setWindowTitle("AUTO-PWN UNIFIED")
         self.resize(1200, 800)
 
@@ -89,7 +91,7 @@ class MainWindow(QMainWindow):
         aw.setContentsMargins(0, 0, 0, 0)
         aw.addWidget(self._artifacts)
         log_split.addWidget(self._artifact_wrap)
-        log_split.setSizes([400, 180])
+        log_split.setSizes([560, 120])
         right_layout.addWidget(log_split, stretch=1)
         split.addWidget(right)
         split.setSizes([240, 960])
@@ -100,6 +102,7 @@ class MainWindow(QMainWindow):
 
         self._target_bar.target_changed.connect(self._on_target_changed)
         self._show_page("dashboard")
+        self._maybe_start_telegram_listener()
 
         quit_action = QAction("Quit", self)
         quit_action.setShortcut("Ctrl+Q")
@@ -248,3 +251,13 @@ class MainWindow(QMainWindow):
         self._artifacts.set_workspace(self._session.target_dir)
         if isinstance(self._pages.get("dashboard"), DashboardPage):
             self._pages["dashboard"].refresh()
+
+    def _maybe_start_telegram_listener(self) -> None:
+        if os.environ.get("NUCLEI_TELEGRAM_EXTERNAL", "").strip() == "1":
+            return
+        if os.environ.get("TELEGRAM_AUTO", "1").strip().lower() in ("0", "false", "no", "off"):
+            return
+        try:
+            self._telegram_thread = start_telegram_bot_background(project_root())
+        except Exception:
+            self._telegram_thread = None

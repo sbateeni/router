@@ -6,7 +6,7 @@ import os
 
 from PyQt6.QtCore import QFileSystemWatcher, QTimer
 from PyQt6.QtGui import QFont
-from PyQt6.QtWidgets import QLabel, QTextEdit, QVBoxLayout, QWidget
+from PyQt6.QtWidgets import QHBoxLayout, QLabel, QPushButton, QTextEdit, QVBoxLayout, QWidget
 
 from core.live_scan_log import path as live_log_path
 from core.paths import logs_dir
@@ -17,11 +17,20 @@ class LogPanel(QWidget):
         super().__init__(parent)
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
+        title_row = QHBoxLayout()
         self._title = QLabel("Live log")
-        layout.addWidget(self._title)
+        self._copy_btn = QPushButton("Copy all")
+        self._copy_btn.clicked.connect(self.copy_all)
+        self._clear_btn = QPushButton("Clear view")
+        self._clear_btn.clicked.connect(self._text.clear)
+        title_row.addWidget(self._title)
+        title_row.addStretch()
+        title_row.addWidget(self._copy_btn)
+        title_row.addWidget(self._clear_btn)
+        layout.addLayout(title_row)
         self._text = QTextEdit()
         self._text.setReadOnly(True)
-        self._text.setFont(QFont("Consolas", 9))
+        self._text.setFont(QFont("Consolas", 11))
         layout.addWidget(self._text)
         self._path = live_log_path()
         self._offset = 0
@@ -58,6 +67,13 @@ class LogPanel(QWidget):
         self._text.moveCursor(self._text.textCursor().MoveOperation.End)
         self._text.insertPlainText(text)
         self._text.moveCursor(self._text.textCursor().MoveOperation.End)
+
+    def copy_all(self) -> None:
+        self._text.selectAll()
+        self._text.copy()
+        cursor = self._text.textCursor()
+        cursor.clearSelection()
+        self._text.setTextCursor(cursor)
 
     def _on_file_changed(self, path: str) -> None:
         if path == self._path and path not in self._watcher.files():
