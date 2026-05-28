@@ -11,6 +11,7 @@ from PyQt6.QtWidgets import (
     QHBoxLayout,
     QLineEdit,
     QPushButton,
+    QSizePolicy,
     QTextEdit,
     QVBoxLayout,
     QWidget,
@@ -22,11 +23,14 @@ class TerminalPanel(QWidget):
         super().__init__(parent)
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(6)
 
-        self._output = QTextEdit()
-        self._output.setReadOnly(True)
-        self._output.setFont(QFont("Consolas", 10))
-        layout.addWidget(self._output)
+        # Controls stay above the output so Run/Stop remain visible when the window is maximized.
+        toolbar = QWidget()
+        toolbar.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
+        toolbar_layout = QVBoxLayout(toolbar)
+        toolbar_layout.setContentsMargins(0, 0, 0, 0)
+        toolbar_layout.setSpacing(4)
 
         quick = QHBoxLayout()
         self._btn_update_all = QPushButton("Update GitHub + tools")
@@ -47,7 +51,7 @@ class TerminalPanel(QWidget):
         )
         quick.addWidget(self._btn_launcher)
         quick.addStretch()
-        layout.addLayout(quick)
+        toolbar_layout.addLayout(quick)
 
         row = QHBoxLayout()
         self._input = QLineEdit()
@@ -56,22 +60,32 @@ class TerminalPanel(QWidget):
         row.addWidget(self._input, stretch=1)
 
         self._run_btn = QPushButton("Run")
+        self._run_btn.setMinimumWidth(72)
         self._run_btn.clicked.connect(self.run_command)
         row.addWidget(self._run_btn)
 
         self._stop_btn = QPushButton("Stop")
+        self._stop_btn.setMinimumWidth(72)
         self._stop_btn.clicked.connect(self.stop_command)
         self._stop_btn.setEnabled(False)
         row.addWidget(self._stop_btn)
 
         self._clear_btn = QPushButton("Clear")
-        self._clear_btn.clicked.connect(self._output.clear)
+        self._clear_btn.clicked.connect(self._output_clear)
         row.addWidget(self._clear_btn)
 
         self._copy_btn = QPushButton("Copy all")
         self._copy_btn.clicked.connect(self.copy_all)
         row.addWidget(self._copy_btn)
-        layout.addLayout(row)
+        toolbar_layout.addLayout(row)
+
+        layout.addWidget(toolbar)
+
+        self._output = QTextEdit()
+        self._output.setReadOnly(True)
+        self._output.setFont(QFont("Consolas", 10))
+        self._output.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        layout.addWidget(self._output, stretch=1)
 
         self._proc = QProcess(self)
         self._proc.setProcessChannelMode(QProcess.ProcessChannelMode.MergedChannels)
@@ -109,6 +123,9 @@ class TerminalPanel(QWidget):
             return
         self._proc.kill()
         self._output.append("[!] Command stopped.")
+
+    def _output_clear(self) -> None:
+        self._output.clear()
 
     def copy_all(self) -> None:
         self._output.selectAll()
