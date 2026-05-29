@@ -1,5 +1,7 @@
 """Route menu selections to classic, AI, or recon runners — no cross-mixing."""
 
+from contextlib import nullcontext
+
 from core.ai.individual import run_ai_hydra_plan_only, run_ai_report_only, run_ai_scan_plan_only
 from core.ai.routersploit import run_routersploit_with_ai_followup
 from core.classic.full_scan import run_all_classic_tools
@@ -22,6 +24,7 @@ from core.recon.runner import (
     run_whatweb_tool,
 )
 from core.scan_config import set_scan_profile
+from core.utils import _stdout_is_live_tee
 
 
 def run_device_engine_only(ip, target_dir, manual_mode=False):
@@ -72,7 +75,8 @@ def run_selected_tool(selection, ip, target_dir, profile="normal", subnet=None):
         )
     exploited = False
     try:
-        with mirror_stdout():
+        tee = mirror_stdout() if not _stdout_is_live_tee() else nullcontext()
+        with tee:
             check_cancelled()
             if selection in ENGINE_CHOICES:
                 exploited = bool(run_device_engine_only(ip, target_dir))

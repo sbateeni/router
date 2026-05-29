@@ -105,15 +105,20 @@ class AiGuidedPage(QWidget):
 
     def _load_max_steps_hint(self) -> None:
         try:
-            from core.ai.analyst import ai_configured
+            from core.ai.analyst import ai_configured, ai_llm_available, ai_provider_status
             import os as _os
 
             self._max_steps = int(_os.environ.get("AI_ORCHESTRATOR_MAX_STEPS", "12"))
             self._progress.setMaximum(self._max_steps)
 
-            if ai_configured():
+            if ai_llm_available():
                 self._hint.setText(
-                    f"AI API configured — up to {self._max_steps} orchestrator steps."
+                    f"LLM: {ai_provider_status()} — up to {self._max_steps} steps."
+                )
+            elif ai_configured():
+                self._hint.setText(
+                    f"Keys present but LLM unavailable — heuristics only. "
+                    f"Add AI_SKIP_OPENROUTER=1 and AI_PROVIDER_ORDER=gemini,openrouter to .env"
                 )
             else:
                 self._hint.setText(

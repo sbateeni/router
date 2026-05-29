@@ -57,6 +57,37 @@ def load_telegram_env(base_dir):
     return load_dotenv(base_dir, override=True)
 
 
+def reload_env_from_file(base_dir: str) -> tuple[bool, int]:
+    """
+    Reload every key from .env into os.environ (override in-memory values).
+
+    Use after manual .env edits while the GUI is already running.
+    Returns (success, number of variables applied).
+    """
+    env_path = os.path.join(base_dir, ".env")
+    if not os.path.isfile(env_path):
+        return False, 0
+    count = 0
+    try:
+        with open(env_path, "r", encoding="utf-8-sig") as fh:
+            for line in fh:
+                line = line.strip()
+                if not line or line.startswith("#") or "=" not in line:
+                    continue
+                key, value = line.split("=", 1)
+                key = key.strip()
+                if not key:
+                    continue
+                value = value.strip().strip('"').strip("'")
+                if key == "TELEGRAM_CHAT_ID":
+                    value = normalize_chat_id(value)
+                os.environ[key] = value
+                count += 1
+        return True, count
+    except OSError:
+        return False, 0
+
+
 def _telegram_token_shape_ok(token):
     return bool(re.match(r"^\d{8,12}:[A-Za-z0-9_-]{20,}$", str(token).strip()))
 

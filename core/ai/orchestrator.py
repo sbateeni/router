@@ -11,7 +11,15 @@ import json
 import os
 from typing import Any
 
-from core.ai.analyst import ai_configured, call_ai_json, call_ai_text, generate_comprehensive_report
+from core.ai.analyst import (
+    ai_configured,
+    ai_llm_available,
+    ai_provider_status,
+    call_ai_json,
+    call_ai_text,
+    generate_comprehensive_report,
+)
+from core.ai.analyst import reset_ai_session
 from core.ai.workspace_state import (
     ALLOWED_TOOLS,
     append_orchestrator_log,
@@ -70,10 +78,21 @@ def load_orchestrator_progress(target_dir: str) -> dict[str, Any]:
         return {}
 
 
+def _looks_like_router_gateway(state: dict[str, Any]) -> bool:
+    blob = (state.get("services_summary") or "").lower()
+    if state.get("auth_username") or state.get("auth_url"):
+        return True
+    return any(
+        x in blob
+        for x in ("zyxel", "netis", "virtual web", "router", "gateway", "tplink", "fiberhome")
+    )
+
+
 def _heuristic_next_action(state: dict[str, Any]) -> dict[str, Any]:
     executed = set(state.get("executed_tools") or [])
     device_type = (state.get("device") or {}).get("type", "unknown")
     ports = state.get("open_ports") or []
+    router_primary = _looks_like_router_gateway(state)
 
     if "nmap" not in executed and not state.get("has_nmap"):
         return {
@@ -95,28 +114,19 @@ def _heuristic_next_action(state: dict[str, Any]) -> dict[str, Any]:
             "source": "heuristic",
         }
 
-    if device_type in ("camera", "hikvision_camera", "dahua_camera", "ip_camera"):
-        if "test_hikvision" not in executed and (8000 in ports or 554 in ports):
-            return {
-                "reason_ar": "جهاز كاميرا — اختبار Hikvision",
-                "action": "test_hikvision",
-                "tool": "test_hikvision",
-                "inputs": {},
-                "stop": False,
-                "source": "heuristic",
-            }
-        if "ingram" not in executed:
-            return {
-                "reason_ar": "كاميرا — Ingram",
-                "action": "run_tool",
-                "tool": "ingram",
-                "inputs": {},
-                "stop": False,
-                "source": "heuristic",
-            }
-
-    if device_type in ("router", "generic_router", "fiberhome_router", "unknown"):
-        for tool in ("nuclei", "routersploit", "hydra", "dirsearch", "test_router"):
+    if device_type in ("router", "generic_router", "fiberhome_router", "unknown") or router_primary:
+        for tool in ("nuclei", "test_router", "routersploit", "hydra", "dirsearch", "router_harvest"):
+            if tool == "router_harvest":
+                if not state.get("auth_username") or "router_harvest" in executed:
+                    continue
+                return {
+                    "reason_ar": "راوتر — حصاد واجهة الإدارة",
+                    "action": "router_harvest",
+                    "tool": "router_harvest",
+                    "inputs": {},
+                    "stop": False,
+                    "source": "heuristic",
+                }
             if tool not in executed and tool in ALLOWED_TOOLS:
                 labels = {
                     "nuclei": "قوالب CVE على الويب",
@@ -133,6 +143,38 @@ def _heuristic_next_action(state: dict[str, Any]) -> dict[str, Any]:
                     "stop": False,
                     "source": "heuristic",
                 }
+
+    camera_type = device_type in ("camera", "hikvision_camera", "dahua_camera", "ip_camera")
+    camera_ports = 8000 in ports or 554 in ports
+    if (camera_type or (camera_ports and not router_primary)):
+        if "test_hikvision" not in executed and camera_ports:
+            return {
+                "reason_ar": "منافذ كاميرا — اختبار Hikvision",
+                "action": "test_hikvision",
+                "tool": "test_hikvision",
+                "inputs": {},
+                "stop": False,
+                "source": "heuristic",
+            }
+        if "ingram" not in executed and not router_primary:
+            return {
+                "reason_ar": "كاميرا — Ingram",
+                "action": "run_tool",
+                "tool": "ingram",
+                "inputs": {},
+                "stop": False,
+                "source": "heuristic",
+            }
+
+    if router_primary and camera_ports and "test_hikvision" not in executed:
+        return {
+            "reason_ar": "راوتر مع منفذ 8000 — فحص Hikvision ثانوي",
+            "action": "test_hikvision",
+            "tool": "test_hikvision",
+            "inputs": {},
+            "stop": False,
+            "source": "heuristic",
+        }
 
     for rec in state.get("recommended_tools") or []:
         name = (rec.get("name") or "").lower()
@@ -173,9 +215,10 @@ def _heuristic_next_action(state: dict[str, Any]) -> dict[str, Any]:
 
 
 def decide_next_action(state: dict[str, Any]) -> dict[str, Any]:
-    if not ai_configured():
+    if not ai_llm_available():
         plan = _heuristic_next_action(state)
-        plan["ai_available"] = False
+        plan["ai_available"] = ai_configured()
+        plan["llm_available"] = False
         return plan
 
     prompt = f"""Workspace state JSON:
@@ -274,6 +317,7 @@ def run_ai_guided_scan(
     Full AI-guided loop. Returns True if any exploitation/creds found.
     """
     load_dotenv(project_root())
+    reset_ai_session()
     max_steps = max_steps or int(os.environ.get("AI_ORCHESTRATOR_MAX_STEPS", DEFAULT_MAX_STEPS))
     executed: list[str] = []
     exploited_any = False
@@ -290,7 +334,12 @@ def run_ai_guided_scan(
 
     log("=" * 60, "INFO")
     log("AI GUIDED SCAN — orchestrator start", "SUCCESS")
-    log(f"Target: {ip} | max_steps={max_steps} | AI={'yes' if ai_configured() else 'heuristic'}", "INFO")
+    llm = ai_llm_available()
+    log(
+        f"Target: {ip} | max_steps={max_steps} | LLM={'yes' if llm else 'heuristic'} | "
+        f"providers: {ai_provider_status()}",
+        "INFO",
+    )
     log("=" * 60, "INFO")
 
     from core.scan_transcript import begin as transcript_begin, end as transcript_end
@@ -325,7 +374,12 @@ def run_ai_guided_scan(
                 },
             })
 
-            if ai_configured() and reason:
+            if (
+                llm
+                and decision.get("source") == "ai"
+                and reason
+                and os.environ.get("AI_ORCHESTRATOR_STEP_NOTES", "0").strip() in ("1", "true", "yes")
+            ):
                 note, provider = call_ai_text(
                     f"In one Arabic sentence, what do we expect from step {step} "
                     f"({tool or act}) on {ip}? Context: {reason}",

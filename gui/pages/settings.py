@@ -24,6 +24,7 @@ from PyQt6.QtWidgets import (
 from core.notify import (
     explain_telegram_config,
     load_telegram_env,
+    reload_env_from_file,
     send_telegram_message,
     telegram_configured,
     telegram_placeholder_keys_present,
@@ -81,11 +82,18 @@ class SettingsPage(QWidget):
         layout.addWidget(env_group)
 
         env_row = QHBoxLayout()
-        self._env_reload_btn = QPushButton("Reload .env")
-        self._env_reload_btn.clicked.connect(self._load_env_into_form)
+        self._env_pull_btn = QPushButton("Pull .env from file → app")
+        self._env_pull_btn.setToolTip(
+            "Re-read .env from disk and apply to the running app "
+            "(use after editing the file manually in an external editor)."
+        )
+        self._env_pull_btn.clicked.connect(self._pull_env_from_disk)
+        self._env_reload_form_btn = QPushButton("Refresh form from .env")
+        self._env_reload_form_btn.clicked.connect(self._refresh_form_from_disk)
         self._env_save_btn = QPushButton("Save .env")
         self._env_save_btn.clicked.connect(self._save_env_from_form)
-        env_row.addWidget(self._env_reload_btn)
+        env_row.addWidget(self._env_pull_btn)
+        env_row.addWidget(self._env_reload_form_btn)
         env_row.addWidget(self._env_save_btn)
         layout.addLayout(env_row)
 
@@ -160,6 +168,58 @@ class SettingsPage(QWidget):
         self._status.setText("<br>".join(lines))
         self._tg_send_btn.setEnabled(tg_ready)
         self._load_env_into_form()
+
+    def _refresh_form_from_disk(self) -> None:
+        """Update Settings fields/table from .env on disk (does not change os.environ)."""
+        self._load_env_into_form()
+        self._reload_env_table()
+
+    def _pull_env_from_disk(self) -> None:
+        """Apply .env file contents to the running process (after manual edits)."""
+        base = project_root()
+        ok, count = reload_env_from_file(base)
+        if not ok:
+            QMessageBox.warning(
+                self,
+                ".env",
+                f"No .env file found at:\n{self._env_path()}",
+            )
+            return
+        try:
+            from core.ai.analyst import (
+                ai_configured,
+                ai_llm_available,
+                ai_provider_status,
+                reset_ai_session,
+            )
+
+            reset_ai_session()
+        except Exception:
+            pass
+        load_telegram_env(base)
+        self._load_env_into_form()
+        self._reload_env_table()
+        self.refresh()
+
+        ai_msg = ""
+        try:
+            from core.ai.analyst import ai_configured, ai_llm_available, ai_provider_status
+
+            if ai_configured():
+                if ai_llm_available():
+                    ai_msg = f"\n\nAI: ready ({ai_provider_status()})"
+                else:
+                    ai_msg = "\n\nAI: keys loaded — providers unavailable (check models/limits)"
+            else:
+                ai_msg = "\n\nAI: no valid API keys in .env"
+        except Exception:
+            pass
+
+        QMessageBox.information(
+            self,
+            ".env applied",
+            f"Pulled {count} variable(s) from .env into the running app.{ai_msg}",
+        )
 
     def _load_env_into_form(self) -> None:
         values = self._read_env_values()
