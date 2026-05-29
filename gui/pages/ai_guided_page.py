@@ -42,11 +42,12 @@ class AiGuidedPage(QWidget):
         layout.addWidget(QLabel("<h2>AI Guided Scan</h2>"))
         layout.addWidget(
             QLabel(
-                "<b>حلقة ذكية مغلقة:</b> يجمع حالة الـ workspace → AI (أو قواعد محلية) يختار "
-                "الأداة التالية → تنفيذ → تكرار → <code>AI_COMPREHENSIVE_REPORT.txt</code>.<br><br>"
-                "• ضع مفتاح <code>OPENROUTER_API_KEY</code> أو <code>GEMINI_API_KEY</code> في <code>.env</code><br>"
-                "• للراوتر مع دخول: <code>http://user:pass@IP/</code> في شريط الهدف<br>"
-                "• يشغّل تلقائياً: Nmap, Nuclei, Hydra, Harvest, Hikvision, … حسب الحالة"
+                "<b>وضع Hybrid (افتراضي):</b> Nmap والأدوات تُشغَّل <b>محلياً</b> — "
+                "الـ AI يُستدعى فقط عند غموض الخطوة التالية + تقرير عربي واحد في النهاية.<br><br>"
+                "• <code>AI_ORCHESTRATOR_MODE=hybrid</code> في <code>.env</code> "
+                "(أو <code>local_rules</code> / <code>full_ai</code>)<br>"
+                "• مفاتيح AI في <code>.env</code> ثم <b>Settings → Pull .env from file</b><br>"
+                "• راوتر مع دخول: <code>http://user:pass@IP/</code>"
             )
         )
 
@@ -110,10 +111,12 @@ class AiGuidedPage(QWidget):
 
             self._max_steps = int(_os.environ.get("AI_ORCHESTRATOR_MAX_STEPS", "12"))
             self._progress.setMaximum(self._max_steps)
+            mode = _os.environ.get("AI_ORCHESTRATOR_MODE", "hybrid").strip().lower()
 
             if ai_llm_available():
                 self._hint.setText(
-                    f"LLM: {ai_provider_status()} — up to {self._max_steps} steps."
+                    f"Mode: {mode} | LLM: {ai_provider_status()} — "
+                    f"local tools first, up to {self._max_steps} steps."
                 )
             elif ai_configured():
                 self._hint.setText(

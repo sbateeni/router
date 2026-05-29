@@ -1,8 +1,12 @@
 """
-AI-guided scan orchestrator — closed loop:
-  workspace state → LLM next action → run tool → refresh → … → comprehensive report.
+AI-guided scan orchestrator — hybrid loop:
+  local tools run on disk → compact workspace state → local rules OR LLM (if ambiguous)
+  → … → one AI report at the end (optional).
 
-Falls back to heuristic routing when no API key is configured.
+Modes (AI_ORCHESTRATOR_MODE):
+  hybrid      — default: local decisions; LLM only when unclear (saves tokens)
+  local_rules — no LLM for step decisions; AI report at end if API available
+  full_ai     — LLM chooses every step (highest token use)
 """
 
 from __future__ import annotations
@@ -34,6 +38,18 @@ from engines.utils import log
 
 ORCHESTRATOR_STATE_FILE = "AI_ORCHESTRATOR_STATE.json"
 DEFAULT_MAX_STEPS = 12
+ORCHESTRATOR_MODES = frozenset({"hybrid", "local_rules", "full_ai"})
+
+
+def get_orchestrator_mode() -> str:
+    mode = os.environ.get("AI_ORCHESTRATOR_MODE", "hybrid").strip().lower()
+    return mode if mode in ORCHESTRATOR_MODES else "hybrid"
+
+
+def ai_report_at_end_enabled() -> bool:
+    return os.environ.get("AI_ORCHESTRATOR_AI_REPORT", "1").strip().lower() in (
+        "1", "true", "yes", "on",
+    )
 
 SYSTEM_PROMPT = """You are the AUTO-PWN scan orchestrator for authorized router/camera pentests.
 Return ONLY valid JSON (no markdown) with this schema:
@@ -214,24 +230,72 @@ def _heuristic_next_action(state: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def decide_next_action(state: dict[str, Any]) -> dict[str, Any]:
-    if not ai_llm_available():
-        plan = _heuristic_next_action(state)
-        plan["ai_available"] = ai_configured()
-        plan["llm_available"] = False
-        return plan
+def _compact_state_for_llm(state: dict[str, Any]) -> dict[str, Any]:
+    """Smaller JSON for LLM calls — full artifacts stay on disk."""
+    creds = state.get("credentials") or []
+    return {
+        "target_ip": state.get("target_ip"),
+        "open_ports": state.get("open_ports"),
+        "services_summary": (state.get("services_summary") or "")[:400],
+        "device": state.get("device"),
+        "has_nmap": state.get("has_nmap"),
+        "auth_username": state.get("auth_username"),
+        "executed_tools": state.get("executed_tools"),
+        "allowed_next_tools": state.get("allowed_next_tools"),
+        "credentials_count": len(creds),
+        "credentials_sample": creds[:5],
+        "nuclei": state.get("nuclei"),
+        "router_harvest_pages": state.get("router_harvest_pages"),
+        "lan_clients_count": len(state.get("lan_clients") or []),
+        "recommended_tools": (state.get("recommended_tools") or [])[:4],
+    }
 
+
+def _needs_llm_decision(state: dict[str, Any], heuristic: dict[str, Any]) -> bool:
+    """True when local rules are not confident enough — worth spending tokens."""
+    if heuristic.get("action") != "finish":
+        ports = state.get("open_ports") or []
+        executed = set(state.get("executed_tools") or [])
+        router_p = _looks_like_router_gateway(state)
+        camera_ports = 8000 in ports or 554 in ports
+        if router_p and camera_ports and state.get("has_nmap"):
+            if "nuclei" not in executed and "test_hikvision" not in executed:
+                return True
+        device_type = (state.get("device") or {}).get("type", "unknown")
+        if device_type == "unknown" and state.get("has_nmap") and len(ports) >= 2:
+            return True
+        return False
+
+    executed_n = len(state.get("executed_tools") or [])
+    if executed_n < 2 and state.get("has_nmap"):
+        return True
+    if not state.get("has_nmap"):
+        return False
+    if executed_n < 4:
+        return True
+    return False
+
+
+def _finalize_plan(plan: dict[str, Any], *, mode: str, path: str = "") -> dict[str, Any]:
+    plan["mode"] = mode
+    plan["decision_path"] = path or plan.get("source", "")
+    plan["ai_available"] = ai_configured()
+    plan["llm_available"] = ai_llm_available()
+    return plan
+
+
+def _decide_with_llm(state: dict[str, Any]) -> dict[str, Any]:
+    compact = _compact_state_for_llm(state)
     prompt = f"""Workspace state JSON:
-{json.dumps(state, ensure_ascii=False, indent=2)[:14000]}
+{json.dumps(compact, ensure_ascii=False, indent=2)}
 
 Pick the single best next action. Respect executed_tools — do not repeat.
 """
     data = call_ai_json(prompt, system=SYSTEM_PROMPT)
     if not data or not isinstance(data, dict):
         plan = _heuristic_next_action(state)
-        plan["ai_available"] = True
         plan["ai_fallback"] = True
-        return plan
+        return _finalize_plan(plan, mode=get_orchestrator_mode(), path="heuristic_fallback")
 
     action = str(data.get("action", "finish")).strip().lower()
     tool = str(data.get("tool", "")).strip().lower()
@@ -239,20 +303,87 @@ Pick the single best next action. Respect executed_tools — do not repeat.
 
     if action == "run_tool" and tool not in allowed:
         if tool in (state.get("executed_tools") or []):
-            data = _heuristic_next_action(state)
-            data["ai_available"] = True
-            data["ai_fallback"] = True
-            return data
+            plan = _heuristic_next_action(state)
+            plan["ai_fallback"] = True
+            return _finalize_plan(plan, mode=get_orchestrator_mode(), path="heuristic_fallback")
         tool = allowed[0] if allowed else ""
 
     if action == "router_harvest" and not state.get("auth_username"):
-        data = _heuristic_next_action(state)
-        data["ai_available"] = True
-        return data
+        plan = _heuristic_next_action(state)
+        return _finalize_plan(plan, mode=get_orchestrator_mode(), path="heuristic_fallback")
 
     data["source"] = "ai"
-    data["ai_available"] = True
-    return data
+    data["tool"] = tool
+    data["action"] = action
+    return _finalize_plan(data, mode=get_orchestrator_mode(), path="llm")
+
+
+def decide_next_action(state: dict[str, Any]) -> dict[str, Any]:
+    mode = get_orchestrator_mode()
+    heuristic = _heuristic_next_action(state)
+
+    if mode == "local_rules" or not ai_llm_available():
+        return _finalize_plan(heuristic, mode=mode, path="local")
+
+    if mode == "full_ai":
+        return _decide_with_llm(state)
+
+    # hybrid: local first unless ambiguous
+    if not _needs_llm_decision(state, heuristic):
+        return _finalize_plan(heuristic, mode="hybrid", path="local")
+
+    log("[*] Hybrid: ambiguous next step — asking LLM (one decision)", "INFO")
+    return _decide_with_llm(state)
+
+
+def _bootstrap_recon(
+    ip: str,
+    target_dir: str,
+    *,
+    raw_target: str,
+    profile: str,
+    executed: list[str],
+) -> bool:
+    """Run Nmap locally before the loop if workspace has no scan yet (zero AI tokens)."""
+    state = build_workspace_state(
+        target_dir, ip, raw_target=raw_target, executed_tools=executed,
+    )
+    if state.get("has_nmap") or "nmap" in executed:
+        return False
+    log("[*] Bootstrap: Nmap locally (no AI tokens for this step)", "INFO")
+    decision = {
+        "action": "run_tool",
+        "tool": "nmap",
+        "reason_ar": "فحص منافذ أولي محلي",
+        "source": "bootstrap",
+        "stop": False,
+    }
+    _execute_action(
+        decision,
+        ip=ip,
+        target_dir=target_dir,
+        raw_target=raw_target,
+        profile=profile,
+    )
+    executed.append("nmap")
+    return True
+
+
+def _generate_final_report(ip: str, target_dir: str) -> None:
+    if not ai_report_at_end_enabled():
+        from core.ai.analyst import generate_offline_comprehensive_report
+
+        log("[*] Final report: offline template (AI_ORCHESTRATOR_AI_REPORT=0)", "INFO")
+        generate_offline_comprehensive_report(ip, target_dir)
+        return
+    if ai_llm_available():
+        log("[*] Final report: AI comprehensive (single LLM call)", "INFO")
+        generate_comprehensive_report(ip, target_dir)
+    else:
+        from core.ai.analyst import generate_offline_comprehensive_report
+
+        log("[*] Final report: offline (no LLM available)", "INFO")
+        generate_offline_comprehensive_report(ip, target_dir)
 
 
 def _execute_action(
@@ -318,17 +449,20 @@ def run_ai_guided_scan(
     """
     load_dotenv(project_root())
     reset_ai_session()
+    mode = get_orchestrator_mode()
     max_steps = max_steps or int(os.environ.get("AI_ORCHESTRATOR_MAX_STEPS", DEFAULT_MAX_STEPS))
     executed: list[str] = []
     exploited_any = False
     orch_state: dict[str, Any] = {
         "step": 0,
         "max_steps": max_steps,
+        "mode": mode,
         "finished": False,
         "phase": "starting",
         "current_tool": "",
         "executed_count": 0,
         "last_reason": "",
+        "llm_decisions": 0,
     }
     _save_orch_state(target_dir, orch_state)
 
@@ -336,17 +470,36 @@ def run_ai_guided_scan(
     log("AI GUIDED SCAN — orchestrator start", "SUCCESS")
     llm = ai_llm_available()
     log(
-        f"Target: {ip} | max_steps={max_steps} | LLM={'yes' if llm else 'heuristic'} | "
+        f"Target: {ip} | mode={mode} | max_steps={max_steps} | LLM={'yes' if llm else 'no'} | "
         f"providers: {ai_provider_status()}",
         "INFO",
     )
+    if mode == "hybrid":
+        log("[*] Hybrid: local tools + rules; LLM only if ambiguous; one AI report at end", "INFO")
+    elif mode == "local_rules":
+        log("[*] Local rules: no LLM step decisions; AI report at end if configured", "INFO")
     log("=" * 60, "INFO")
 
     from core.scan_transcript import begin as transcript_begin, end as transcript_end
 
-    transcript_begin(target_dir, header=f"AI Guided Scan | {ip} | profile={profile}")
+    transcript_begin(target_dir, header=f"AI Guided Scan | {ip} | profile={profile} | mode={mode}")
 
     try:
+        if _bootstrap_recon(
+            ip, target_dir, raw_target=raw_target, profile=profile, executed=executed,
+        ):
+            try:
+                from core.recon.target_profile import build_target_profile, save_target_profile
+                from core.classic.context import build_context_from_ports
+                from core.workspace_ports import load_open_ports_from_workspace
+
+                ctx = build_context_from_ports(load_open_ports_from_workspace(target_dir))
+                prof = build_target_profile(ip, target_dir, context=ctx)
+                save_target_profile(target_dir, prof)
+            except Exception:
+                pass
+
+        llm_decisions = 0
         for step in range(1, max_steps + 1):
             check_cancelled()
             state = build_workspace_state(
@@ -362,8 +515,14 @@ def run_ai_guided_scan(
             tool = decision.get("tool", "")
             act = decision.get("action", "finish")
             source = decision.get("source", "?")
+            path = decision.get("decision_path", source)
+            if source == "ai":
+                llm_decisions += 1
 
-            log(f"[Step {step}/{max_steps}] {source}: {act} / {tool} — {reason}", "INFO")
+            log(
+                f"[Step {step}/{max_steps}] {source} ({path}): {act} / {tool} — {reason}",
+                "INFO",
+            )
             append_orchestrator_log(target_dir, {
                 "step": step,
                 "decision": decision,
@@ -436,8 +595,11 @@ def run_ai_guided_scan(
         orch_state.update({"phase": "report", "current_tool": "comprehensive_report"})
         _save_orch_state(target_dir, orch_state)
 
-        log("[*] Generating comprehensive AI report…", "INFO")
-        generate_comprehensive_report(ip, target_dir)
+        log(
+            f"[*] Orchestrator stats: local_steps={len(executed)}, llm_decisions={llm_decisions}",
+            "INFO",
+        )
+        _generate_final_report(ip, target_dir)
 
         try:
             from core.report import generate_scan_report
@@ -455,6 +617,7 @@ def run_ai_guided_scan(
             "phase": "done",
             "step": orch_state.get("step", 0),
             "executed_count": len(executed),
+            "llm_decisions": llm_decisions,
             "current_tool": "",
         })
         _save_orch_state(target_dir, orch_state)
