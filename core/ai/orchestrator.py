@@ -21,7 +21,6 @@ from core.ai.workspace_state import (
 )
 from core.notify import load_dotenv
 from core.paths import project_root
-from core.runner import run_selected_tool
 from core.scan_cancel import ScanCancelled, check_cancelled
 from engines.utils import log
 
@@ -249,6 +248,8 @@ def _execute_action(
         return False
 
     if act == "run_tool" and tool in ALLOWED_TOOLS:
+        from core.runner import run_selected_tool
+
         meta = ALLOWED_TOOLS[tool]
         sel = meta.get("selection")
         if sel:

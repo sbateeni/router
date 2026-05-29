@@ -1,11 +1,14 @@
-"""AI-assisted planning, orchestration, and reporting."""
+"""AI-assisted planning, orchestration, and reporting.
+
+Import orchestrator symbols directly to avoid circular imports with core.runner:
+  from core.ai.orchestrator import run_ai_guided_scan
+"""
 
 from core.ai.analyst import (
     ai_configured,
     generate_ai_analysis,
     generate_comprehensive_report,
 )
-from core.ai.orchestrator import load_orchestrator_progress, run_ai_guided_scan
 from core.ai.workspace_state import build_workspace_state
 
 __all__ = [
@@ -13,6 +16,4 @@ __all__ = [
     "build_workspace_state",
     "generate_ai_analysis",
     "generate_comprehensive_report",
-    "load_orchestrator_progress",
-    "run_ai_guided_scan",
 ]
