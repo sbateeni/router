@@ -20,6 +20,14 @@ ROUTER_HTTP_FORMS = [
     "/login:user=^USER^&pass=^PASS^:F=invalid",
 ]
 
+# Netis / ZyXEL gateway: real login is login.cgi — /goform/login causes Hydra false positives.
+NETIS_HTTP_FORMS = [
+    "/login.cgi:user=^USER^&pass=^PASS^:F=invalid",
+    "/login.html:user=^USER^&pass=^PASS^:F=invalid",
+]
+
+HYDRA_UNRELIABLE_FORM_PATHS = frozenset({"/goform/login"})
+
 
 def resolve_password_file(target_dir=None):
     if target_dir:
@@ -73,6 +81,114 @@ def prepare_password_wordlist(source_path, target_dir):
 
 def form_path(form_string):
     return (form_string or "/").split(":")[0] or "/"
+
+
+def _read_workspace_text(target_dir: str, limit: int = 6000) -> str:
+    parts: list[str] = []
+    for name in ("nmap_scan.txt", "target_profile.json", "ROUTER_ACCESS.txt"):
+        path = os.path.join(target_dir, name)
+        if not os.path.isfile(path):
+            continue
+        try:
+            with open(path, encoding="utf-8", errors="ignore") as fh:
+                parts.append(fh.read()[:limit])
+        except OSError:
+            continue
+    return "\n".join(parts).lower()
+
+
+def target_looks_netis_or_zyxel_gateway(target_dir: str) -> bool:
+    blob = _read_workspace_text(target_dir)
+    return any(
+        x in blob
+        for x in ("netis", "zyxel", "virtual web", "login.cgi", "netis adsl")
+    )
+
+
+def router_http_forms_for_target(target_dir: str) -> list[str]:
+    if target_looks_netis_or_zyxel_gateway(target_dir):
+        return list(NETIS_HTTP_FORMS)
+    return list(ROUTER_HTTP_FORMS)
+
+
+def known_router_creds_on_disk(target_dir: str) -> tuple[str, str] | None:
+    from core.target_auth import creds_from_router_access
+
+    pair = creds_from_router_access(target_dir)
+    if pair:
+        return pair
+    harvest = os.path.join(target_dir, "ROUTER_HARVEST.json")
+    if os.path.isfile(harvest):
+        try:
+            import json
+
+            with open(harvest, encoding="utf-8") as fh:
+                data = json.load(fh)
+            u, p = data.get("username"), data.get("password")
+            if u and p:
+                return str(u), str(p)
+        except (OSError, json.JSONDecodeError):
+            pass
+    return None
+
+
+def _base_url(ip: str, port: int) -> str:
+    scheme = "https" if port in (443, 8443) else "http"
+    netloc = ip if port in (80, 443) else f"{ip}:{port}"
+    return f"{scheme}://{netloc}"
+
+
+def verify_web_hydra_hit(
+    ip: str,
+    port: int,
+    form_string: str,
+    login: str,
+    password: str,
+    *,
+    target_dir: str = "",
+) -> bool:
+    """Reject Hydra false positives (especially /goform/login on Netis/ZyXEL)."""
+    path = form_path(form_string)
+    if path in HYDRA_UNRELIABLE_FORM_PATHS:
+        return False
+
+    base = _base_url(ip, port)
+    from engines.credential_hunter import validate_netis_login
+
+    netis_like = target_dir and target_looks_netis_or_zyxel_gateway(target_dir)
+    if netis_like or path in ("/login.cgi", "/login.html"):
+        if validate_netis_login(base, login, password):
+            return True
+        if netis_like or path in ("/login.cgi", "/login.html"):
+            return False
+
+    info = probe_http_auth(ip, port, path)
+    if not (info.get("basic_auth") or info.get("digest_auth")):
+        return False
+
+    url = info.get("url") or f"{base}{path}"
+    try:
+        response = requests.get(
+            url, auth=(login, password), timeout=12, verify=False, allow_redirects=True,
+        )
+        if response.status_code == 401:
+            return False
+        body = (response.text or "").lower()
+        if any(x in body for x in ("invalid", "failed", "error", "denied", "incorrect")):
+            return False
+        return response.status_code in (200, 204) and len(body) > 80
+    except requests.RequestException:
+        return False
+
+
+def _save_verified_hydra_hit(target_dir: str, ip: str, port: int, login: str, password: str, form: str) -> None:
+    path = os.path.join(target_dir, "hydra_web_success.txt")
+    line = f"{ip}:{port} {login}:{password} ({form_path(form)}) verified\n"
+    try:
+        with open(path, "a", encoding="utf-8") as fh:
+            fh.write(line)
+    except OSError:
+        pass
 
 
 def probe_http_auth(ip, port, path="/"):
@@ -163,8 +279,7 @@ def run_hydra(ip, login_ports, target_dir):
         log_file = os.path.join(target_dir, f"hydra_{service}_{port}.txt")
         command = [HYDRA_CMD, "-l", DEFAULT_USER, "-P", passwords_file, "-t", str(profile["hydra_threads"]), "-f", target_str]
         success, output = run_cmd(command, capture=True, log_file=log_file)
-        if output:
-            print(output)
+        if output and log_file:
             print(f"[+] Hydra {service} results saved to: {log_file}")
 
         if hydra_found_credentials(output):
@@ -186,15 +301,16 @@ def _run_http_basic_hydra(ip, port, path, users, passwords_file, target_dir, pro
             ip, service, path,
         ]
         success, output = run_cmd(command, capture=True, log_file=log_file)
-        if output:
-            print(output)
         hit = _hydra_hit_from_output(output, mode=service)
-        if hit:
-            print(
-                f"[!] Possible HTTP-auth credentials on {path} "
-                f"(user={hit['login']}) — verify: curl -u user:pass {probe_http_auth(ip, port, path).get('url', '')}"
-            )
+        if hit and verify_web_hydra_hit(
+            ip, port, f"{path}:user=^USER^&pass=^PASS^:F=invalid",
+            hit["login"], hit["password"], target_dir=target_dir,
+        ):
+            print(f"[!] Verified HTTP-auth on {path}: {hit['login']}:{hit['password']}")
+            _save_verified_hydra_hit(target_dir, ip, port, hit["login"], hit["password"], path)
             return True
+        if hit:
+            print(f"[-] Hydra HTTP-auth hit on {path} failed verification — ignored.")
     return False
 
 
@@ -202,6 +318,14 @@ def run_web_hydra(ip, web_ports, target_dir, hydra_plan=None):
     profile = get_scan_profile()
     if not shutil.which(HYDRA_CMD):
         print("[!] Hydra is not installed; skipping web login brute-force.")
+        return False
+
+    known = known_router_creds_on_disk(target_dir)
+    if known:
+        print(
+            f"[*] Skipping web Hydra — router login already saved "
+            f"({known[0]}:{known[1]} in workspace)."
+        )
         return False
 
     raw_passwords = resolve_password_file(target_dir)
@@ -214,7 +338,9 @@ def run_web_hydra(ip, web_ports, target_dir, hydra_plan=None):
         print("[*] Using filtered password list (removed user:pass lines that cause false positives).")
 
     users = COMMON_USERS
-    forms = ROUTER_HTTP_FORMS
+    forms = router_http_forms_for_target(target_dir)
+    if target_looks_netis_or_zyxel_gateway(target_dir):
+        print("[*] Netis/ZyXEL profile — Hydra uses login.cgi only (skips /goform/login).")
     if hydra_plan:
         users = hydra_plan.get("users") or users
         forms = hydra_plan.get("http_forms") or forms
@@ -267,16 +393,32 @@ def run_web_hydra(ip, web_ports, target_dir, hydra_plan=None):
                 ip, "http-post-form", form,
             ]
             success, output = run_cmd(command, capture=True, log_file=log_file)
-            if output:
-                print(output)
             if hydra_output_unreliable(output, "http-post-form"):
                 print(f"[!] {form_name}: endpoint uses HTTP Basic Auth — post-form results ignored.")
                 continue
             hit = _hydra_hit_from_output(output, "http-post-form")
-            if hit:
-                print(f"[!] Possible form credentials on port {port} ({form_name}) — verify manually.")
+            if hit and verify_web_hydra_hit(
+                ip,
+                port,
+                form,
+                hit["login"],
+                hit["password"],
+                target_dir=target_dir,
+            ):
+                print(
+                    f"[!] Verified web login on port {port} ({form_name}): "
+                    f"{hit['login']}:{hit['password']}"
+                )
+                _save_verified_hydra_hit(
+                    target_dir, ip, port, hit["login"], hit["password"], form,
+                )
                 success_flag = True
                 break
+            if hit:
+                print(
+                    f"[-] Hydra reported {hit['login']}:{hit['password']} on {form_name} "
+                    f"— verification failed (ignored)."
+                )
 
         if success_flag:
             break

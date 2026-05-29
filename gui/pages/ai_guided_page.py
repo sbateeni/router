@@ -47,7 +47,8 @@ class AiGuidedPage(QWidget):
                 "• <code>AI_ORCHESTRATOR_MODE=hybrid</code> في <code>.env</code> "
                 "(أو <code>local_rules</code> / <code>full_ai</code>)<br>"
                 "• مفاتيح AI في <code>.env</code> ثم <b>Settings → Pull .env from file</b><br>"
-                "• راوتر مع دخول: <code>http://user:pass@IP/</code>"
+                "• راوتر مع دخول: <code>http://user:pass@IP/</code><br>"
+                "• للمسح الأسرع: اختر <b>Normal</b> من شريط الأدوات (Deep يشغّل Masscan أولاً)"
             )
         )
 

@@ -3,6 +3,7 @@ from core.classic.context import build_context_from_ports, build_url, get_web_po
 from core.classic.helpers import is_tool_available, run_ffuf, run_gau
 from core.exploitation import run_ingram, run_routersploit
 from core.scanner import run_nmap
+from core.utils import print_tool_banner
 from core.web import run_dirsearch, run_nuclei, run_sqlmap
 
 
@@ -19,7 +20,7 @@ def _open_ports_for_tool(ip: str, target_dir: str) -> list:
 
 
 def run_nmap_only(ip, target_dir):
-    print("\n>>> TOOL: Nmap scan only")
+    print_tool_banner("Nmap scan only")
     run_nmap(ip, target_dir)
     return False
 
@@ -69,17 +70,17 @@ def run_sqlmap_only(ip, target_dir):
 
 
 def run_routersploit_only(ip, target_dir):
-    print("\n>>> TOOL: RouterSploit only")
+    print_tool_banner("RouterSploit only")
     return run_routersploit(ip, target_dir)
 
 
 def run_ingram_only(ip, target_dir):
-    print("\n>>> TOOL: Ingram only")
+    print_tool_banner("Ingram only")
     return run_ingram(ip, target_dir)
 
 
 def run_hydra_only(ip, target_dir):
-    print("\n>>> TOOL: Hydra only")
+    print_tool_banner("Hydra only")
     open_ports = _open_ports_for_tool(ip, target_dir)
     if not open_ports:
         return False

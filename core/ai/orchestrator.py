@@ -444,9 +444,17 @@ def _execute_action(
         meta = ALLOWED_TOOLS[tool]
         sel = meta.get("selection")
         if sel:
-            exploited = bool(
-                run_selected_tool(sel, ip, target_dir, profile=profile)
-            )
+            prev_nested = os.environ.get("AUTOPWN_NESTED_TOOL")
+            os.environ["AUTOPWN_NESTED_TOOL"] = "1"
+            try:
+                exploited = bool(
+                    run_selected_tool(sel, ip, target_dir, profile=profile)
+                )
+            finally:
+                if prev_nested is None:
+                    os.environ.pop("AUTOPWN_NESTED_TOOL", None)
+                else:
+                    os.environ["AUTOPWN_NESTED_TOOL"] = prev_nested
         return exploited
 
     log(f"Unknown orchestrator action: {act}/{tool}", "ERROR")
@@ -501,7 +509,16 @@ def run_ai_guided_scan(
 
     transcript_begin(target_dir, header=f"AI Guided Scan | {ip} | profile={profile} | mode={mode}")
 
+    prev_nested = os.environ.get("AUTOPWN_NESTED_TOOL")
+    os.environ["AUTOPWN_NESTED_TOOL"] = "1"
     try:
+        if profile.strip().lower() == "deep":
+            log(
+                "[*] Profile=deep: Masscan + deep Nmap enabled (slower). "
+                "For faster AI Guided scans set toolbar profile to Normal.",
+                "INFO",
+            )
+
         if _bootstrap_recon(
             ip, target_dir, raw_target=raw_target, profile=profile, executed=executed,
         ):
@@ -674,4 +691,8 @@ def run_ai_guided_scan(
     except ScanCancelled:
         raise
     finally:
+        if prev_nested is None:
+            os.environ.pop("AUTOPWN_NESTED_TOOL", None)
+        else:
+            os.environ["AUTOPWN_NESTED_TOOL"] = prev_nested
         transcript_end()

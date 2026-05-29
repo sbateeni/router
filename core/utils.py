@@ -261,6 +261,13 @@ def _stdout_is_live_tee() -> bool:
     return type(sys.stdout).__name__ == "_StdoutTee"
 
 
+def print_tool_banner(name: str) -> None:
+    """Standalone tool menu banner — suppressed during AI Guided nested steps."""
+    if os.environ.get("AUTOPWN_NESTED_TOOL") == "1":
+        return
+    print(f"\n>>> TOOL: {name}")
+
+
 def run_cmd(command, capture=False, log_file=None, timeout=None, cwd=None):
     """
     Run a shell command. When log_file is set, stdout/stderr are saved there.
