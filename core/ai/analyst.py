@@ -6,6 +6,7 @@ import requests
 from core.notify import load_dotenv
 
 AI_REPORT_FILE = "AI_ANALYSIS.txt"
+AI_COMPREHENSIVE_FILE = "AI_COMPREHENSIVE_REPORT.txt"
 MAX_INPUT_CHARS = 12000
 PLACEHOLDER_MARKERS = ("your_", "_here", "changeme", "placeholder", "example")
 
@@ -168,56 +169,82 @@ def call_ai_json(prompt, system="You return only valid JSON."):
     return parsed
 
 
-def _build_prompt(ip, target_dir):
-    report = _read_optional(os.path.join(target_dir, "RESULTS_SUMMARY.txt"))
-    recon = _read_optional(os.path.join(target_dir, "recon_summary.json"), 4000)
-    context = _read_optional(os.path.join(target_dir, "scan_context.json"), 4000)
-    scan_plan = _read_optional(os.path.join(target_dir, "AI_SCAN_PLAN.json"), 2000)
-    hydra_plan = _read_optional(os.path.join(target_dir, "AI_HYDRA_PLAN.json"), 2000)
-    rsf_plan = _read_optional(os.path.join(target_dir, "AI_ROUTERSPLOIT_PLAN.txt"), 2000)
-    nuclei = _read_optional(os.path.join(target_dir, "nuclei_port_443_notags.jsonl"), 3000)
+def _build_comprehensive_context(ip: str, target_dir: str) -> str:
+    """Aggregate all major artifacts for final report."""
+    chunks: list[str] = []
+
+    try:
+        from core.ai.workspace_state import build_workspace_state
+
+        state = build_workspace_state(target_dir, ip)
+        chunks.append("=== WORKSPACE STATE (structured) ===\n" + json.dumps(state, ensure_ascii=False, indent=2)[:8000])
+    except Exception as exc:
+        chunks.append(f"=== WORKSPACE STATE (error: {exc}) ===")
+
+    files = [
+        ("RESULTS_SUMMARY.txt", 5000),
+        ("ROUTER_HARVEST.txt", 6000),
+        ("ROUTER_HARVEST.json", 4000),
+        ("ROUTER_LAN_CLIENTS.json", 3000),
+        ("ENGINE_LOOT.json", 4000),
+        ("hikvision_test_report.json", 4000),
+        ("target_profile.json", 3500),
+        ("workflow_recommendations.json", 2500),
+        ("AI_ORCHESTRATOR_LOG.jsonl", 4000),
+        ("AI_STEP_NOTES.jsonl", 2500),
+        ("nmap_scan.txt", 3500),
+        ("scan_context.json", 2500),
+        ("recon_summary.json", 2500),
+    ]
+    for name, limit in files:
+        path = os.path.join(target_dir, name)
+        text = _read_optional(path, limit)
+        if text.strip():
+            chunks.append(f"=== {name} ===\n{text}")
+
+    nuclei = _read_optional(os.path.join(target_dir, "nuclei_port_443_notags.jsonl"), 2500)
     if not nuclei:
-        nuclei = _read_optional(os.path.join(target_dir, "nuclei_port_80_notags.jsonl"), 3000)
+        nuclei = _read_optional(os.path.join(target_dir, "nuclei_port_80_notags.jsonl"), 2500)
+    if nuclei:
+        chunks.append(f"=== NUCLEI SAMPLE ===\n{nuclei}")
 
-    return f"""You are a senior penetration testing analyst.
-Analyze the following scan data for target IP {ip}.
-Write the answer in Arabic.
-Be concise, practical, and structured with these sections:
-1) ملخص الجهاز
-2) ما الذي يعمل بشكل صحيح
-3) المشاكل أو الأخطاء في الأدوات
-4) أخطر النتائج الأمنية
-5) الخطوات التالية المقترحة
+    return "\n\n".join(chunks)[:28000]
 
-Do not invent findings that are not present in the data.
 
-=== RESULTS SUMMARY ===
-{report}
+def _build_prompt(ip, target_dir):
+    return _build_comprehensive_context(ip, target_dir)
 
-=== RECON JSON ===
-{recon}
 
-=== SCAN CONTEXT JSON ===
-{context}
+def _build_comprehensive_prompt(ip, target_dir):
+    body = _build_comprehensive_context(ip, target_dir)
+    return f"""You are a senior penetration testing analyst writing the FINAL comprehensive report.
+Target IP: {ip}
+Write in Arabic. Be thorough but only use evidence from the data below.
 
-=== AI SCAN PLAN ===
-{scan_plan}
+Required sections (use these exact headings):
+## 1. ملخص تنفيذي
+## 2. نوع الجهاز والخدمات (منافذ، بانر، stack)
+## 3. الحسابات وكلمات المرور المؤكدة (مصدر كل cred)
+## 4. الشبكة الداخلية — أجهزة LAN / DHCP / ARP (إن وُجدت)
+## 5. Wi‑Fi و PPPoE / WAN
+## 6. الثغرات والمخاطر (Nuclei, CVE, RouterSploit — مع تصنيف خطورة)
+## 7. ما نُفّذ من أدوات (orchestrator log)
+## 8. الفجوات — ما لم يُكتشف ولماذا (مثلاً guest بدون صلاحيات)
+## 9. خطة العمل التالية (مرتبة بالأولوية)
 
-=== AI HYDRA PLAN ===
-{hydra_plan}
+Rules:
+- NEVER invent usernames, passwords, LAN IPs, or CVEs not in the data
+- If a section has no data, say "لا توجد بيانات في workspace" explicitly
+- Distinguish confirmed vs attempted vs not tested
 
-=== AI ROUTERSPLOIT PLAN ===
-{rsf_plan}
-
-=== NUCLEI SAMPLE ===
-{nuclei}
+{body}
 """
 
 
 def generate_ai_analysis(ip, target_dir):
     if not ai_configured():
         print("[*] AI analysis skipped (no API keys in .env).")
-        return None
+        return generate_offline_comprehensive_report(ip, target_dir)
 
     prompt = _build_prompt(ip, target_dir)
     print("[*] Running final AI analysis...")
@@ -231,4 +258,77 @@ def generate_ai_analysis(ip, target_dir):
         return analysis
 
     print("[!] All AI providers failed.")
-    return None
+    return generate_offline_comprehensive_report(ip, target_dir)
+
+
+def generate_offline_comprehensive_report(ip: str, target_dir: str) -> str:
+    """Template report from workspace_state when AI API unavailable."""
+    from core.ai.workspace_state import build_workspace_state
+
+    state = build_workspace_state(target_dir, ip)
+    lines = [
+        "=" * 60,
+        f"تقرير شامل (بدون AI) — {ip}",
+        f"تاريخ: {state.get('updated_at', '')}",
+        "=" * 60,
+        "",
+        "## 1. ملخص تنفيذي",
+        f"جهاز: {state.get('device', {})}",
+        f"منافذ: {', '.join(str(p) for p in (state.get('open_ports') or []))}",
+        "",
+        "## 3. الحسابات",
+    ]
+    for c in state.get("credentials") or []:
+        lines.append(f"  - {c}")
+    if not state.get("credentials"):
+        lines.append("  (لا creds مؤكدة)")
+    lines.extend(["", "## 4. أجهزة LAN",])
+    for c in state.get("lan_clients") or []:
+        lines.append(f"  - {c}")
+    if not state.get("lan_clients"):
+        lines.append("  (لا أجهزة — جرّب admin أو Harvest)")
+    lines.extend([
+        "",
+        "## 6. Nuclei",
+        str(state.get("nuclei", {})),
+        "",
+        "لتقرير AI كامل: ضع OPENROUTER_API_KEY أو GEMINI_API_KEY في .env",
+    ])
+    text = "\n".join(lines)
+    path = os.path.join(target_dir, AI_COMPREHENSIVE_FILE)
+    with open(path, "w", encoding="utf-8") as fh:
+        fh.write(text)
+    also = os.path.join(target_dir, AI_REPORT_FILE)
+    with open(also, "w", encoding="utf-8") as fh:
+        fh.write(text)
+    print(f"[+] Offline comprehensive report: {path}")
+    return text
+
+
+def generate_comprehensive_report(ip: str, target_dir: str) -> str | None:
+    """Full Arabic report — used by AI Guided Scan finale."""
+    if not ai_configured():
+        return generate_offline_comprehensive_report(ip, target_dir)
+
+    prompt = _build_comprehensive_prompt(ip, target_dir)
+    print("[*] Generating AI comprehensive report…")
+    analysis, provider = call_ai_text(
+        prompt,
+        system="You write accurate Arabic penetration test reports. Never hallucinate findings.",
+    )
+    if not analysis:
+        return generate_offline_comprehensive_report(ip, target_dir)
+
+    header = (
+        f"Provider: {provider}\n"
+        f"Target: {ip}\n"
+        f"Generated: {__import__('datetime').datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
+        f"{'=' * 60}\n\n"
+    )
+    full = header + analysis
+    for fname in (AI_COMPREHENSIVE_FILE, AI_REPORT_FILE):
+        path = os.path.join(target_dir, fname)
+        with open(path, "w", encoding="utf-8") as fh:
+            fh.write(full)
+    print(f"[+] Comprehensive report: {os.path.join(target_dir, AI_COMPREHENSIVE_FILE)}")
+    return full

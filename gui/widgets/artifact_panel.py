@@ -19,6 +19,9 @@ from PyQt6.QtWidgets import (
 )
 
 KEY_ARTIFACTS = (
+    "AI_COMPREHENSIVE_REPORT.txt",
+    "AI_WORKSPACE_STATE.json",
+    "AI_ORCHESTRATOR_LOG.jsonl",
     "ROUTER_HARVEST.txt",
     "ROUTER_HARVEST.json",
     "ROUTER_ACCESS.txt",

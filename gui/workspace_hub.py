@@ -18,6 +18,7 @@ PAGE_ID_BY_TITLE.update({
     "Device AUTO-PWN": "engine_autopwn",
     "Device Engine": "engine_autopwn",
     "Comprehensive Scan": "comprehensive",
+    "AI Guided Scan": "ai_guided",
     "Test Hikvision": "util_hik_test",
     "Test Router": "util_router_test",
     "Router Deep Harvest": "util_router_harvest",
@@ -28,6 +29,9 @@ PAGE_ID_BY_TITLE.update({
 })
 
 IMPORTANT_FILES = (
+    ("AI_COMPREHENSIVE_REPORT.txt", "AI comprehensive report"),
+    ("AI_WORKSPACE_STATE.json", "AI workspace state"),
+    ("AI_ORCHESTRATOR_LOG.jsonl", "AI orchestrator log"),
     ("ROUTER_HARVEST.txt", "Router harvest"),
     ("ROUTER_HARVEST.json", "Router harvest (JSON)"),
     ("ROUTER_ACCESS.txt", "Router login"),
@@ -279,6 +283,10 @@ def format_results_summary(view: dict[str, Any], *, finished_tool: str = "") -> 
     harvest_note = view.get("router_harvest_note")
     if harvest_note:
         lines.append(f"— Router harvest —\n  • {harvest_note}")
+
+    comp = os.path.join(target_dir, "AI_COMPREHENSIVE_REPORT.txt")
+    if os.path.isfile(comp):
+        lines.append("— AI comprehensive report —\n  • AI_COMPREHENSIVE_REPORT.txt (full Arabic report)")
 
     tools = view.get("next_tools") or []
     if tools:

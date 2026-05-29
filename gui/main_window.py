@@ -193,6 +193,12 @@ class MainWindow(QMainWindow):
         comp.run_requested.connect(self._on_worker)
         self._register("comprehensive", comp)
 
+        from gui.pages.ai_guided_page import AiGuidedPage
+
+        ai_guided = AiGuidedPage(session)
+        ai_guided.run_requested.connect(self._on_worker)
+        self._register("ai_guided", ai_guided)
+
         for page_id, spec in PAGE_SPECS.items():
             if spec.get("kind") == "engine":
                 continue

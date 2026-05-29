@@ -6,6 +6,7 @@ NAV_ITEMS: list[tuple[str, str, str | None]] = [
     # (page_id, label, parent_id)
     ("dashboard", "Dashboard", None),
     ("comprehensive", "Comprehensive Scan", None),
+    ("ai_guided", "AI Guided Scan", None),
     ("classic_nmap", "Nmap", "classic"),
     ("classic_nuclei", "Nuclei", "classic"),
     ("classic_dirsearch", "Dirsearch", "classic"),

@@ -41,6 +41,7 @@ TOOL_BY_SELECTION: dict[int, tuple[str, str]] = {
 
 UTIL_LABELS: dict[str, tuple[str, str]] = {
     "router-harvest": ("Router Deep Harvest", "Utilities → Router Deep Harvest"),
+    "ai-guided-scan": ("AI Guided Scan", "AI Guided Scan"),
     "test-hikvision": ("Test Hikvision", "Utilities → Test Hikvision"),
     "test-router": ("Test Router", "Utilities → Test Router"),
     "test-cve": ("CVE Report", "Utilities → CVE Report"),
