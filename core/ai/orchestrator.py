@@ -58,6 +58,19 @@ def _save_orch_state(target_dir: str, payload: dict[str, Any]) -> None:
         json.dump(payload, fh, indent=2, ensure_ascii=False)
 
 
+def load_orchestrator_progress(target_dir: str) -> dict[str, Any]:
+    """Read live progress for GUI (step, tool, phase)."""
+    path = os.path.join(target_dir, ORCHESTRATOR_STATE_FILE)
+    if not os.path.isfile(path):
+        return {}
+    try:
+        with open(path, encoding="utf-8") as fh:
+            data = json.load(fh)
+        return data if isinstance(data, dict) else {}
+    except (OSError, json.JSONDecodeError):
+        return {}
+
+
 def _heuristic_next_action(state: dict[str, Any]) -> dict[str, Any]:
     executed = set(state.get("executed_tools") or [])
     device_type = (state.get("device") or {}).get("type", "unknown")
@@ -263,7 +276,16 @@ def run_ai_guided_scan(
     max_steps = max_steps or int(os.environ.get("AI_ORCHESTRATOR_MAX_STEPS", DEFAULT_MAX_STEPS))
     executed: list[str] = []
     exploited_any = False
-    orch_state = {"step": 0, "max_steps": max_steps, "finished": False}
+    orch_state: dict[str, Any] = {
+        "step": 0,
+        "max_steps": max_steps,
+        "finished": False,
+        "phase": "starting",
+        "current_tool": "",
+        "executed_count": 0,
+        "last_reason": "",
+    }
+    _save_orch_state(target_dir, orch_state)
 
     log("=" * 60, "INFO")
     log("AI GUIDED SCAN — orchestrator start", "SUCCESS")
@@ -281,6 +303,9 @@ def run_ai_guided_scan(
                 target_dir, ip, raw_target=raw_target, executed_tools=executed,
             )
             save_workspace_state(target_dir, state)
+
+            orch_state.update({"phase": "deciding", "step": step, "current_tool": ""})
+            _save_orch_state(target_dir, orch_state)
 
             decision = decide_next_action(state)
             reason = decision.get("reason_ar", "")
@@ -308,19 +333,30 @@ def run_ai_guided_scan(
                 if note:
                     append_step_note(target_dir, step, note, provider=provider or "")
 
-            orch_state["step"] = step
-            orch_state["last_reason"] = reason
+            tool_key = tool if act == "run_tool" else (act or tool)
+            orch_state.update({
+                "step": step,
+                "last_reason": reason,
+                "planned_tool": tool_key,
+                "decision_source": source,
+            })
             _save_orch_state(target_dir, orch_state)
 
             if decision.get("stop") or act == "finish":
                 log("[*] Orchestrator: finish requested", "INFO")
                 break
 
-            tool_key = tool if act == "run_tool" else (act or tool)
             if tool_key in executed:
                 log(f"[!] Duplicate step {tool_key} — ending orchestrator", "WARNING")
                 break
             executed.append(tool_key)
+
+            orch_state.update({
+                "phase": "running",
+                "current_tool": tool_key,
+                "executed_count": len(executed),
+            })
+            _save_orch_state(target_dir, orch_state)
 
             if _execute_action(
                 decision,
@@ -342,6 +378,9 @@ def run_ai_guided_scan(
             except Exception:
                 pass
 
+        orch_state.update({"phase": "report", "current_tool": "comprehensive_report"})
+        _save_orch_state(target_dir, orch_state)
+
         log("[*] Generating comprehensive AI report…", "INFO")
         generate_comprehensive_report(ip, target_dir)
 
@@ -356,7 +395,13 @@ def run_ai_guided_scan(
         except Exception:
             pass
 
-        orch_state["finished"] = True
+        orch_state.update({
+            "finished": True,
+            "phase": "done",
+            "step": orch_state.get("step", 0),
+            "executed_count": len(executed),
+            "current_tool": "",
+        })
         _save_orch_state(target_dir, orch_state)
 
         final = build_workspace_state(

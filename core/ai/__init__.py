@@ -5,7 +5,7 @@ from core.ai.analyst import (
     generate_ai_analysis,
     generate_comprehensive_report,
 )
-from core.ai.orchestrator import run_ai_guided_scan
+from core.ai.orchestrator import load_orchestrator_progress, run_ai_guided_scan
 from core.ai.workspace_state import build_workspace_state
 
 __all__ = [
@@ -13,5 +13,6 @@ __all__ = [
     "build_workspace_state",
     "generate_ai_analysis",
     "generate_comprehensive_report",
+    "load_orchestrator_progress",
     "run_ai_guided_scan",
 ]

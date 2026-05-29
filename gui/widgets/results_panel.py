@@ -87,6 +87,29 @@ class ResultsPanel(QWidget):
         self._host = host or ""
         self.refresh()
 
+    def focus_artifact(self, filename: str) -> bool:
+        """Select a workspace file in the list and show it in the preview pane."""
+        if not self._target_dir:
+            return False
+        path = os.path.join(self._target_dir, filename)
+        if not os.path.isfile(path):
+            self.refresh()
+            path = os.path.join(self._target_dir, filename)
+        if not os.path.isfile(path):
+            return False
+        for i in range(self._files.count()):
+            item = self._files.item(i)
+            if item and item.data(256) == path:
+                self._files.setCurrentItem(item)
+                self._preview_file_item(item)
+                return True
+        try:
+            with open(path, encoding="utf-8", errors="replace") as fh:
+                self._preview.setPlainText(fh.read(50000))
+        except OSError as exc:
+            self._preview.setPlainText(str(exc))
+        return True
+
     def refresh(self) -> None:
         view = collect_workspace_view(self._target_dir, self._host)
         self._summary.setPlainText(format_results_summary(view))

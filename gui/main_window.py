@@ -197,7 +197,9 @@ class MainWindow(QMainWindow):
 
         ai_guided = AiGuidedPage(session)
         ai_guided.run_requested.connect(self._on_worker)
+        ai_guided.show_report_in_results.connect(self._show_ai_report_in_results)
         self._register("ai_guided", ai_guided)
+        self._ai_guided_page = ai_guided
 
         for page_id, spec in PAGE_SPECS.items():
             if spec.get("kind") == "engine":
@@ -315,6 +317,19 @@ class MainWindow(QMainWindow):
         if page_id in self._nav_items:
             self._tree.setCurrentItem(self._nav_items[page_id])
             self._show_page(page_id)
+
+    def _show_ai_report_in_results(self) -> None:
+        target_dir = self._session.target_dir
+        host = self._session.scan_host or self._session.target
+        self._artifacts.set_workspace(target_dir)
+        self._results.set_context(target_dir, host)
+        self._bottom_tabs.setCurrentWidget(self._results)
+        if not self._results.focus_artifact("AI_COMPREHENSIVE_REPORT.txt"):
+            QMessageBox.information(
+                self,
+                "AI Report",
+                "AI_COMPREHENSIVE_REPORT.txt not found yet. Wait for the scan to finish.",
+            )
 
     def _on_target_changed(self) -> None:
         self._target_bar.sync_from_session()
