@@ -64,7 +64,7 @@ Return ONLY valid JSON (no markdown) with this schema:
 Rules:
 - action run_tool requires tool from allowed_next_tools only
 - Never invent credentials, CVEs, or LAN clients not in workspace state
-- router_harvest only if auth_url or auth_username is set
+- router_harvest if auth_url, auth_username, or ROUTER_ACCESS / test_router creds in workspace
 - ingram only for camera device types (hikvision, camera, dahua)
 - routersploit/nuclei/hydra for router types
 - Do not repeat tools in executed_tools unless finish
@@ -96,7 +96,7 @@ def load_orchestrator_progress(target_dir: str) -> dict[str, Any]:
 
 def _looks_like_router_gateway(state: dict[str, Any]) -> bool:
     blob = (state.get("services_summary") or "").lower()
-    if state.get("auth_username") or state.get("auth_url"):
+    if state.get("auth_username") or state.get("auth_url") or state.get("has_router_web_creds"):
         return True
     return any(
         x in blob
@@ -104,93 +104,102 @@ def _looks_like_router_gateway(state: dict[str, Any]) -> bool:
     )
 
 
+def _has_router_web_creds(state: dict[str, Any]) -> bool:
+    if state.get("auth_username") or state.get("has_router_web_creds"):
+        return True
+    for c in state.get("credentials") or []:
+        if c.get("username") and c.get("password"):
+            return True
+    return False
+
+
+def _heuristic_plan(
+    reason_ar: str,
+    *,
+    action: str,
+    tool: str,
+    stop: bool = False,
+) -> dict[str, Any]:
+    return {
+        "reason_ar": reason_ar,
+        "action": action,
+        "tool": tool,
+        "inputs": {},
+        "stop": stop,
+        "source": "heuristic",
+    }
+
+
 def _heuristic_next_action(state: dict[str, Any]) -> dict[str, Any]:
     executed = set(state.get("executed_tools") or [])
     device_type = (state.get("device") or {}).get("type", "unknown")
     ports = state.get("open_ports") or []
     router_primary = _looks_like_router_gateway(state)
+    camera_ports = 8000 in ports or 554 in ports
+    has_creds = _has_router_web_creds(state)
 
     if "nmap" not in executed and not state.get("has_nmap"):
-        return {
-            "reason_ar": "لا يوجد Nmap — فحص المنافذ أولاً",
-            "action": "run_tool",
-            "tool": "nmap",
-            "inputs": {},
-            "stop": False,
-            "source": "heuristic",
-        }
+        return _heuristic_plan(
+            "لا يوجد Nmap — فحص المنافذ أولاً",
+            action="run_tool",
+            tool="nmap",
+        )
 
-    if state.get("auth_url") and "router_harvest" not in executed:
-        return {
-            "reason_ar": "رابط يحتوي حساب دخول — حصاد داخل الراوتر",
-            "action": "router_harvest",
-            "tool": "router_harvest",
-            "inputs": {},
-            "stop": False,
-            "source": "heuristic",
-        }
+    if (
+        has_creds
+        and "router_harvest" not in executed
+        and (state.get("auth_url") or "test_router" in executed)
+    ):
+        return _heuristic_plan(
+            "حساب راوتر متاح — حصاد واجهة الإدارة (Wi‑Fi / LAN / WAN)",
+            action="router_harvest",
+            tool="router_harvest",
+        )
 
     if device_type in ("router", "generic_router", "fiberhome_router", "unknown") or router_primary:
-        for tool in ("nuclei", "test_router", "routersploit", "hydra", "dirsearch", "router_harvest"):
+        router_sequence: list[tuple[str, str, str]] = [
+            ("test_router", "test_router", "اختبار راوتر Netis/ZyXEL وكلمات افتراضية"),
+            ("router_harvest", "router_harvest", "حصاد بعد تأكيد الدخول"),
+            ("nuclei", "run_tool", "قوالب CVE على الويب"),
+            ("routersploit", "run_tool", "وحدات استغلال الراوتر"),
+            ("dirsearch", "run_tool", "مسارات الإدارة"),
+        ]
+        if not has_creds:
+            router_sequence.append(("hydra", "run_tool", "تخمين كلمات المرور (لا يوجد دخول بعد)"))
+
+        for tool, action, label in router_sequence:
             if tool == "router_harvest":
-                if not state.get("auth_username") or "router_harvest" in executed:
+                if tool in executed or not _has_router_web_creds(state):
                     continue
-                return {
-                    "reason_ar": "راوتر — حصاد واجهة الإدارة",
-                    "action": "router_harvest",
-                    "tool": "router_harvest",
-                    "inputs": {},
-                    "stop": False,
-                    "source": "heuristic",
-                }
-            if tool not in executed and tool in ALLOWED_TOOLS:
-                labels = {
-                    "nuclei": "قوالب CVE على الويب",
-                    "routersploit": "وحدات استغلال الراوتر",
-                    "hydra": "تخمين كلمات المرور",
-                    "dirsearch": "مسارات الإدارة",
-                    "test_router": "اختبار راوتر Netis/ZyXEL",
-                }
-                return {
-                    "reason_ar": labels.get(tool, tool),
-                    "action": "test_router" if tool == "test_router" else "run_tool",
-                    "tool": tool,
-                    "inputs": {},
-                    "stop": False,
-                    "source": "heuristic",
-                }
+                return _heuristic_plan(label, action=action, tool=tool)
+            if tool in executed or tool not in ALLOWED_TOOLS:
+                continue
+            if tool == "hydra" and has_creds:
+                continue
+            return _heuristic_plan(label, action=action, tool=tool)
+
+        if router_primary and camera_ports and "test_hikvision" not in executed:
+            if "test_router" in executed or "nuclei" in executed:
+                return _heuristic_plan(
+                    "راوتر مع منفذ كاميرا — فحص Hikvision ثانوي بعد الراوتر",
+                    action="test_hikvision",
+                    tool="test_hikvision",
+                )
 
     camera_type = device_type in ("camera", "hikvision_camera", "dahua_camera", "ip_camera")
-    camera_ports = 8000 in ports or 554 in ports
     if (camera_type or (camera_ports and not router_primary)):
         if "test_hikvision" not in executed and camera_ports:
-            return {
-                "reason_ar": "منافذ كاميرا — اختبار Hikvision",
-                "action": "test_hikvision",
-                "tool": "test_hikvision",
-                "inputs": {},
-                "stop": False,
-                "source": "heuristic",
-            }
+            return _heuristic_plan(
+                "منافذ كاميرا — اختبار Hikvision",
+                action="test_hikvision",
+                tool="test_hikvision",
+            )
         if "ingram" not in executed and not router_primary:
-            return {
-                "reason_ar": "كاميرا — Ingram",
-                "action": "run_tool",
-                "tool": "ingram",
-                "inputs": {},
-                "stop": False,
-                "source": "heuristic",
-            }
-
-    if router_primary and camera_ports and "test_hikvision" not in executed:
-        return {
-            "reason_ar": "راوتر مع منفذ 8000 — فحص Hikvision ثانوي",
-            "action": "test_hikvision",
-            "tool": "test_hikvision",
-            "inputs": {},
-            "stop": False,
-            "source": "heuristic",
-        }
+            return _heuristic_plan(
+                "كاميرا — Ingram",
+                action="run_tool",
+                tool="ingram",
+            )
 
     for rec in state.get("recommended_tools") or []:
         name = (rec.get("name") or "").lower()
@@ -252,27 +261,17 @@ def _compact_state_for_llm(state: dict[str, Any]) -> dict[str, Any]:
 
 
 def _needs_llm_decision(state: dict[str, Any], heuristic: dict[str, Any]) -> bool:
-    """True when local rules are not confident enough — worth spending tokens."""
+    """Hybrid: LLM only when heuristic wants finish but recon is still thin."""
     if heuristic.get("action") != "finish":
-        ports = state.get("open_ports") or []
-        executed = set(state.get("executed_tools") or [])
-        router_p = _looks_like_router_gateway(state)
-        camera_ports = 8000 in ports or 554 in ports
-        if router_p and camera_ports and state.get("has_nmap"):
-            if "nuclei" not in executed and "test_hikvision" not in executed:
-                return True
-        device_type = (state.get("device") or {}).get("type", "unknown")
-        if device_type == "unknown" and state.get("has_nmap") and len(ports) >= 2:
-            return True
         return False
-
-    executed_n = len(state.get("executed_tools") or [])
-    if executed_n < 2 and state.get("has_nmap"):
-        return True
+    executed = state.get("executed_tools") or []
     if not state.get("has_nmap"):
         return False
-    if executed_n < 4:
+    if len(executed) < 2:
         return True
+    if not _has_router_web_creds(state) and _looks_like_router_gateway(state):
+        if "test_router" not in executed:
+            return True
     return False
 
 
@@ -308,7 +307,7 @@ Pick the single best next action. Respect executed_tools — do not repeat.
             return _finalize_plan(plan, mode=get_orchestrator_mode(), path="heuristic_fallback")
         tool = allowed[0] if allowed else ""
 
-    if action == "router_harvest" and not state.get("auth_username"):
+    if action == "router_harvest" and not _has_router_web_creds(state):
         plan = _heuristic_next_action(state)
         return _finalize_plan(plan, mode=get_orchestrator_mode(), path="heuristic_fallback")
 
@@ -328,12 +327,15 @@ def decide_next_action(state: dict[str, Any]) -> dict[str, Any]:
     if mode == "full_ai":
         return _decide_with_llm(state)
 
-    # hybrid: local first unless ambiguous
-    if not _needs_llm_decision(state, heuristic):
+    # hybrid: always use local rules while a tool step remains; LLM only at finish if thin
+    if heuristic.get("action") != "finish":
         return _finalize_plan(heuristic, mode="hybrid", path="local")
 
-    log("[*] Hybrid: ambiguous next step — asking LLM (one decision)", "INFO")
-    return _decide_with_llm(state)
+    if _needs_llm_decision(state, heuristic):
+        log("[*] Hybrid: recon thin at finish — one LLM decision", "INFO")
+        return _decide_with_llm(state)
+
+    return _finalize_plan(heuristic, mode="hybrid", path="local")
 
 
 def _bootstrap_recon(
@@ -404,9 +406,24 @@ def _execute_action(
         return False
 
     if act == "router_harvest" or tool == "router_harvest":
+        from core.target_auth import creds_from_router_access, parse_target_auth
         from engines.router_harvest import run_router_harvest
 
-        run_router_harvest(target_dir, raw_target or f"http://{ip}/")
+        harvest_url = raw_target
+        if not parse_target_auth(harvest_url or ""):
+            access = creds_from_router_access(target_dir)
+            if access:
+                u, p = access
+                harvest_url = f"http://{u}:{p}@{ip}/"
+            else:
+                state = build_workspace_state(
+                    target_dir, ip, raw_target=raw_target, executed_tools=[],
+                )
+                u = state.get("auth_username")
+                p = state.get("auth_password") or ""
+                if u:
+                    harvest_url = f"http://{u}:{p}@{ip}/"
+        run_router_harvest(target_dir, harvest_url or f"http://{ip}/")
         return True
 
     if act == "test_hikvision" or tool == "test_hikvision":
@@ -519,8 +536,11 @@ def run_ai_guided_scan(
             if source == "ai":
                 llm_decisions += 1
 
+            tag = "heuristic" if path == "local" or source in ("heuristic", "bootstrap") else source
+            if path == "llm":
+                tag = "ai"
             log(
-                f"[Step {step}/{max_steps}] {source} ({path}): {act} / {tool} — {reason}",
+                f"[Step {step}/{max_steps}] {tag}: {act} / {tool} — {reason}",
                 "INFO",
             )
             append_orchestrator_log(target_dir, {

@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import Any
 
 from core.report.parsers import load_target_hints, parse_nmap_summary
-from core.target_auth import parse_target_auth
+from core.target_auth import creds_from_router_access, parse_target_auth
 from core.workspace_ports import load_open_ports_from_workspace, open_port_numbers
 
 STATE_FILE = "AI_WORKSPACE_STATE.json"
@@ -94,12 +94,42 @@ def _collect_credentials(target_dir: str) -> list[dict[str, str]]:
                     "device_type": entry.get("device_type", ""),
                 })
 
+    access = creds_from_router_access(target_dir)
+    if access:
+        creds.append({
+            "source": "router_access",
+            "username": access[0],
+            "password": access[1],
+        })
+
     for name in ("hydra_success.txt", "hydra_web_success.txt", "credentials.txt"):
         text = _read_tail(os.path.join(target_dir, name), 2000)
         for m in re.finditer(r"\b(\w+):(\S+)", text):
             creds.append({"source": name, "username": m.group(1), "password": m.group(2)})
 
-    return creds[:20]
+    for scan_name in ("routersploit_scan.txt", "LIVE_SCAN.log", "scan_transcript.txt"):
+        text = _read_tail(os.path.join(target_dir, scan_name), 8000)
+        for pat in (
+            r"VALID NETIS LOGIN:\s*(\w+):(\S+)",
+            r"CREDENTIALS:\s*(\w+):(\S+)",
+            r"\[\$\$\$\]\s*VALID NETIS LOGIN:\s*(\w+):(\S+)",
+        ):
+            for m in re.finditer(pat, text, re.IGNORECASE):
+                creds.append({
+                    "source": "test_router",
+                    "username": m.group(1),
+                    "password": m.group(2),
+                })
+
+    seen: set[tuple[str, str]] = set()
+    unique: list[dict[str, str]] = []
+    for c in creds:
+        key = (c.get("username", ""), c.get("password", ""))
+        if key in seen or not key[0]:
+            continue
+        seen.add(key)
+        unique.append(c)
+    return unique[:20]
 
 
 def _lan_clients(target_dir: str) -> list[dict[str, Any]]:
@@ -186,6 +216,21 @@ def build_workspace_state(
             "authenticated_url": hints.get("raw") or raw_target,
         }
 
+    credentials = _collect_credentials(target_dir)
+    if not auth.get("username"):
+        for c in credentials:
+            u, p = c.get("username"), c.get("password")
+            if u and p and c.get("source") in (
+                "router_access", "test_router", "router_harvest", "engine_loot",
+            ):
+                scheme = "http"
+                auth = {
+                    "username": u,
+                    "password": p,
+                    "authenticated_url": f"{scheme}://{u}:{p}@{ip}/",
+                }
+                break
+
     nmap = parse_nmap_summary(target_dir)
     ports = open_port_numbers(load_open_ports_from_workspace(target_dir)) or [
         p.get("port") for p in (nmap.get("ports") or []) if p.get("port")
@@ -207,7 +252,9 @@ def build_workspace_state(
         "device": device,
         "artifacts": artifacts,
         "has_nmap": artifacts.get("has_nmap", False),
-        "credentials": _collect_credentials(target_dir),
+        "credentials": credentials,
+        "auth_password": auth.get("password"),
+        "has_router_web_creds": bool(auth.get("username")),
         "lan_clients": _lan_clients(target_dir),
         "lan_gateway": harvest.get("lan_gateway"),
         "wireless": harvest.get("wireless"),

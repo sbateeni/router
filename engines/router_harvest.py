@@ -16,7 +16,7 @@ from urllib.parse import urljoin, urlparse
 
 import requests
 
-from core.target_auth import auth_from_hints, parse_target_auth
+from core.target_auth import auth_from_hints, creds_from_router_access, parse_target_auth
 from engines.credential_hunter import _netis_login_url
 from engines.device_cve_checker import assess_device, print_cve_report
 from engines.fingerprinter import Fingerprinter
@@ -181,8 +181,13 @@ def resolve_auth(
         if u:
             user, pwd = u, p or ""
     if not user:
+        access = creds_from_router_access(target_dir)
+        if access:
+            user, pwd = access
+    if not user:
         raise ValueError(
-            "No credentials — use http://user:pass@IP/ in the target bar or pass username/password."
+            "No credentials — use http://user:pass@IP/ in the target bar, run Test Router, "
+            "or ensure ROUTER_ACCESS.txt exists in the target workspace."
         )
     if port in (80, 443):
         netloc = host

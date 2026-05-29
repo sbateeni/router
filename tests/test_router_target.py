@@ -2,6 +2,7 @@
 """Quick test for router/camera targets (authorized use only)."""
 
 import argparse
+import os
 import re
 
 try:
@@ -21,8 +22,14 @@ from engines.credential_hunter import (
 from engines.device_cve_checker import assess_device, print_cve_report
 from engines.fingerprinter import Fingerprinter
 from engines.hikvision_module import HikvisionExploiter
+from core.paths import project_root
+from core.target_auth import save_router_access
 
 requests.packages.urllib3.disable_warnings()
+
+
+def _target_dir_for_ip(ip: str) -> str:
+    return os.path.join(project_root(), "targets", ip.strip())
 
 COMMON_WEB_PORTS = (80, 443, 8080, 8443, 8000, 8081, 81, 8888, 9000, 37777, 5000, 8001)
 
@@ -127,6 +134,17 @@ def test_router(ip: str, url: str | None = None, port: int | None = None) -> Non
     print("=" * 60)
     if found:
         print(f"  CREDENTIALS: {found[0]}:{found[1]}")
+        tdir = _target_dir_for_ip(ip)
+        path = save_router_access(
+            tdir,
+            found[0],
+            found[1],
+            host=ip,
+            port=port or 80,
+            scheme="https" if (port or 80) in (443, 8443) else "http",
+            auth_method="netis_form" if device == "NETIS" else "router_scan",
+        )
+        print(f"  [+] Saved: {path}")
     else:
         print("  No credentials confirmed in this run.")
     print("=" * 60)
