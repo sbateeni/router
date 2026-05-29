@@ -284,9 +284,13 @@ def format_results_summary(view: dict[str, Any], *, finished_tool: str = "") -> 
     if harvest_note:
         lines.append(f"— Router harvest —\n  • {harvest_note}")
 
-    comp = os.path.join(target_dir, "AI_COMPREHENSIVE_REPORT.txt")
-    if os.path.isfile(comp):
-        lines.append("— AI comprehensive report —\n  • AI_COMPREHENSIVE_REPORT.txt (full Arabic report)")
+    target_dir = view.get("target_dir") or ""
+    if target_dir:
+        comp = os.path.join(target_dir, "AI_COMPREHENSIVE_REPORT.txt")
+        if os.path.isfile(comp):
+            lines.append(
+                "— AI comprehensive report —\n  • AI_COMPREHENSIVE_REPORT.txt (full Arabic report)"
+            )
 
     tools = view.get("next_tools") or []
     if tools:
