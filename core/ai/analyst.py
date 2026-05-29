@@ -308,6 +308,10 @@ Rules:
 - NEVER invent usernames, passwords, LAN IPs, or CVEs not in the data
 - If a section has no data, say "لا توجد بيانات في workspace" explicitly
 - Distinguish confirmed vs attempted vs not tested
+- Section 7: list ALL tools from executed_tools in WORKSPACE STATE; if nmap_scan.txt exists, include Nmap (bootstrap) even if "nmap" is missing from the log
+- Section 9: do NOT recommend re-running tools already in executed_tools (e.g. Nmap, Nuclei, RouterSploit, Dirsearch, Hydra, Ingram, test_router, test_hikvision)
+- Section 9: suggest only manual follow-ups: admin login for full harvest/Wi‑Fi, Hikvision with -p YOUR_PASSWORD, UPnP/CVE-2014-8361 if Netis, physical access
+- If only guest:guest works, explain guest cannot see LAN/Wi‑Fi admin pages
 
 {body}
 """

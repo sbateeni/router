@@ -190,6 +190,36 @@ def _add(
     )
 
 
+_GUI_FOR_EXECUTED_TOOL: dict[str, str] = {
+    "nmap": "Nmap",
+    "nuclei": "Nuclei",
+    "dirsearch": "Dirsearch",
+    "routersploit": "RouterSploit",
+    "ingram": "Ingram",
+    "hydra": "Hydra",
+    "test_hikvision": "Test Hikvision",
+    "test_router": "Test Router",
+    "router_harvest": "Router Deep Harvest",
+}
+
+
+def _guided_scan_completed_gui_names(target_dir: str) -> set[str]:
+    """Tools already run by AI Guided Scan — omit from post-scan hints."""
+    path = os.path.join(target_dir, "AI_WORKSPACE_STATE.json")
+    if not os.path.isfile(path):
+        return set()
+    try:
+        with open(path, encoding="utf-8") as fh:
+            data = json.load(fh)
+        executed = data.get("executed_tools") or []
+    except (OSError, json.JSONDecodeError):
+        return set()
+    names = {_GUI_FOR_EXECUTED_TOOL.get(t, "") for t in executed}
+    if os.path.isfile(os.path.join(target_dir, "nmap_scan.txt")):
+        names.add("Nmap")
+    return {n for n in names if n}
+
+
 def build_tool_recommendations(
     target_dir: str,
     ip: str,
@@ -202,6 +232,7 @@ def build_tool_recommendations(
     prof = _load_workspace_profile(target_dir, ip)
     steps: list[ToolRecommendation] = []
     seen: set[str] = set()
+    already_done = _guided_scan_completed_gui_names(target_dir) if job_kind == "ai_guided" else set()
 
     fin_key = finished_tool if isinstance(finished_tool, int) else None
     fin_label = _finished_label(finished_tool)
@@ -410,7 +441,30 @@ def build_tool_recommendations(
             "Run phased scan or review Artifacts / RESULTS_SUMMARY.txt.",
         )
 
-    return _dedupe_priority(steps)
+    steps = _dedupe_priority(steps)
+    if not already_done:
+        return steps
+
+    filtered = [s for s in steps if s.gui_name not in already_done]
+    if filtered:
+        return filtered
+
+    # AI Guided already ran the classic stack — suggest manual follow-ups only
+    manual: list[ToolRecommendation] = [
+        ToolRecommendation(1, "CVE Report", "Utilities → CVE Report",
+                           "Firmware/vendor CVE summary (guided scan finished)."),
+    ]
+    if prof.router_harvest_done and not prof.lan_clients:
+        manual.append(ToolRecommendation(
+            2, "Router Deep Harvest", "Utilities → Router Deep Harvest",
+            "guest:guest hides LAN/Wi‑Fi — retry with http://admin:YOUR_PASS@IP/ if you obtain admin.",
+        ))
+    if (prof.is_hikvision or 8000 in prof.open_ports) and not prof.hikvision_creds:
+        manual.append(ToolRecommendation(
+            len(manual) + 1, "Test Hikvision", "Utilities → Test Hikvision",
+            "Port 8000 open but no Digest password — run with your camera password (-p).",
+        ))
+    return manual
 
 
 def _dedupe_priority(steps: list[ToolRecommendation]) -> list[ToolRecommendation]:

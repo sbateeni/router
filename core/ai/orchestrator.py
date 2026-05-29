@@ -186,6 +186,17 @@ def _heuristic_next_action(state: dict[str, Any]) -> dict[str, Any]:
                     tool="test_hikvision",
                 )
 
+        if router_primary:
+            router_core = {"test_router", "router_harvest", "nuclei", "routersploit", "dirsearch"}
+            camera_done = not camera_ports or "test_hikvision" in executed
+            if router_core.issubset(executed) and camera_done:
+                return _heuristic_plan(
+                    "اكتمل مسار الراوتر — إنهاء (بدون Ingram على بوابة Netis)",
+                    action="finish",
+                    tool="",
+                    stop=True,
+                )
+
     camera_type = device_type in ("camera", "hikvision_camera", "dahua_camera", "ip_camera")
     if (camera_type or (camera_ports and not router_primary)):
         if "test_hikvision" not in executed and camera_ports:
@@ -214,7 +225,10 @@ def _heuristic_next_action(state: dict[str, Any]) -> dict[str, Any]:
             "test router": "test_router",
             "router deep harvest": "router_harvest",
         }
+        skip_on_router = frozenset({"ingram", "nmap", "hydra"})
         for key, tool in mapping.items():
+            if router_primary and tool in skip_on_router:
+                continue
             if key in name and tool not in executed:
                 return {
                     "reason_ar": rec.get("reason", "")[:100],
